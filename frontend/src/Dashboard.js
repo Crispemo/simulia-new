@@ -83,6 +83,8 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [savingPracticePrefs, setSavingPracticePrefs] = useState(false);
   // Tutorial modal (primera visita)
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  // Racha de acceso a la plataforma
+  const [streakDays, setStreakDays] = useState(0);
 
   // Estado para el filtrado y ordenamiento
   const [sortConfig, setSortConfig] = useState({
@@ -90,7 +92,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     direction: 'descending'
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('summary');
   
   // Configuración de tipos de exámenes
   const examTypes = {
@@ -134,6 +135,45 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     } catch (e) {
       // Si localStorage falla, no bloquear la UI
       console.warn('No se pudo acceder a localStorage para tutorial:', e);
+    }
+  }, [userId]);
+
+  // Calcular racha de acceso a la plataforma
+  useEffect(() => {
+    if (!userId) return;
+    
+    try {
+      const today = new Date().toDateString();
+      const lastAccessKey = `lastAccess_${userId}`;
+      const lastAccess = localStorage.getItem(lastAccessKey);
+      const streakKey = `streak_${userId}`;
+      const streakCount = parseInt(localStorage.getItem(streakKey) || '0');
+      
+      if (lastAccess !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toDateString();
+        
+        if (lastAccess === yesterdayStr) {
+          // Continúa la racha
+          const newStreak = streakCount + 1;
+          localStorage.setItem(streakKey, newStreak.toString());
+          localStorage.setItem(lastAccessKey, today);
+          setStreakDays(newStreak);
+        } else if (!lastAccess || lastAccess !== today) {
+          // Nueva racha (primer acceso o se rompió la racha)
+          const newStreak = streakCount > 0 ? 1 : 1;
+          localStorage.setItem(streakKey, newStreak.toString());
+          localStorage.setItem(lastAccessKey, today);
+          setStreakDays(newStreak);
+        }
+      } else {
+        // Ya accedió hoy
+        setStreakDays(streakCount || 1);
+      }
+    } catch (e) {
+      console.warn('Error al calcular racha:', e);
+      setStreakDays(0);
     }
   }, [userId]);
 
@@ -382,7 +422,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   };
 
   function calculateTimeLeft() {
-    const targetDate = new Date('2026-01-25T00:00:00');
+    const targetDate = new Date('2026-01-24T00:00:00');
     const now = new Date();
     const difference = targetDate - now;
 
@@ -1780,6 +1820,17 @@ const handleErroresClick = () => {
           
           <div className="form-actions">
             <button 
+              onClick={() => {
+                setPracticePreferences(p => ({ ...p, emailReminders: false }));
+                handleSavePracticePreferences();
+              }}
+              disabled={savingPracticePrefs}
+              className="btn btn-danger"
+              style={{ backgroundColor: '#dc3545', color: 'white', border: 'none' }}
+            >
+              Desactivar Recurrencia
+            </button>
+            <button 
               onClick={closeRecurrencePopup} 
               disabled={savingPracticePrefs}
               className="btn btn-secondary"
@@ -1943,19 +1994,15 @@ const handleErroresClick = () => {
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                   <p className="text-muted-foreground">
-                    Bienvenido de vuelta, aquí tienes un resumen de tu progreso
+                    {currentUser?.name || authUser?.displayName ? `¡${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¡Listo para practicar?'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Racha activada */}
-                  <StreakCounter streak={3} label="Racha" textColor="#3b82f6" />
-                  <StreakCounter streak={timeLeft.days || 0} label="Días hasta examen" textColor="#ef4444" />
+                  {/* Racha de acceso */}
+                  <StreakCounter streak={streakDays} label="Días de acceso" textColor="#3b82f6" />
+                  {/* Días hasta examen */}
+                  <StreakCounter streak={timeLeft.days || 0} label="Días hasta EIR" textColor="#ef4444" />
                 </div>
-              </div>
-              
-              {/* Timeline */}
-              <div className="mt-6">
-                <TimelineProgress />
               </div>
             </div>
 
@@ -1968,6 +2015,12 @@ const handleErroresClick = () => {
                   Tutorial
                 </Button>
                 <AIAssistant />
+                {RECURRENCE_ENABLED && (
+                  <Button variant="outline" onClick={openRecurrencePopup}>
+                    <Flame className="mr-2 h-4 w-4" />
+                    Configurar Racha
+                  </Button>
+                )}
                 <Button variant="outline" onClick={handleToggleDarkMode}>
                   {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </Button>
@@ -1977,16 +2030,8 @@ const handleErroresClick = () => {
               </div>
             </div>
 
-            {/* Tabs Section */}
-            <Tabs value={activeTab} onChange={setActiveTab} className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="summary">Resumen</TabsTrigger>
-                <TabsTrigger value="progress">Progreso</TabsTrigger>
-                <TabsTrigger value="subjects">Asignaturas</TabsTrigger>
-              </TabsList>
-
-              {/* Summary Tab */}
-              <TabsContent value="summary" className="space-y-4">
+            {/* Content Section */}
+            <div className="space-y-4">
                 {/* Métricas principales */}
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card className="border-l-4 border-l-blue-500">
@@ -2118,18 +2163,7 @@ const handleErroresClick = () => {
                     </CardContent>
                   </Card>
                 </div>
-              </TabsContent>
-
-              {/* Progress Tab */}
-              <TabsContent value="progress" className="space-y-4">
-                {renderDashboardMetrics()}
-              </TabsContent>
-
-              {/* Subjects Tab */}
-              <TabsContent value="subjects" className="space-y-4">
-                {renderDashboardMetrics()}
-              </TabsContent>
-            </Tabs>
+              </div>
 
             {/* Exam History Table */}
             <ExamHistoryTable 
@@ -2145,7 +2179,7 @@ const handleErroresClick = () => {
         {showContrarrelojPopup && <Contrarreloj onClose={closePopup} />}
         {renderErrorPopup()}
         {renderAvatarPopup()}
-        {RECURRENCE_ENABLED && renderRecurrencePopup()}
+        {renderRecurrencePopup()}
         {renderTutorialModal()}
       </div>
     </GoogleOAuthProvider>
