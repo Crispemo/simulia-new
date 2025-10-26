@@ -1,0 +1,141 @@
+.scales-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f4f4f9 0%, #7ea0a7 100%);
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.scales-container h2 {
+  text-align: center;
+  color: #3f5056;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.scales-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #3f5056;
+}
+
+.scale-select,
+.num-questions-input {
+  padding: 0.8rem;
+  border: 2px solid #7ea0a7;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.scale-select:focus,
+.num-questions-input:focus {
+  outline: none;
+  border-color: #3f5056;
+  box-shadow: 0 0 0 2px rgba(126, 160, 167, 0.2);
+}
+
+.start-exam-btn {
+  padding: 1rem 2rem;
+  background-color: #7ea0a7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.start-exam-btn:hover {
+  background-color: #3f5056;
+  transform: translateY(-2px);
+}
+
+.start-exam-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #3f5056;
+}
+
+.error {
+  color: #ff4d4d;
+}
+
+/* Modo oscuro */
+body.dark .scales-container {
+  background: linear-gradient(135deg, #2A2A2A 0%, #3E5055 100%);
+}
+
+body.dark .scales-container h2 {
+  color: #a8c5cc;
+}
+
+body.dark .form-group label {
+  color: #a8c5cc;
+}
+
+body.dark .scale-select,
+body.dark .num-questions-input {
+  background-color: #3E5055;
+  border-color: #5A6B72;
+  color: white;
+}
+
+body.dark .scale-select:focus,
+body.dark .num-questions-input:focus {
+  border-color: #7ea0a7;
+  box-shadow: 0 0 0 2px rgba(126, 160, 167, 0.2);
+}
+
+body.dark .start-exam-btn {
+  background-color: #5A6B72;
+}
+
+body.dark .start-exam-btn:hover {
+  background-color: #7ea0a7;
+}
+
+body.dark .loading,
+body.dark .error {
+  color: #a8c5cc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .scales-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .scales-container h2 {
+    font-size: 1.5rem;
+  }
+
+  .start-exam-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+} 

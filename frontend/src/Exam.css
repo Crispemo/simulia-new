@@ -1,0 +1,1591 @@
+/* Barra superior */
+.exam-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: #3f5056 !important; /* Fondo correcto para navbar */
+  padding: 0 1rem !important;
+  height: 60px !important;
+  width: 100% !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: background-color 0.3s ease;
+} 
+
+body.dark .exam-header {
+  background: #1E2428 !important;
+  color: #FFFFFF;
+}
+
+body.dark .exam-header .logo h1, 
+body.dark .exam-header .logo h2 {
+  color: #a8c5cc !important;
+}
+
+.exam-header .logo {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.exam-header .logo h1, .exam-header .logo h2 {
+  font-size: 30px;
+  margin-left: 10px;
+  font-weight: bold;
+  color: #7ea0a7;
+  transition: color 0.3s ease;
+}
+
+body.dark .exam-header .logo h1, body.dark .exam-header .logo h2 {
+  color: #a8c5cc;
+}
+
+.right-buttons {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-right: 16px !important;
+}
+
+/* Arreglar los botones en popups */
+.popup-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.popup-buttons button {
+  background: #3f5056 !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  min-width: 120px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+body.dark .popup-buttons button {
+  background: #516166 !important;
+}
+
+.popup-buttons button:hover {
+  background-color: #516166 !important;
+}
+
+body.dark .popup-buttons button:hover {
+  background-color: #617177 !important;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.control-btn {
+  background-color: #3f5056;
+  border: 1.5px solid #7ea0a7; /* Reducido el grosor del borde */
+  padding: 0.4rem 0.8rem; /* Reducido desde 0.5rem 1rem */
+  font-size: 14px; /* Reducido el tamaño de fuente */
+  color: white;
+  cursor: pointer;
+  border-radius: 15px; /* Menos redondeo */
+  transition: all 0.3s ease;
+}
+body.dark .control-btn {
+  background-color: #3f5056;
+  border-color: #a8c5cc;
+  color: white;
+}
+.control-btn:hover {
+  background-color: #526670;
+  color: white;
+}
+
+body.dark .control-btn:hover {
+  background-color: #526670; /* Fondo más claro al hacer hover en modo oscuro */
+  color: white;
+}
+.time-display {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  transition: color 0.3s ease;
+  background: transparent !important;
+  color: white !important;
+}
+body.dark .time-display {
+  color: #FFFFFF !important; /* Texto claro */
+}
+
+/* Rectángulo para las preguntas - con overflow auto para scroll */
+.question-box {
+  position: relative !important;
+  margin-top: 70px !important;
+  margin-bottom: 10px;
+  padding: 15px 20px 75px 20px !important; /* Mantener padding inferior */
+  background: white !important;
+  border: 2px solid #7ea0a7;
+  border-radius: 8px;
+  width: 75%; /* Ancho fijo */
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(126, 160, 167, 0.2) !important;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 390px; /* Altura mínima */
+  max-height: 550px; /* Altura máxima */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto !important; /* Permitir scroll vertical cuando sea necesario */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark .question-box {
+  background: transparent !important;
+  color: #FFFFFF;
+  border-color: #5A6B72;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Estilo para el enunciado de las preguntas - tamaño fijo */
+.question-box h3 {
+  color: #3f5056;
+  font-weight: 600;
+  margin-bottom: 1px;
+  font-size: 17px !important; /* Tamaño fijo según solicitado */
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  transition: color 0.3s ease;
+}
+
+body.dark .question-box h3 {
+  color: #FFFFFF;
+}
+
+.selected {
+  background-color: #7ea0a7;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+body.dark .selected {
+  background-color: #5A6B72;
+}
+
+/* Contenedor de preguntas - Mejor espaciado */
+.question-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* Reducido el gap */
+  padding: 6px 0; /* Reducido el padding vertical */
+  flex: 1;
+  margin-bottom: 80px !important; /* Asegura espacio para los botones */
+}
+
+/* Título de la pregunta */
+.question-title {
+  font-size: 17px;
+  color: #7ea0a7;
+  margin-bottom: 15px;
+  max-width: 90%;
+  text-align: center;
+}
+
+/* Opciones de respuesta - Mejorada la legibilidad */
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 7px !important;
+  width: 100%;
+  max-width: 100% !important; /* Aumentado para textos largos */
+  margin: 0 auto;
+  margin-bottom: 80px !important;
+}
+
+.options-container button {
+  text-align: left !important;
+  padding: 12px 20px !important;
+  min-height: 40px;
+  line-height: 1 !important; /* Mejor espaciado entre líneas */
+  font-size: 16px !important;
+  white-space: normal !important;
+  border: 1.5px solid #7ea0a7 !important;
+  transition: all 0.2s ease !important;
+  background-color: transparent !important;
+  color: #3f5056 !important;
+}
+
+body.dark .options-container button {
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+.options-container button:hover {
+  background-color: #7ea0a7 !important;
+  color: white !important;
+  border-color: #7ea0a7 !important;
+}
+
+body.dark .options-container button:hover {
+  background-color: #5A6B72 !important;
+  color: white !important;
+  border-color: #5A6B72 !important;
+}
+
+/* Estilo para preguntas con imagen - formato de columnas */
+.question-content.with-image {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 15px !important; /* Reducir el margen inferior */
+  padding-bottom: 0 !important; /* Eliminar padding inferior */
+}
+
+/* Estilos para la imagen */
+.question-image {
+  width: 100%;
+  max-width: 350px;
+  height: auto; /* Cambio a altura automática */
+  max-height: 220px; /* Limitar altura máxima */
+  margin: 0 auto 10px auto; /* Añadido margen inferior */
+  text-align: center;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+body.dark .question-image {
+  background-color: #2A3439;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.question-image img {
+  max-width: 100%;
+  max-height: 280px; /* Ligeramente menor que el contenedor para considerar el padding */
+  object-fit: contain; /* Mantiene la relación de aspecto dentro del contenedor */
+  border: 1px solid #7ea0a7;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.dark .question-image img {
+  border-color: #5A6B72;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para las opciones en formato de columna */
+.question-content.with-image .options-container {
+  flex: 1;
+  min-width: 250px; /* Ancho mínimo más pequeño */
+  margin-left: 20px;
+  margin-bottom: 10px; /* Asegurar espacio para botones inferiores */
+}
+
+/* Contenedor para los botones de control - Reposicionado */
+.control-buttons-container {
+  position: absolute !important;
+  bottom: 10px !important; /* Ajustado para que quede dentro del padding */
+  left: 0 !important;
+  right: 0 !important;
+  height: 45px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 20px !important;
+  z-index: 2 !important; /* Asegura que esté por encima del contenido */
+  transition: background 0.3s ease;
+}
+
+body.dark .control-buttons-container {
+  background: linear-gradient(to bottom, transparent, #1E2428) !important;
+}
+
+/* Contenedor para los botones, sobrescribiendo cualquier otro estilo */
+.action-buttons-container {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  position: absolute !important;
+  bottom: 70px !important; /* Ajusta según sea necesario para que coincida con la imagen */
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 100 !important;
+  gap: 20px !important;
+  
+}
+
+/* Estilos base para ambos botones */
+.control-btn.doubt-btn,
+.control-btn.impugnar {
+  display: inline-block !important;
+  border: none !important;
+  padding: 12px 30px !important;
+  border-radius: 30px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  min-width: 160px !important;
+  font-size: 16px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* Botón de marcar como duda - naranja/amarillo */
+.control-btn.doubt-btn {
+  background-color: #ffc069 !important;
+  color: black !important;
+}
+
+/* Botón de impugnar - rojo */
+.control-btn.impugnar {
+  background-color: #f56060 !important;
+  color: white !important;
+}
+
+/* Estado marcado */
+.control-btn.doubt-btn.doubt-marked {
+  background-color: #ffb347 !important;
+  border: 2px dashed #ff8c00 !important;
+  font-weight: bold !important;
+}
+
+/* Efectos hover */
+.control-btn.doubt-btn:hover {
+  background-color: #ffb246 !important;
+}
+
+.control-btn.impugnar:hover {
+  background-color: #e04a4a !important;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+  .action-buttons-container {
+    flex-direction: row !important;
+    gap: 10px !important;
+  }
+  
+  .control-btn.doubt-btn,
+  .control-btn.impugnar {
+    min-width: 130px !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+  }
+  
+  .exam-question-index {
+    width: 85%;
+    grid-template-columns: repeat(15, minmax(21px, 1fr));
+    gap: 2px !important;
+  }
+  
+  .side-pagination-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+  }
+  
+  .exam-filters {
+    flex-direction: column !important;
+    max-width: 90% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons-container {
+    flex-direction: row !important;
+    gap: 8px !important;
+    bottom: 60px !important;
+  }
+  
+  .control-btn.doubt-btn,
+  .control-btn.impugnar {
+    min-width: 120px !important;
+    padding: 8px 15px !important;
+    font-size: 13px !important;
+  }
+  
+  .exam-question-index {
+    width: 90%;
+    grid-template-columns: repeat(10, minmax(20px, 1fr));
+    gap: 2px !important;
+  }
+  
+  .exam-question-number {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 10px !important;
+  }
+  
+  .side-pagination-btn {
+    width: 25px !important;
+    height: 25px !important;
+    font-size: 12px !important;
+  }
+}
+
+/* Botones de filtro con estilo específico */
+.control-btn.filter-btn {
+  background-color: #3f5056 !important;
+  color: white !important;
+  border: 2px solid #3f5056 !important;
+  border-radius: 20px !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500 !important;
+}
+
+.control-btn.filter-btn:hover {
+  background-color: #2b383c !important;
+  border-color: #2b383c !important;
+}
+
+body.dark .control-btn.filter-btn {
+  background-color: #2A3439 !important;
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+body.dark .control-btn.filter-btn:hover {
+  background-color: #3E5055 !important;
+  border-color: #7ea0a7 !important;
+}
+
+/* Controles de paginación */
+.pagination-controls {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 10px auto 15px auto !important;
+  gap: 15px !important;
+}
+
+.page-control-btn {
+  background: transparent !important;
+  border: 2px solid #3f5056 !important;
+  color: #3f5056 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.page-control-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.page-control-btn:not(:disabled):hover {
+  background-color: #3f5056 !important;
+  color: white !important;
+}
+
+.page-info {
+  font-size: 14px !important;
+  color: #3f5056 !important;
+  font-weight: 500 !important;
+}
+
+body.dark .page-info {
+  color: #FFFFFF !important;
+}
+
+body.dark .page-control-btn {
+  border-color: #7ea0a7 !important;
+  color: #7ea0a7 !important;
+}
+
+body.dark .page-control-btn:not(:disabled):hover {
+  background-color: #7ea0a7 !important;
+  color: #2A2A2A !important;
+}
+
+/* Asegurar que la navegación esté siempre abajo y visible */
+.navigation-buttons {
+  position: absolute !important;
+  bottom: 15px !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 20px !important;
+  width: calc(100% - 40px) !important;
+  margin: 0 auto !important;
+  background-color: transparent !important;
+  z-index: 100 !important; /* Mayor z-index para estar por encima de todo */
+  transition: border-top-color 0.3s ease;
+}
+
+.nav-left, .nav-center, .nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-left {
+  min-width: 100px !important;
+  justify-content: flex-start;
+}
+
+.nav-center {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.nav-right {
+  min-width: 100px !important;
+  justify-content: flex-end;
+}
+
+body.dark .navigation-buttons {
+  border-top-color: #5A6B72;
+}
+
+.navigation-buttons .control-btn {
+  background-color: transparent;
+  border: 1.5px solid #7ea0a7;
+  padding: 0.4rem 0.8rem;
+  font-size: 14px;
+  color: #7ea0a7;
+  cursor: pointer;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  min-width: 90px;
+}
+
+/* Contenedor para el grid y los controles de paginación laterales */
+.grid-pagination-container {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 15px auto !important;
+  background: transparent !important;
+}
+
+/* Índice de preguntas - Manteniendo el diseño circular y ajustando espaciado */
+.exam-question-index {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 5px !important;
+  margin-top: 0 !important;
+  width: 85% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-bottom: 0 !important;
+  padding: 10px !important;
+  background: transparent !important;
+}
+
+/* Ajustes responsive para el grid y paginación */
+@media (min-width: 576px) {
+  .exam-question-index {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .exam-question-index {
+    grid-template-columns: repeat(5, 1fr) !important;
+    width: 80% !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .exam-question-index {
+    grid-template-columns: repeat(5, 1fr) !important;
+    width: 75% !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .exam-question-index {
+    grid-template-columns: repeat(5, 1fr) !important;
+    width: 70% !important;
+  }
+}
+
+/* Botones de paginación laterales */
+.side-pagination-btn {
+  position: absolute !important;
+  z-index: 10 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid #3f5056 !important;
+  color: #3f5056 !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease-in-out !important;
+  font-size: 18px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.side-pagination-btn.left {
+  left: 2% !important;
+}
+
+.side-pagination-btn.right {
+  right: 2% !important;
+}
+
+.side-pagination-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.side-pagination-btn:not(:disabled):hover {
+  background-color: #3f5056 !important;
+  color: white !important;
+  transform: scale(1.1) !important;
+}
+
+body.dark .side-pagination-btn {
+  background: rgba(30, 36, 40, 0.9) !important;
+  border-color: #5A6B72 !important;
+  color: #a8c5cc !important;
+}
+
+body.dark .side-pagination-btn:not(:disabled):hover {
+  background-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+/* Indicador de página */
+.page-indicator {
+  text-align: center !important;
+  font-size: 14px !important;
+  color: #3f5056 !important;
+  font-weight: 500 !important;
+  margin-bottom: 15px !important;
+  transition: color 0.3s ease !important;
+}
+
+body.dark .page-indicator {
+  color: #a8c5cc !important;
+}
+
+/* Mensaje de error para imágenes que no cargan */
+.image-error-message {
+  color: #ff4d4d;
+  font-size: 14px;
+  padding: 10px;
+  background-color: rgba(255, 77, 77, 0.1);
+  border-radius: 5px;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos para el modal de imagen */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.image-modal {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+.image-modal img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.close-modal {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.exam-image {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.exam-image:hover {
+  transform: scale(1.05);
+}
+
+/* Filtros de examen */
+.exam-filters {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 15px !important;
+  margin: 15px auto !important;
+  max-width: 70% !important;
+}
+
+.question-search {
+  padding: 8px 12px !important;
+  border: 1px solid #7ea0a7 !important;
+  border-radius: 20px !important;
+  width: 120px !important;
+  text-align: center !important;
+  font-size: 14px !important;
+}
+
+/* Ajustes responsive para los filtros */
+@media (max-width: 768px) {
+  .exam-filters {
+    flex-direction: column !important;
+    max-width: 90% !important;
+  }
+}
+
+.modal-actions {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+}
+
+.submit-dispute-btn {
+  background-color: #ff4d4d !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 25px !important;
+  border-radius: 25px !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.submit-dispute-btn:hover {
+  background-color: #e60000 !important;
+}
+
+/* Estilos para el overlay y popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Para asegurarse de que el pop-up esté sobre todo lo demás */
+}
+
+.popup {
+  background: white !important;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 50%; /* Ajusta el tamaño del pop-up */
+  max-width: 500px; /* Limitar el ancho máximo del pop-up */
+  text-align: center;
+  color: #3f5056;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark .popup {
+  background-color: #2a3439 !important;
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  width: 100%;
+}
+
+/* Estilos para el modal de cierre */
+.modal-close-button {
+  position: absolute  ;
+  top: 5px !important;
+  right: 5px !important;
+  width: 25px !important;
+  height: 25px ;
+  border-radius: 50% !important;
+  background-color: #ff4d4d !important;
+  color: white !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  z-index: 1001 !important;
+}
+
+.modal-close-button:hover {
+  background-color: #e60000 !important;
+}
+
+.exam-question-number {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 11px !important;
+  background-color: #ffffff !important;
+  border: 1.5px solid #3E5055 !important;
+  color: #333333 !important;
+  border-radius: 50% !important; /* Asegurar que sean completamente circulares */
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.exam-question-number.active {
+  background-color: #7ea0a7 !important;
+  color: white !important;
+  border: 1px solid #7ea0a7 !important;
+  transform: scale(1.1);
+}
+
+body.dark .exam-question-number.active {
+  background-color: #5A6B72 !important;
+  color: white !important;
+  border: 1px solid #5A6B72 !important;
+}
+
+.exam-question-number.answered {
+  background-color: #7ea0a7 !important;
+  color: #ffffff !important;
+  border-color: #7ea0a7 !important;
+}
+
+/* Estilo para preguntas con duda */
+.exam-question-number.doubt {
+  border: 2px dashed #FF9800 !important;
+  background-color: #edd9b5 !important;
+}
+
+body.dark .exam-question-number.doubt {
+  border: 2px dashed #FF9800 !important;
+  background-color: #614107 !important;
+}
+
+/* Modal de impugnación - Como popup independiente */
+.dispute-modal {
+  position: relative !important;
+  width: 90% !important;
+  max-width: 500px !important;
+  background: white !important;
+  padding: 30px 20px 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+body.dark .dispute-modal {
+  background-color: #1E2428 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dispute-modal h3 {
+  margin-top: 0 !important;
+  margin-bottom: 15px !important;
+  color: #3f5056 !important;
+  font-weight: 600 !important;
+  font-size: 18px !important;
+}
+
+.dispute-modal textarea {
+  width: 100% !important;
+  height: 150px !important;
+  padding: 15px !important;
+  border: 1px solid #7ea0a7 !important;
+  border-radius: 8px !important;
+  resize: none !important;
+  margin-bottom: 15px !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+}
+
+.dispute-modal .modal-actions {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.dispute-modal .submit-dispute-btn {
+  background-color: #ff4d4d !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 30px !important;
+  border-radius: 25px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.dispute-modal .submit-dispute-btn:hover {
+  background-color: #e60000 !important;
+}
+
+body.dark .dispute-modal h3 {
+  color: #FFFFFF !important;
+}
+
+body.dark .dispute-modal textarea {
+  background-color: #2A3439 !important;
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+/* Estilos para los botones de impugnar y marcar duda en la barra inferior */
+.custom-impugnar-btn {
+  background-color: #f56060 !important;
+  color: white !important;
+  border: none !important;
+  padding: 5px 10px !important;
+  border-radius: 15px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  height: 28px !important;
+  min-width: 80px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+body.dark .custom-impugnar-btn {
+  background-color: #d85050 !important;
+}
+
+.custom-doubt-btn {
+  background-color: #ffc069 !important;
+  color: black !important;
+  border: none !important;
+  padding: 5px 10px !important;
+  border-radius: 15px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  height: 28px !important;
+  min-width: 80px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+body.dark .custom-doubt-btn {
+  background-color: #e6a545 !important;
+  color: #121518 !important;
+}
+
+.custom-doubt-btn.doubt-marked {
+  background-color: #ffb347 !important;
+  border: 1px dashed #ff8c00 !important;
+  font-weight: bold !important;
+}
+
+/* Hover effects */
+.custom-impugnar-btn:hover {
+  background-color: #e04a4a !important;
+}
+
+.custom-doubt-btn:hover {
+  background-color: #ffb246 !important;
+}
+
+/* Media queries para ajuste responsivo */
+@media (max-width: 768px) {
+  .nav-center {
+    gap: 6px !important;
+  }
+  
+  .custom-impugnar-btn, 
+  .custom-doubt-btn {
+    min-width: 70px !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+  
+  .navigation-buttons {
+    padding: 0 10px !important;
+    width: calc(100% - 20px) !important;
+  }
+}
+
+/* Estilos para los botones de impugnar y marcar duda en el centro (versión antigua) */
+button[type="button"].control-btn.impugnar,
+button[type="button"].control-btn.doubt-btn,
+button.impugnar,
+button.marcar-duda {
+  display: none !important; /* Ocultar la versión antigua */
+}
+
+/* Estilos para los botones que aparecen en el centro para preguntas antiguas */
+.custom-impugnar-btn.center-btn, 
+.custom-doubt-btn.center-btn {
+  position: absolute !important;
+  bottom: 15px !important;
+  margin: 0 auto !important;
+  height: 28px !important;
+  font-size: 13px !important;
+  padding: 5px 10px !important;
+  z-index: 999 !important;
+}
+
+/* Ajustar el selector global para capturar todos los botones de impugnar estilo antiguo */
+button[id="impugnar-button"],
+button[id="impugnar"],
+button[id="marcar-duda"],
+button[id="doubt-button"] {
+  font-size: 13px !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  min-width: 80px !important;
+}
+
+/* Para preguntas con la versión antigua de botones de impugnar/duda */
+.impugnar-center,
+.marcar-duda-center {
+  font-size: 13px !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  min-width: 80px !important;
+  background-color: #f56060 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 15px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.marcar-duda-center {
+  background-color: #ffc069 !important;
+  color: black !important;
+}
+
+/* Clase para capturar todos los botones independientemente de su estructura */
+[onclick*="Impugnar"], 
+[onclick*="impugnar"],
+[id*="impugnar-button"],
+[class*="impugnar"] {
+  font-size: 13px !important;
+  padding: 5px 12px !important;
+  height: 28px !important;
+  min-width: 80px !important;
+  border-radius: 15px !important;
+}
+
+/* Ajustes adicionales para resolver el problema con preguntas largas y los botones */
+.question-box {
+  padding-bottom: 75px !important; /* Aumentado para dar más espacio a los botones */
+}
+
+/* Mover todos los botones de impugnar y marcar duda a la barra de navegación */
+.navigation-buttons {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: calc(100% - 40px) !important;
+  padding: 0 20px !important;
+  z-index: 999 !important;
+}
+
+/* Espacio adicional para las opciones */
+.options-container {
+  margin-bottom: 70px !important;
+}
+
+/* Específico para botones en el centro de la pantalla (como los de la imagen) */
+button.impugnar, button.marcar-duda, button[id="impugnar-button"], button[id="doubt-button"] {
+  position: relative !important;
+  bottom: 0 !important;
+  margin: 0 5px !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  display: inline-block !important;
+  border-radius: 15px !important;
+}
+
+/* Estilos para el indicador de guardado en navbar */
+.save-indicator-navbar {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.saving-text.icon-only,
+.saved-text.icon-only,
+.save-btn.icon-only,
+.control-btn.icon-only {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  color: #7ea0a7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-btn.icon-only:hover,
+.control-btn.icon-only:hover {
+  transform: scale(1.1);
+  color: #ffffff;
+  background-color: transparent;
+}
+
+body.dark .save-indicator-navbar .icon-only,
+body.dark .save-btn.icon-only,
+body.dark .control-btn.icon-only {
+  color: #FFFFFF;
+}
+
+body.dark .save-btn.icon-only:hover,
+body.dark .control-btn.icon-only:hover {
+  color: #7ea0a7;
+  background-color: transparent;
+}
+
+/* Mantener animación de pulso */
+.saving-text.icon-only {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Ajustes para pantallas medianas */
+@media (max-width: 992px) {
+  .question-content.with-image {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .question-content.with-image .options-container {
+    margin-left: 0;
+    margin-top: 15px;
+    width: 100%;
+  }
+  
+  .question-image {
+    max-width: 300px;
+    max-height: 180px;
+  }
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 768px) {
+  .question-image {
+    max-width: 250px;
+    max-height: 150px;
+  }
+  
+  .nav-center {
+    gap: 5px !important;
+  }
+  
+  .custom-impugnar-btn, 
+  .custom-doubt-btn {
+    min-width: 65px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+    height: 24px !important;
+  }
+}
+
+/* Estilos para los botones centrales de la imagen compartida */
+button.impugnar, 
+button.control-btn.impugnar,
+button[type="button"][onclick*="Impugnar"],
+button[type="button"][onclick*="impugnar"] {
+  font-size: 12px !important;
+  background-color: #f56060 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 15px !important;
+  cursor: pointer !important;
+  height: auto !important;
+  padding: 5px 12px !important;
+  margin: 0 5px !important;
+  transition: all 0.2s;
+  min-width: 80px;
+  max-width: 120px;
+  display: inline-block !important;
+}
+
+button.marcar-duda,
+button[type="button"][onclick*="duda"],
+button[type="button"][onclick*="Duda"] {
+  font-size: 12px !important;
+  background-color: #ffc069 !important;
+  color: black !important;
+  border: none !important;
+  border-radius: 15px !important;
+  cursor: pointer !important;
+  height: auto !important;
+  padding: 5px 12px !important;
+  margin: 0 5px !important;
+  transition: all 0.2s;
+  min-width: 80px;
+  max-width: 120px;
+  display: inline-block !important;
+}
+
+/* Estilo más amplio para capturar botones Impugnar y Marcar duda */
+[id$="-button"],
+[id$="impugnar"],
+[id$="marcar-duda"],
+[class*="impugnar"],
+[class*="duda"],
+[onclick*="impugnar"], 
+[onclick*="Impugnar"],
+[onclick*="duda"],
+[onclick*="Duda"] {
+  font-size: 12px !important;
+  height: auto !important;
+  padding: 5px 12px !important;
+  min-width: 80px !important;
+  max-width: 120px !important;
+  border-radius: 15px !important;
+}
+
+/* Ajustar posición de botones de impugnar en el centro */
+[id="impugnar-button"],
+[id="doubt-button"] {
+  margin: 0 5px !important;
+}
+
+/* Aumentar tamaño de cuadro y padding */
+.question-box {
+  min-height: 390px !important; /* Más espacio para preguntas largas */
+  padding-bottom: 90px !important; /* Más espacio inferior */
+}
+
+/* Ajustar espacio de opciones para dar más espacio a botones */
+.options-container {
+  margin-bottom: 80px !important;
+}
+
+/* Estilos para el botón del interruptor de tema */
+.control-btn.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.control-btn.theme-toggle:hover {
+  transform: scale(1.1);
+  background-color: rgba(126, 160, 167, 0.3);
+}
+
+body.dark .control-btn.theme-toggle:hover {
+  background-color: rgba(168, 197, 204, 0.3);
+}
+
+/* Estilos generales para la app */
+body.dark {
+  background-color: #121518;
+  color: #FFFFFF;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.exam-container {
+  transition: background-color 0.3s ease;
+  background: linear-gradient(135deg, #f4f4f9 0%, #7ea0a7 100%) !important;
+}
+
+body.dark .exam-container {
+  background-color: #121518 !important;
+  background: none !important;
+}
+
+/* Ajuste para los números de pregunta en modo oscuro */
+body.dark .exam-question-number {
+  background-color: #2A3439 !important;
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+body.dark .exam-question-number.active {
+  background-color: #7ea0a7 !important;
+  color: #121518 !important;
+  border-color: #7ea0a7 !important;
+}
+
+body.dark .exam-question-number.answered {
+  background-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+  border-color: #5A6B72 !important;
+}
+
+/* Estilos para modal de disputa en modo oscuro */
+body.dark .dispute-modal {
+  background-color: #1E2428 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark .dispute-modal textarea {
+  background-color: #2A3439 !important;
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+/* Indicador de página */
+.page-indicator {
+  text-align: center !important;
+  font-size: 14px !important;
+  color: #3f5056 !important;
+  font-weight: 500 !important;
+  margin-bottom: 15px !important;
+  transition: color 0.3s ease !important;
+}
+
+body.dark .page-indicator {
+  color: #a8c5cc !important;
+}
+
+/* Ajuste para los botones de páginación en modo oscuro */
+body.dark .side-pagination-btn {
+  background: rgba(30, 36, 40, 0.9) !important;
+  border-color: #5A6B72 !important;
+  color: #a8c5cc !important;
+}
+
+body.dark .side-pagination-btn:not(:disabled):hover {
+  background-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+/* Ajustes para el botón de filtro en modo oscuro */
+body.dark .control-btn.filter-btn {
+  background-color: #2A3439 !important;
+  border-color: #5A6B72 !important;
+  color: #FFFFFF !important;
+}
+
+body.dark .control-btn.filter-btn:hover {
+  background-color: #3E5055 !important;
+  border-color: #7ea0a7 !important;
+}
+
+/* Transición global para elementos */
+* {
+  transition-property: background-color, color, border-color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* Estilos para la sección de justificación en ReviewExam */
+.justification-section {
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark .justification-section {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.justification-section h3 {
+  margin-top: 0;
+  color: #3f5056;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.dark .justification-section h3 {
+  color: #e0e0e0;
+}
+
+.justification-section p {
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.correct-answer-display {
+  background-color: #d4edda;
+  border-left: 4px solid #28a745;
+  color: #155724;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 0 4px 4px 0;
+}
+
+.dark .correct-answer-display {
+  background-color: #1e4620;
+  border-left: 4px solid #28a745;
+  color: #d4edda;
+}
+
+.answer-result {
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.answer-result.correct {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.answer-result.incorrect {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.dark .answer-result.correct {
+  background-color: #1e4620;
+  color: #d4edda;
+}
+
+.dark .answer-result.incorrect {
+  background-color: #461e1e;
+  color: #f8d7da;
+}
+
+/* Loading overlay for exam submission */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-container {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.dark .loading-container {
+  background-color: #2d2d2d;
+  color: #f5f5f5;
+}
+
+.spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(0, 123, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+.loading-text {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.loading-subtext {
+  font-size: 14px;
+  color: #777;
+}
+
+.dark .loading-subtext {
+  color: #aaa;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

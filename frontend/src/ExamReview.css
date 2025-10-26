@@ -1,0 +1,58 @@
+/* Este archivo se puede crear si necesitas estilos específicos para ExamReview */
+.exam-review-info {
+  display: flex;
+  justify-content: space-around;
+  background-color: #f4f4f9;
+  padding: 10px;
+  margin: 10px auto;
+  border-radius: 8px;
+  width: 70%;
+  box-shadow: 0 2px 4px rgba(126, 160, 167, 0.2);
+}
+
+body.dark .exam-review-info {
+  background-color: #2A2A2A;
+  color: #FFFFFF;
+}
+
+.exam-review-info p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3E5055;
+}
+
+body.dark .exam-review-info p {
+  color: #FFFFFF;
+}
+
+.justification-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+  width: 100%;
+  text-align: left;
+  border-left: 3px solid #7ea0a7;
+}
+
+body.dark .justification-section {
+  background-color: #3E5055;
+  border-left-color: #7ea0a7;
+}
+
+.justification-section h3 {
+  color: #7ea0a7;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.justification-section p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.incorrect-selected {
+  background-color: rgba(255, 77, 77, 0.2) !important;
+  border-color: #ff4d4d !important;
+} 

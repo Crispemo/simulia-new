@@ -1,0 +1,296 @@
+/* Base styles converted to CSS Modules */
+.paginationComponent {
+  width: 100%;
+  margin: 15px 0;
+}
+
+.gridPaginationContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 10px auto;
+  background: transparent;
+}
+
+.examQuestionIndex {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(26px, max-content));
+  gap: 5px;
+  margin: 0 50px;
+  width: 100%;
+  max-width: 900px;
+  overflow-x: auto;
+  justify-content: center;
+  padding: 5px;
+}
+
+.examQuestionNumber {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+  background-color: #ffffff;
+  border: 1.5px solid #3E5055;
+  color: #333333;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.examQuestionNumber.active {
+  background-color: #3E5055;
+  color: #ffffff;
+  border-color: #3E5055;
+  font-weight: bold;
+  transform: scale(1.1);
+}
+
+.examQuestionNumber.answered {
+  background-color: #7ea0a7;
+  color: #ffffff;
+  border-color: #7ea0a7;
+}
+
+.examQuestionNumber.correct {
+  background-color: #4CAF50; /* Green color for correct answers */
+  color: #ffffff;
+  border-color: #4CAF50;
+}
+
+.examQuestionNumber.doubt {
+  border: 2px dashed #FF9800;
+  background-color: #edd9b5;
+}
+
+.examQuestionNumber.incorrect {
+  background-color: #e74c3c;
+  color: #ffffff;
+  border-color: #e74c3c;
+}
+
+.examQuestionNumber.unanswered {
+  background-color: #f0f0f0;
+  color: #7a7a7a;
+  border-color: #b0b0b0;
+}
+
+.paginationPlaceholder {
+  width: 26px;
+  height: 26px;
+}
+
+/* Side pagination buttons */
+.sidePaginationBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #3f5056;
+  color: #3f5056;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-size: 16px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sidePaginationBtn.left {
+  left: 15px;
+}
+
+.sidePaginationBtn.right {
+  right: 15px;
+}
+
+.sidePaginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background-color: #e0e0e0;
+}
+
+.sidePaginationBtn:not(:disabled):hover {
+  background-color: #3f5056;
+  color: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+/* Page Indicator */
+.pageIndicator {
+  text-align: center;
+  font-size: 14px;
+  color: #3f5056;
+  font-weight: 500;
+  margin-top: 10px;
+  transition: color 0.3s ease;
+}
+
+/* Dark Mode Styles */
+.paginationComponent.dark .examQuestionNumber {
+  background-color: #2A3439;
+  border-color: #5A6B72;
+  color: #FFFFFF;
+}
+
+.paginationComponent.dark .examQuestionNumber.active {
+  background-color: #7ea0a7;
+  color: #121518;
+  border-color: #7ea0a7;
+}
+
+.paginationComponent.dark .examQuestionNumber.answered {
+  background-color: #5A6B72;
+  color: #FFFFFF;
+  border-color: #5A6B72;
+}
+
+.paginationComponent.dark .examQuestionNumber.correct {
+  background-color: #388E3C; /* Darker green for dark mode */
+  color: #FFFFFF;
+  border-color: #388E3C;
+}
+
+.paginationComponent.dark .examQuestionNumber.doubt {
+  border: 2px dashed #FF9800;
+  background-color: #614107;
+}
+
+.paginationComponent.dark .examQuestionNumber.incorrect {
+  background-color: #e74c3c;
+  color: #ffffff;
+  border-color: #e74c3c;
+}
+
+.paginationComponent.dark .examQuestionNumber.unanswered {
+  background-color: #f0f0f0;
+  color: #7a7a7a;
+  border-color: #b0b0b0;
+}
+
+.paginationComponent.dark .sidePaginationBtn {
+  background: rgba(30, 36, 40, 0.9);
+  border-color: #5A6B72;
+  color: #a8c5cc;
+}
+
+.paginationComponent.dark .sidePaginationBtn:disabled {
+  background-color: #333;
+}
+
+.paginationComponent.dark .sidePaginationBtn:not(:disabled):hover {
+  background-color: #5A6B72;
+  color: #FFFFFF;
+}
+
+.paginationComponent.dark .pageIndicator {
+  color: #a8c5cc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .examQuestionIndex {
+    grid-template-columns: repeat(auto-fill, minmax(26px, max-content));
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 992px) {
+  .examQuestionIndex {
+    grid-template-columns: repeat(auto-fill, minmax(24px, max-content));
+    margin: 0 45px;
+    max-width: 600px;
+  }
+  .sidePaginationBtn {
+      width: 30px;
+      height: 30px;
+      font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .examQuestionIndex {
+    grid-template-columns: repeat(auto-fill, minmax(24px, max-content));
+    gap: 4px;
+    margin: 0 40px;
+    max-width: 450px;
+  }
+  .examQuestionNumber {
+      width: 24px;
+      height: 24px;
+      font-size: 10px;
+  }
+  .sidePaginationBtn {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .gridPaginationContainer {
+    margin: 5px auto;
+  }
+  .examQuestionIndex {
+    grid-template-columns: repeat(auto-fill, minmax(22px, max-content));
+    gap: 3px;
+    margin: 0 35px;
+    max-width: 350px;
+  }
+  .examQuestionNumber {
+      width: 22px;
+      height: 22px;
+      font-size: 9px;
+  }
+  .sidePaginationBtn {
+      width: 25px;
+      height: 25px;
+      font-size: 10px;
+  }
+  .sidePaginationBtn.left {
+    left: 5px;
+  }
+  .sidePaginationBtn.right {
+    right: 5px;
+  }
+}
+
+@media (max-width: 400px) {
+  .examQuestionIndex {
+    grid-template-columns: repeat(auto-fill, minmax(20px, max-content));
+    gap: 2px;
+    margin: 0 30px;
+    max-width: 280px;
+    padding: 3px;
+  }
+  .examQuestionNumber {
+      width: 20px;
+      height: 20px;
+      font-size: 8px;
+  }
+  .sidePaginationBtn {
+      width: 22px;
+      height: 22px;
+      font-size: 9px;
+  }
+  .sidePaginationBtn.left {
+    left: 3px;
+  }
+  .sidePaginationBtn.right {
+    right: 3px;
+  }
+  .pageIndicator {
+    font-size: 12px;
+  }
+} 

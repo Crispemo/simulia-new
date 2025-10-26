@@ -1,0 +1,593 @@
+/* Estilos generales para el examen de protocolos */
+.exam-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f5f5f5;
+  padding: 0;
+  margin-top: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Estilo para los contenedores de preguntas */
+.question-box {
+  position: relative;
+  margin: 20px auto;
+  padding: 20px;
+  background: white !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-top: 20px !important;
+}
+
+/* Estilos para el encabezado del examen */
+.exam-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  background: #3f5056 !important; /* Fondo correcto para navbar */
+  padding: 0 1rem !important;
+  height: 60px !important;
+  width: 100% !important;
+  position: relative !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Estilos para el cronómetro */
+.time-display {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: transparent !important;
+  padding: 8px 15px;
+  border-radius: 24px;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Estilos para botones de control */
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #3f5056;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  min-width: 100px;
+}
+
+.control-btn:hover {
+  background-color: #526670;
+  transform: translateY(-2px);
+}
+
+.control-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.right-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Índice de preguntas */
+.exam-question-index {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 auto 20px;
+  width: 85%;
+  max-width: 1200px;
+  padding: 10px;
+  background: transparent !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+}
+
+.exam-question-number {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.exam-question-number:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.1);
+}
+
+.exam-question-number.active {
+  background-color: #3f51b5;
+  color: white;
+  border-color: #3f51b5;
+}
+
+.exam-question-number.answered {
+  background-color: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.exam-question-number.doubt {
+  background-color: #ff9800;
+  color: white;
+  border-color: #ff9800;
+}
+
+.exam-question-number.active.answered {
+  background-color: #388e3c;
+  border-color: #388e3c;
+}
+
+.exam-question-number.active.doubt {
+  background-color: #f57c00;
+  border-color: #f57c00;
+}
+
+/* Estilos para el área de opciones de respuesta */
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.options-container button {
+  padding: 15px;
+  text-align: left;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  font-size: 1rem;
+}
+
+.options-container button:hover {
+  background-color: #eef2ff;
+  transform: translateX(5px);
+}
+
+.options-container button.selected {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 1px #4caf50;
+  font-weight: bold;
+}
+
+/* Botones de navegación */
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+/* Estilos para acciones de la pregunta */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.custom-doubt-btn, .custom-impugnar-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  border: none;
+}
+
+.custom-doubt-btn {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.custom-doubt-btn.doubt-marked {
+  background-color: #ff9800;
+  color: white;
+}
+
+.custom-impugnar-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.custom-doubt-btn:hover, .custom-impugnar-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Modal para impugnar */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dispute-modal {
+  background: white !important;
+  border-radius: 8px;
+  padding: 25px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.dispute-modal textarea {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit-dispute-btn {
+  padding: 10px 16px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Popup overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup {
+  background: white !important;
+  border-radius: 8px;
+  padding: 30px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.popup h2 {
+  margin-top: 0;
+  color:  #3f5056;
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.popup-buttons button {
+  background: #3f5056 !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  min-width: 120px !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.dark-mode .popup-buttons button {
+  background: #516166 !important;
+}
+
+.popup-buttons button:hover {
+  background: #516166 !important;
+}
+
+.dark-mode .popup-buttons button:hover {
+  background: #617177 !important;
+}
+
+/* Loader para estados de carga */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+/* Error display */
+.exam-error {
+  max-width: 600px;
+  margin: 100px auto;
+  padding: 30px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.error-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+/* Estilos para el logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Animación para el spinner */
+.spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Indicador de guardado */
+.save-indicator-navbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.saving-text, .saved-text {
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.saving-text {
+  color: #ff9800;
+}
+
+.saved-text {
+  color: #4caf50;
+}
+
+.save-btn {
+  background: none;
+  border: none;
+  color: #3f51b5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.icon-only {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.icon-only:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Media queries para responsividad */
+@media (max-width: 768px) {
+  .question-box, .exam-question-index {
+    width: 95%;
+  }
+  
+  .exam-header {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    height: auto !important;
+  }
+  
+  .navigation-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .popup {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .popup-buttons {
+    flex-direction: column;
+  }
+  
+  .options-container button {
+    padding: 12px;
+  }
+
+  .exam-question-number {
+    width: 30px;
+    height: 30px;
+    font-size: 0.8rem;
+  }
+  
+  .exam-container {
+    overflow-y: auto;
+    height: 100%;
+  }
+  
+  .exam-question-index {
+    overflow-x: auto;
+    padding: 10px 5px;
+    justify-content: flex-start;
+  }
+}
+
+/* Dark mode */
+.dark-mode {
+  background: #121212 !important;
+  color: #f5f5f5;
+}
+
+.dark-mode .exam-container {
+  background: #121212 !important;
+}
+
+.dark-mode .question-box {
+  background: transparent !important;
+  color: #fff;
+  border: 1px solid rgba(126, 160, 167, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .exam-header,
+.dark-mode .exam-question-index {
+  background-color: #1e1e1e;
+  color: #f5f5f5;
+}
+
+.dark-mode .options-container button {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #f5f5f5;
+}
+
+.dark-mode .options-container button.selected {
+  background-color: #1b5e20;
+  border-color: #2e7d32;
+}
+
+.dark-mode .time-display {
+  background: transparent !important;
+  color: #f5f5f5 !important;
+}
+
+.dark-mode .popup,
+.dark-mode .dispute-modal {
+  background-color: #2a3439 !important;
+  color: #f5f5f5;
+}
+
+.dark-mode .exam-question-number {
+  background-color: #2d2d2d;
+  border-color: #444;
+  color: #f5f5f5;
+}
+
+.dark-mode .custom-doubt-btn {
+  background-color: #424242;
+  color: #f5f5f5;
+}
+
+.dark-mode .dispute-modal textarea {
+  background-color: #333;
+  color: #f5f5f5;
+  border-color: #444;
+}
+
+.dark-mode-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.grid-pagination-container {
+  position: sticky;
+  bottom: 0;
+  background: transparent !important;
+  padding: 10px 0;
+  z-index: 90;
+}
+
+.dark-mode .grid-pagination-container {
+  background: transparent !important;
+}
+
+.dark-mode .exam-header {
+  background: #1E2428 !important;
+  color: #FFFFFF;
+}
+
+/* Ocultar botón de dark mode en exam-header */
+.exam-header .control-btn.theme-toggle {
+  display: none;
+}

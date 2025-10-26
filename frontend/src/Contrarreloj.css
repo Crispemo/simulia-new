@@ -1,0 +1,699 @@
+/* Barra superior */
+.contrarreloj-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #3E5055; /* Fondo gris oscuro */ 
+  padding: 0.25rem 0.5rem;
+  height: 45px;
+} 
+body.dark .contrarreloj-header {
+  background-color: #5A6E71;
+  color: #FFFFFF; /* Texto claro */
+}
+.contrarreloj-header .logo {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+.contrarreloj-header .logo h1 {
+  font-size: 30px;
+  margin-left: 10px;
+  font-weight: bold;
+  color: #7ea0a7;
+}
+
+/* Texto SIMULIA en blanco */
+.simulia-title {
+  color: #7ea0a7 !important;
+  font-size: 30px;
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+/* Botón con icono para salir */
+.exit-icon-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+  font-size: 18px;
+  background-color: transparent;
+  border: 1.5px solid #7ea0a7;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.exit-icon-btn:hover {
+  background-color: #7ea0a7;
+  color: white;
+  transform: scale(1.05);
+}
+
+body.dark .exit-icon-btn {
+  border-color: white;
+  color: white;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.contrarreloj-control-btn {
+  background-color: transparent;
+  border: 1.5px solid #7ea0a7; /* Reducido el grosor del borde */
+  padding: 0.4rem 0.8rem; /* Reducido desde 0.5rem 1rem */
+  font-size: 14px; /* Reducido el tamaño de fuente */
+  color: #7ea0a7;
+  cursor: pointer;
+  border-radius: 15px; /* Menos redondeo */
+  transition: all 0.3s ease;
+}
+body.dark .contrarreloj-control-btn {
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+}
+.contrarreloj-control-btn:hover {
+  background-color: #7ea0a7;
+  color: white;
+}
+
+body.dark .contrarreloj-control-btn:hover {
+  background-color: #5A6B72; /* Fondo más oscuro */
+  color: white;
+}
+.time-display {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  background: transparent !important;
+  color: white !important;
+}
+body.dark .time-display {
+  color: #FFFFFF !important; /* Texto claro */
+}
+.contrarreloj-progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.contrarreloj-progress-fill {
+  height: 100%;
+  background-color: #ff4d4d;
+  transition: width 1s linear;
+}
+/* Rectángulo para las preguntas (entre barra superior y leyenda) */
+.contrarreloj-question-box {
+  margin-top: 30px; /* Reducido desde 30px */
+  margin-bottom: 5px; /* Reducido desde 10px */
+  padding: 10px; /* Reducido desde 20px */
+  background-color: #f4f4f9;
+  border: 2px solid #7ea0a7; /* Reducido el grosor del borde */
+  border-radius: 8px; /* Menos redondeo */
+  width: 70%; /* Ajustado el ancho */
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombras más sutiles */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.dark .contrarreloj-question-box {
+  background-color: transparent !important;
+  color: #FFFFFF;
+}
+
+.selected {
+  background-color: #7ea0a7;
+  color: white;
+}
+body.dark .selected {
+  background-color: #5A6B72;
+}
+
+/* Estilos para las opciones de respuesta */
+.contrarreloj-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.contrarreloj-options-container button {
+  background-color: #f4f4f9;
+  border: 2px solid #7ea0a7;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%; /* Las opciones ocuparán todo el ancho */
+}
+
+body.dark .contrarreloj-options-container button {
+  background-color: #3E5055;
+  color: #FFFFFF;
+}
+
+.contrarreloj-options-container button:hover {
+  background-color: #7ea0a7;
+  color: white;
+}
+
+.contrarreloj-options-container button.selected {
+  background-color: #7ea0a7;
+  border: 2px solid #7ea0a7;
+  color: white;
+}
+
+/* Botones de navegación */
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  width: 100%;
+  position: relative;
+}
+
+/* Responsive para los botones de navegación */
+@media (max-width: 768px) {
+  .navigation-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .navigation-buttons button {
+    width: 100%;
+    margin: 5px 0;
+  }
+}
+
+/* Índice de preguntas */
+.contrarreloj-question-index{
+  display: grid;
+  grid-template-columns: repeat(20, 1fr); /* 12 columnas por fila */
+  gap: 6;
+  margin-top: 20px;
+  justify-items: center;
+  max-width: 75%; /* Limitar el ancho máximo */
+  margin-left: auto;
+  margin-right: auto; /* Centrar la leyenda */
+  margin-bottom: 45px;
+  background: transparent !important;
+}
+
+.contrarreloj-question-number {
+  display: flex; /* Para centrar el contenido */
+  align-items: center; /* Centrar verticalmente */
+  justify-content: center; /* Centrar horizontalmente */
+  width: 40px;
+  height: 29px;
+  background-color: #f4f4f9;
+  border: 1.5px solid #3E5055;
+  border-radius: 25%;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  color: rgb(0, 0, 0); 
+  transition: background-color 0.3s;
+  margin-block-end: 1;
+}
+body.dark .contrarreloj-question-number {
+  background-color: #3E5055;
+  color: #FFFFFF;
+}
+
+.contrarreloj-question-number:hover {
+  background-color: #3E5055;
+  border: 1.5px solid #3E5055;
+  color: rgb(255, 255, 255);
+}
+body.dark .contrarreloj-question-number:hover {
+  background-color: #5A6B72;
+  color: #FFFFFF;
+}
+.active {
+  background-color: #fab469; /* Color activo */
+}
+
+.answered {
+  background-color: #3E5055; /* Color cuando está respondida */
+  color: rgb(255, 255, 255);
+}
+
+/* Pop-up genérico (usado tanto para inicio como para finalizar examen) */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color:#7ea0a7;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Para asegurarse de que el pop-up esté sobre todo lo demás */
+}
+.popup-overlay:body {
+ color:#7ea0a7;
+}
+
+.popup {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 50%; /* Ajusta el tamaño del pop-up */
+  max-width: 500px; /* Limitar el ancho máximo del pop-up */
+  text-align: center;
+}
+
+body.dark .popup {
+  background-color: #2A2A2A;
+  color: #FFFFFF;
+}
+.popup-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.control-btn {
+  background-color: transparent;
+  border: 2px solid #7ea0a7;
+  color: #7ea0a7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+}
+
+.control-btn:hover {
+  background-color: #7ea0a7;
+  color: white;
+}
+
+.dark-mode-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #7ea0a7;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+body.dark .dark-mode-toggle {
+  background-color: #3E5055;
+}
+
+.dispute-section {
+  margin-top: 1rem;
+}
+
+.dispute-btn, .submit-dispute-btn {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dispute-btn:hover, .submit-dispute-btn:hover {
+  background-color: #cc0000;
+}
+
+.dispute-form {
+  margin-top: 0.5rem;
+}
+
+textarea {
+  width: 100%;
+  height: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding: 20px;
+}
+
+.content > div {
+  flex: 1; /* Distribuye el espacio entre los componentes */
+}
+
+.bar-chart-container {
+  min-height: 400px;
+  min-width: 300px;
+}
+.control-btn.impugnar {
+  display: block !important;
+  margin: 5px auto !important;
+  background-color: #ff4d4d !important;
+  color: white !important;
+  font-size: 16px !important;
+  border: none !important;
+  border-radius: 7px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+  max-width: 105px !important;
+  text-align: center !important;
+}
+
+.control-btn.impugnar:hover {
+  background-color: #e60000 !important;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 50%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.popup h2 {
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+body.dark .popup h2 {
+  color: #FFFFFF !important; /* Made white color important to override any other styles */
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.control-btn {
+  background-color: transparent;
+  border: 2px solid #7ea0a7;
+  color: #7ea0a7;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+  background-color: #7ea0a7;
+  color: white;
+}
+
+.loading-message,
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-message {
+  font-size: 1.2em;
+  color: #666;
+}
+
+.error-message {
+  color: #d32f2f;
+  gap: 20px;
+}
+
+.error-message button {
+  margin-top: 20px;
+}
+
+.exam-question-index {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 20px auto !important;
+  width: 80% !important;
+  max-width: 800px !important;
+  padding: 15px !important;
+  background: transparent !important;
+  position: unset !important;
+}
+
+.exam-question-number {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1.5px solid #3E5055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #f4f4f9;
+  color: #000;
+  font-size: 13px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+.exam-question-number.active {
+  background: #fbb469;
+  color: white;
+  border-color:#fbb469;
+}
+.exam-question-number.answered {
+  background: #3E5055;
+  color: white;
+  border-color: #3E5055;
+}
+
+/* Estilos para el modal de impugnación */
+.modal {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 80% !important;
+  max-width: 500px !important;
+  background-color: #f4f4f9 !important;
+  padding: 30px 20px 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  z-index: 1000 !important;
+}
+
+.modal-close-button {
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  width: 25px !important;
+  height: 25px !important;
+  border-radius: 50% !important;
+  background-color: #ff4d4d !important;
+  color: white !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  z-index: 1001 !important;
+}
+
+.modal-close-button:hover {
+  background-color: #e60000 !important;
+}
+
+/* Modal de impugnación */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 9999 !important;
+}
+
+.modal {
+  position: relative !important;
+  background-color: #f4f4f9 !important;
+  padding: 30px 20px 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  width: 90% !important;
+  max-width: 500px !important;
+  margin: auto !important;
+}
+
+.modal textarea {
+  width: 100% !important;
+  min-height: 100px !important;
+  padding: 10px !important;
+  border: 1px solid #7ea0a7 !important;
+  border-radius: 4px !important;
+  resize: vertical !important;
+  margin-bottom: 15px !important;
+}
+
+body.dark .modal {
+  background-color: #2A2A2A !important;
+  color: #FFFFFF !important;
+}
+
+body.dark .modal h2 {
+  color: #FFFFFF !important;
+}
+
+body.dark .modal textarea {
+  background-color: #3E5055 !important;
+  color: #FFFFFF !important;
+  border-color: #5A6B72 !important;
+}
+
+/* Contenedor para los botones de acción al final del cuadro de preguntas */
+.action-buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  z-index: 100;
+  gap: 20px;
+  position:unset !important;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Estilos para el botón de marcar duda */
+.control-btn.doubt-btn {
+  background-color: #ffc069;
+  color: black;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-weight: 500;
+  margin: 0;
+  cursor: pointer;
+  min-width: 160px;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estado cuando está marcado como duda */
+.control-btn.doubt-btn.doubt-marked {
+  background-color: #ffb347;
+  border: 2px dashed #ff8c00;
+  font-weight: bold;
+}
+
+/* Efectos hover */
+.control-btn.doubt-btn:hover {
+  background-color: #ffb246;
+}
+
+/* Estilos para el botón impugnar */
+.control-btn.impugnar {
+  background-color: #f56060;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-weight: 500;
+  margin: 0;
+  cursor: pointer;
+  min-width: 160px;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.control-btn.impugnar:hover {
+  background-color: #e04a4a;
+}
+
+/* Estilo para números de pregunta con duda */
+.exam-question-number.doubt {
+  border: 2px dashed #FF9800 !important;
+  background-color: #edd9b5 !important;
+}
+
+/* Media queries para dispositivos móviles */
+@media (max-width: 768px) {
+  .action-buttons-container {
+    flex-direction: row;
+    gap: 10px;
+  }
+  
+  .control-btn.doubt-btn,
+  .control-btn.impugnar {
+    min-width: 130px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-buttons-container {
+    flex-direction: row;
+    gap: 8px;
+    bottom: 60px;
+  }
+  
+  .control-btn.doubt-btn,
+  .control-btn.impugnar {
+    min-width: 120px;
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+}
+
+.contrarreloj-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+}

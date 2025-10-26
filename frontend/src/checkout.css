@@ -1,0 +1,98 @@
+button[type="submit"] {
+  background: linear-gradient(45deg, #4a828c, #7ea0a7);  /* Degradado más pronunciado */
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);  /* Sombra inicial */
+}
+
+button[type="submit"]:hover {
+  background: linear-gradient(45deg, #3b6872, #4a828c);  /* Variación más oscura para hover */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);  /* Sombra más pronunciada en hover */
+}
+
+ /* Estilo para los campos de tarjeta de crédito */
+ .card-element {
+  width: 100%;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #5b8b7e;
+  border-radius: 7px;
+  align-items: center;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  }
+  .card-element::placeholder {
+    color: #aab7c4;
+  }
+
+  .checkout-container {
+    max-width: 500px;
+    margin: 0 auto;
+    margin-top: 80px;
+    padding: 40px;
+    background-color: #3e5055;
+    border-radius: 20px;
+    box-shadow:  0 10px 20px rgba(0, 0, 0, 0.1);  /* Sombras suaves */
+    text-align: center;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .checkout-container:hover {
+    transform: translateY(-5px);  /* Añade un sutil efecto al pasar el ratón */
+  }
+  
+  .checkout-container h3 {
+    font-size: 23px;
+    color: #3e5055;
+    margin-bottom: 10px;
+  }
+
+  .checkout-form {
+    width: 100%;
+    max-width: 400px; /* Ajuste de ancho del formulario */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-left: 25px;
+    background-color: #f4f4f9;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .checkout-form button {
+    margin-top: 20px;
+    background-color: #7ea0a7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  .checkout-form button:hover {
+    background-color: #5b8b7e;
+  }
+
+  .checkout-form button:disabled {
+    background-color: #ccc;
+  }
+
+  .checkout-form button:hover:enabled {
+    background-color: #5d7f82;
+  }
+  .error-message {
+    color: red;
+    margin-top: 15px;
+  }
+
+  .success-message {
+    color: green;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+  }

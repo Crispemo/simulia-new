@@ -1,0 +1,168 @@
+.examHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #3f5056;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 50px;
+  width: 100%;
+  box-sizing: border-box;
+  left: 0;
+  right: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 120px;
+}
+
+.logoText {
+  font-size: 20px;
+  font-weight: 600;
+  color: #7da0a7;
+  margin: 0;
+}
+
+.timeDisplay {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #7da0a7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 100px;
+}
+
+.rightButtons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  width: 120px;
+  justify-content: flex-end;
+}
+
+.controlBtn,
+.themeToggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7da0a7;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.controlBtn:hover,
+.themeToggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.controlBtn:active,
+.themeToggle:active {
+  transform: scale(0.95);
+}
+
+/* Estados especiales del botón de guardar */
+.saving {
+  animation: pulse 1.5s infinite;
+  cursor: not-allowed;
+}
+
+.pendingChanges {
+  color: #ffcc00;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Media query para pantallas más pequeñas */
+@media (max-width: 600px) {
+  .examHeader {
+    padding: 8px 12px;
+  }
+  
+  .timeDisplay {
+    font-size: 1.5rem;
+    min-width: 80px;
+  }
+  
+  .rightButtons {
+    gap: 10px;
+  }
+  
+  .logo {
+    width: 100px;
+  }
+  
+  .rightButtons {
+    width: 100px;
+  }
+  
+  /* Ocultar el texto del logo, dejando solo la imagen */
+  .logoText {
+    display: none;
+  }
+}
+
+/* Media query para pantallas medianas */
+@media (min-width: 601px) and (max-width: 768px) {
+  .logoText {
+    font-size: 16px;
+  }
+  
+  .timeDisplay {
+    font-size: 1.75rem;
+  }
+}
+
+/* Media query para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .examHeader {
+    padding: 8px 10px;
+  }
+  
+  .timeDisplay {
+    font-size: 1.4rem;
+    min-width: 70px;
+  }
+  
+  .rightButtons {
+    gap: 8px;
+  }
+  
+  .logo {
+    gap: 5px;
+    width: 80px;
+  }
+  
+  .rightButtons {
+    width: 80px;
+  }
+  
+  .controlBtn,
+  .themeToggle {
+    padding: 4px;
+  }
+} 

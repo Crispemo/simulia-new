@@ -1,0 +1,102 @@
+.success-notification-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+  pointer-events: none; /* No bloquea interacciones del usuario */
+}
+
+.success-notification {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  animation: slideInFromRight 0.2s ease-out;
+  pointer-events: auto;
+  max-width: 200px;
+  min-width: 150px;
+}
+
+.success-icon {
+  font-size: 14px;
+  color: white;
+  margin-right: 6px;
+  display: inline-block;
+}
+
+/* Icono para impugnaciones en fondo blanco */
+.success-notification.dispute-notification .success-icon {
+  color: #2196F3; /* Icono azul en fondo blanco */
+}
+
+.success-message {
+  font-size: 12px;
+  color: white;
+  margin: 0;
+  display: inline-block;
+  font-weight: 400;
+}
+
+/* Mensaje para impugnaciones en fondo blanco */
+.success-notification.dispute-notification .success-message {
+  color: #333; /* Texto oscuro en fondo blanco */
+}
+
+/* Dark mode styles */
+body.dark .success-notification {
+  background-color: #2d2d2d;
+  color: #fff;
+}
+
+body.dark .success-message {
+  color: #fff;
+}
+
+/* Estilos especiales para diferentes tipos de notificación */
+.success-notification.dispute-notification {
+  background-color: white; /* Blanco para impugnaciones */
+  color: #333; /* Texto oscuro para contraste */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra sutil en lugar de borde */
+}
+
+.success-notification.error-notification {
+  background-color: #f44336; /* Rojo para errores */
+}
+
+.success-notification.success-notification-default {
+  background-color: #4CAF50; /* Verde para éxito (por defecto) */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+} 
