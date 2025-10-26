@@ -1,57 +1,77 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   body {
-    @apply font-['Quicksand',_sans-serif];
+    @apply font-['Poppins',_sans-serif];
   }
+  
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --header-bg: #3f5056;
+    --background: #fcfdfd;
+    --foreground: #2d3e45;
+    --card: #ffffff;
+    --card-foreground: #2d3e45;
+    --popover: #ffffff;
+    --popover-foreground: #2d3e45;
+    --primary: #7ea0a7;
+    --primary-foreground: #ffffff;
+    --secondary: #3e5055;
+    --secondary-foreground: #fcfdfd;
+    --muted: #f1f4f6;
+    --muted-foreground: #4a5c63;
+    --accent: #7ea0a7;
+    --accent-foreground: #ffffff;
+    --destructive: #e57373;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8eb;
+    --input: #e2e8eb;
+    --ring: #7ea0a7;
+    --chart-1: oklch(0.62 0.04 200);
+    --chart-2: oklch(0.28 0.01 200);
+    --chart-3: oklch(0.45 0.03 200);
+    --chart-4: oklch(0.7 0.05 200);
+    --chart-5: oklch(0.35 0.02 200);
+    --radius: 0.75rem;
+    --header-bg: #3e5055;
     --header-text: white;
-    --accent-color: #ffcc00;
+    --accent-color: #7ea0a7;
+    --success: #4caf50;
   }
- 
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: #2d3e45;
+    --foreground: #fcfdfd;
+    --card: #2d3e45;
+    --card-foreground: #fcfdfd;
+    --popover: #2d3e45;
+    --popover-foreground: #fcfdfd;
+    --primary: #7ea0a7;
+    --primary-foreground: #ffffff;
+    --secondary: #455560;
+    --secondary-foreground: #fcfdfd;
+    --muted: #455560;
+    --muted-foreground: #a8b3b8;
+    --accent: #7ea0a7;
+    --accent-foreground: #ffffff;
+    --destructive: #c8554e;
+    --destructive-foreground: #ffffff;
+    --border: #455560;
+    --input: #455560;
+    --ring: #7ea0a7;
+    --chart-1: oklch(0.62 0.04 200);
+    --chart-2: oklch(0.45 0.03 200);
+    --chart-3: oklch(0.7 0.05 200);
+    --chart-4: oklch(0.35 0.02 200);
+    --chart-5: oklch(0.55 0.03 200);
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
@@ -60,4 +80,57 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+/* Custom Animations */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 40s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Typography Improvements */
+body {
+  font-feature-settings: "rlig" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }

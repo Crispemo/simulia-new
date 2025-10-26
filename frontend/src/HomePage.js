@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import './HomePage.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import AOS from 'aos';
@@ -67,10 +66,11 @@ function HomePage() {
         return;
       }
 
-      if(data.subscriptionActive === true) {
-        navigate('/dashboard');
-        return;
-      }
+      // NO redirigir automáticamente, permitir que el usuario navegue manualmente
+      // if(data.subscriptionActive === true) {
+      //   navigate('/dashboard');
+      //   return;
+      // }
 
       // Si el usuario existe pero no tiene suscripción activa
       scrollToPayments();
@@ -135,10 +135,10 @@ function HomePage() {
         console.log("Verificación de suscripción:", response.data);
         const hasSubscription = response.data && response.data.hasSubscription === true;
         
-        // 3. Redireccionar según corresponda
+        // 3. Permitir que el usuario navegue manualmente, no redirigir automáticamente
         if (hasSubscription) {
-          console.log("Usuario con suscripción activa, redirigiendo al dashboard");
-          navigate('/dashboard');
+          console.log("Usuario con suscripción activa");
+          // navigate('/dashboard'); // Comentado para permitir navegación manual
         } else {
           console.log("Usuario sin suscripción, mostrando planes");
           setShowPopup(true);
@@ -159,7 +159,7 @@ function HomePage() {
   };
   
   const scrollToPayments = () => {
-    const paymentSection = document.querySelector('.pricing-section');
+    const paymentSection = document.querySelector('#planes');
     if (paymentSection) {
       paymentSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -233,7 +233,7 @@ function HomePage() {
   }, []);
 
   const scrollToPricing = () => {
-    const pricingSection = document.querySelector('.pricing-section');
+    const pricingSection = document.querySelector('#planes');
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -264,36 +264,32 @@ function HomePage() {
   const renderActionButtons = () => {
     if (currentUser) {
       return (
-        <div className="buttons-container">
           <button 
             onClick={handleLoginClick}
-            className="main-action-btn"
+          className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
             aria-label="Comenzar simulacro"
           >
-            <span>Haz tu simulacro EIR</span>
-            <i className="fa fa-arrow-right"></i>
+          Haz tu simulacro EIR
+          <span>→</span>
           </button>
-        </div>
       );
     } else {
       return (
-        <div className="buttons-container">
                       <button
               onClick={handleLoginClick} 
-              className="main-action-btn"
+          className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
               disabled={isSigningIn}
               aria-label="Comenzar simulacro"
             >
-              <span>{isSigningIn ? 'Iniciando sesión...' : 'Haz tu simulacro EIR'}</span>
-              {!isSigningIn && <i className="fa fa-arrow-right"></i>}
+          {isSigningIn ? 'Iniciando sesión...' : 'Haz tu simulacro EIR'}
+          {!isSigningIn && <span>→</span>}
             </button>
-        </div>
       );
     }
   };
 
   return (
-    <div className="App">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
         <title>Simulia - Plataforma de Preparación EIR | Simulacros y Exámenes</title>
         <meta name="description" content="Plataforma especializada en preparación para el examen EIR. Simulacros, exámenes, protocolos y análisis de errores para enfermeros. Prepárate de forma eficaz con nuestra plataforma especializada." />
@@ -408,447 +404,490 @@ function HomePage() {
           `}
         </script>
       </Helmet>
-    <nav className="navbar">
-      <div className="logo">
-        <img
-          src={logoSrc}
-          alt="Logo"
-          width="37"
-          height="39"
-        />
-        <h1>SIMULIA</h1>
-      </div>
-      <div className="auth-buttons">
-        <a href="/blog" className="nav-link">Blog</a>
-        <button 
-          onClick={() => setShowDemoModal(true)}
-          className="demo-btn"
-          aria-label="Probar demo"
-        >
-          Demo
-        </button>
-        {renderActionButtons()}
-      </div>
+    <nav className="sticky top-0 z-50 border-b bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/Logo_oscuro.png" alt="Logo Simulia" className="h-12 w-12 object-contain" />
+              <span className="text-xl font-bold text-primary">SIMULIA</span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-6">
+              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                Blog
+              </a>
+              {renderActionButtons()}
+            </div>
+
+            <button className="md:hidden text-white" onClick={() => setShowPopup(!showPopup)}>
+              ☰
+            </button>
+          </div>
+        </div>
     </nav>
       {showPopup && (
-        <div className="subscription-popup" data-aos="fade-up" data-aos-duration="1000">
-          <p>Para acceder a los simulacros, necesitas una suscripción activa.</p>
-          <p style={{ marginTop: '10px', fontSize: '14px' }}>Selecciona un plan para comenzar tu preparación.</p>
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md mx-4 p-6 bg-card border border-primary shadow-xl rounded-lg">
+          <p className="text-center font-medium text-foreground">
+            Para acceder a los simulacros, necesitas una suscripción activa.
+          </p>
+          <p className="text-center text-sm text-muted-foreground mt-2">
+            Selecciona un plan para comenzar tu preparación.
+          </p>
         </div>
       )}
-      <div className="columns">
-        <div className="column-left" data-aos="fade-up" data-aos-duration="1500">
-          <h1>Simula el EIR, asegura tu plaza</h1>
-          <p style={{ marginBottom: '1rem' }}>
-          La plataforma que te entrena con simulacros reales, análisis inteligente y flexibilidad total.
-          </p>
-          <p style={{ color: "#3e5055", fontWeight: "500" }}>
-          Prepárate como si estuvieras en el examen. Practica, corrige, mejora y llega segura al gran día.
-          </p>
+      <section className="bg-primary/10 border-y border-primary/20 py-3">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-secondary">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✓</span>
+              <span>+5,000 estudiantes preparándose</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✓</span>
+              <span>5,000+ preguntas actualizadas</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">✓</span>
+              <span>7 días gratis</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div className="exam-types-container">
-            <div className="exam-types-grid">
-              <div className="exam-type-item" data-tooltip="Simula exactamente el examen oficial con 210 preguntas y tiempo limitado">
-                <span className="exam-check">📝</span>
-                <span>Simulacro oficial EIR</span>
-              </div>
-              <div className="exam-type-item" data-tooltip="Practica con preguntas que has fallado hasta dominarlas">
-                <span className="exam-check">🔄</span>
-                <span>Repetición errores</span>
-              </div>
-              <div className="exam-type-item" data-tooltip="Ponte a prueba con límite de tiempo para mejorar tu velocidad">
-                <span className="exam-check">⏱️</span>
-                <span>Contrarreloj</span>
-              </div>
-              <div className="exam-type-item" data-tooltip="Sesiones rápidas de 50 preguntas ideales para estudio ágil">
-                <span className="exam-check">🔍</span>
-                <span>Quiz 50 preguntas</span>
-              </div>
-              <div className="exam-type-item" data-tooltip="Crea tu propio examen eligiendo asignaturas y número de preguntas">
-                <span className="exam-check">✏️</span>
-                <span>Examen personalizado</span>
-              </div>
-              <div className="exam-type-item" data-tooltip="Preguntas basadas en los últimos protocolos clínicos">
-                <span className="exam-check">📋</span>
-                <span>Protocolos clínicos</span>
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
+        <div className="max-w-5xl mx-auto space-y-8 text-center">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
+              Domina el EIR con simulacros que replican el examen y se adaptan a ti
+            </h1>
+            <p className="text-lg sm:text-xl text-foreground leading-relaxed">
+              Entrena como si ya estuvieras en el examen. Elige entre 6 formas de practicar. Todo desde cualquier
+              dispositivo, sin límites.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[
+                { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real" },
+                { icon: "🔄", title: "Repetición errores", desc: "Aprende de tus fallos" },
+                { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión" },
+                { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica" },
+                { icon: "✏️", title: "Examen personalizado", desc: "Adapta el contenido a ti" },
+                { icon: "📋", title: "Protocolos clínicos", desc: "Casos prácticos actualizados" },
+              ].map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
+                  title={item.desc}
+                >
+                  <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                  <span className="text-sm font-semibold text-secondary">{item.title}</span>
+                  <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
+                    {item.desc}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                className="flex-1 sm:flex-initial bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle max-w-md w-full"
+                onClick={() => {
+                  const pricingSection = document.querySelector('#planes');
+                  pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                aria-label="Comenzar prueba gratuita"
+              >
+                Haz tu primer simulacro gratis
+                <span className="text-xl">→</span>
+              </button>
+              <button
+                onClick={() => setShowDemoModal(true)}
+                className="flex-1 sm:flex-initial border-2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all text-base max-w-md w-full"
+                aria-label="Ver demo"
+              >
+                Ver cómo funciona
+              </button>
+            </div>
+        </div>
+      </section>
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div className="space-y-2">
+              <div className="text-4xl lg:text-5xl font-bold text-primary">5,000+</div>
+              <div className="text-base text-foreground font-medium">Estudiantes activos</div>
+              <div className="text-sm text-muted-foreground">Preparándose ahora mismo</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-4xl lg:text-5xl font-bold text-primary">5,000+</div>
+              <div className="text-base text-foreground font-medium">Preguntas actualizadas</div>
+              <div className="text-sm text-muted-foreground">Nuevas cada semana</div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-4xl lg:text-5xl font-bold text-primary">95%</div>
+              <div className="text-base text-foreground font-medium">Tasa de satisfacción</div>
+              <div className="text-sm text-muted-foreground">Según nuestros usuarios</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+        <div className="max-w-3xl mx-auto text-center space-y-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
+            Elige tu modalidad de entrenamiento, mejora justo donde lo necesitas
+          </h2>
+          <p className="text-lg sm:text-xl text-foreground leading-relaxed">
+            Cada estudiante es diferente. Por eso, Simulia te ofrece varios modos de examen: desde simulacros oficiales
+            hasta entrenamientos contrarreloj, test rápidos o prácticas con protocolos clínicos actualizados.
+          </p>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Entrena como quieras, mejora como nunca</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Test rápidos de 50 preguntas, entrenamientos contrarreloj, exámenes personalizados y protocolos clínicos.
+                </p>
               </div>
             </div>
           </div>
 
-          <button 
-            className="main-action-btn mobile-full-width"
-            onClick={() => {
-              const pricingSection = document.querySelector('.pricing-section');
-              pricingSection?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            aria-label="Ver planes"
-          >
-            <span>Empieza gratis hoy</span>
-            <i className="fa fa-arrow-right"></i>
-          </button>
-        </div>
-        <div className="column-right" data-aos="fade-left" data-aos-duration="1500" style={{ background: 'transparent' }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <picture style={{ background: 'transparent' }}>
-              <img
-                src="/Dashboard-EIR-Simulia.png"
-                alt="Dashboard EIR Simulia - Estadísticas detalladas de rendimiento en exámenes de enfermería, simulacros realistas y análisis de progreso"
-                loading="lazy"
-                style={{ background: 'transparent', position: 'relative', zIndex: 2, border: 'none', outline: 'none' }}
-              />
-            </picture>
-            <div style={{
-              position: 'absolute',
-              bottom: -20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '75%',
-              height: '40px',
-              background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 30%, rgba(0,0,0,0) 70%)',
-              borderRadius: '50%',
-              zIndex: 1,
-              filter: 'blur(10px)'
-            }}></div>
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Convierte cada error en una oportunidad</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Te mostramos en qué destacas y qué necesitas reforzar. Cada fallo se convierte en oportunidad de mejora.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      {/* Hero Section */}
-      <section className="hero-section">
-        <h2>Entrena como en el examen real, sin sorpresas</h2>
-        <p style={{ color: "#3e5055", fontWeight: "500" }}>Simulacros oficiales EIR, condiciones auténticas y formatos adaptados a tu ritmo.</p>
-      </section>
 
-      {/* Features Grid */}
-      <div className="features-grid">
-        <div className="feature-card" data-aos="fade-up" data-aos-delay="100">
-          <img 
-            src={process.env.PUBLIC_URL + '/opciones-entrenamiento-personalizado-eir.png'} 
-            alt="Opciones de entrenamiento personalizado EIR - Diferentes modalidades de simulacros para preparar tu examen de enfermería"
-            loading="lazy"
-          />
-          <h3>Elige tu camino</h3>
-          <p>
-          Test rápidos de 50 preguntas, entrenamientos contrarreloj, exámenes personalizados y protocolos clínicos.          
-          </p>
-        </div>
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Estadísticas que te hacen avanzar</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Sin distracciones, sin clases interminables. Solo práctica, solo resultados. Tú decides cómo avanzar.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div className="feature-card" data-aos="fade-up" data-aos-delay="200">
-          <img 
-            src={process.env.PUBLIC_URL + '/aprende-errores-practica-eir.png'} 
-            alt="Convierte cada error en oportunidad de mejora - Selección de respuestas correctas para EIR"
-            loading="lazy"
-          />
-          <h3>Avanza con feedback inteligente</h3>
-          <p>
-            Te mostramos en qué destacas y qué necesitas reforzar. Cada fallo se convierte en oportunidad de mejora.
-          </p>
-        </div>
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Simula el examen real, sin sorpresas</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Entrena con condiciones reales: sin pausas, con tiempo, imágenes y textos con el mismo formato del EIR.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div className="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <img 
-            src={process.env.PUBLIC_URL + '/estadisticas-eir.png'} 
-            alt="Estadísticas personalizadas"
-            loading="lazy"
-          />
-          <h3>Sin distracciones, sin clases interminables</h3>
-          <p>
-          Solo práctica, solo resultados. Tú decides cómo avanzar. Nosotros solo guiamos el camino.          
-          </p>
-        </div>
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Descarga en PDF para practicar en papel</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Descarga tus exámenes en PDF para practicar como si fuera el examen real, sin conexión y donde quieras.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <div className="feature-card" data-aos="fade-up" data-aos-delay="400">
-          <img 
-            src={process.env.PUBLIC_URL + '/simulacro-condiciones-reales-eir.png'} 
-            alt="Enfermero preparándose con simulacros EIR en condiciones reales del examen - Simulacros cronometrados"
-            loading="lazy"
-          />
-          <h3>Simula el examen real, sin sorpresas</h3>
-          <p>
-          Entrena con condiciones reales: sin pausas, con tiempo, imágenes y textos con el mismo formato y número de preguntas del EIR. Llega al examen sabiendo exactamente a lo que te enfrentas.
-          </p>
-        </div>
-      </div>
-
-      {/* Sección de Modalidades de Estudio */}
-      <section className="modalidades-section" style={{ padding: "60px 20px", textAlign: "center", backgroundColor: "#f8f9fa" }}>
-        <h2 style={{ fontSize: "2rem", marginBottom: "1rem", color: "#3e5055" }}>Entrena como nunca</h2>
-        <p style={{ color: "#3e5055", fontWeight: "500", maxWidth: "800px", margin: "0 auto 2rem", fontSize: "1.1rem" }}>
-          Simulacros completos de 210 preguntas, minitests exprés o entrenamientos contrarreloj. Elige tu estilo, repite las veces que necesites.
-        </p>
-        <h2 style={{ fontSize: "2rem", marginTop: "3rem", marginBottom: "1rem", color: "#3e5055" }}>Convierte errores en oportunidades</h2>
-        <p style={{ color: "#3e5055", fontWeight: "500", maxWidth: "800px", margin: "0 auto", fontSize: "1.1rem" }}>
-          Nuestro sistema detecta y guarda tus fallos, los analiza y te los sirve de nuevo hasta que los superas. Cada error te acerca un paso más a tu plaza.
-        </p>
-      </section>
-
-      {/* Sección de Testimonios */}
-      <section className="testimonials-section">
-        <h2>Lo que dicen nuestros estudiantes</h2>
-        <p style={{ color: "#3e5055", fontWeight: "500", textAlign: "center", marginBottom: "3rem" }}>
-          Descubre las experiencias de quienes ya están preparando su plaza con Simulia
-        </p>
-        <div className="testimonials-slider">
-          <div className="testimonials-track">
-            {/* Primer conjunto de testimonios */}
-            <div className="testimonial-card" data-aos="fade-up">
-              <div className="testimonial-content">
-                <p>"Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅"</p>
-                <div className="testimonial-author">
-                  <h4>María</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card" data-aos="fade-up" data-aos-delay="100">
-              <div className="testimonial-content">
-              <p>"Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!"</p>
-              <div className="testimonial-author">
-                  <h4>Carlos</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card" data-aos="fade-up" data-aos-delay="200">
-              <div className="testimonial-content">
-                <p>"Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad."</p>
-                <div className="testimonial-author">
-                  <h4>Ana</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card" data-aos="fade-up" data-aos-delay="300">
-              <div className="testimonial-content">
-                <p>"Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino."</p>
-                <div className="testimonial-author">
-                  <h4>David</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card" data-aos="fade-up" data-aos-delay="400">
-              <div className="testimonial-content">
-                <p>"Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen."</p>
-                <div className="testimonial-author">
-                  <h4>Sofía</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card" data-aos="fade-up" data-aos-delay="500">
-              <div className="testimonial-content">
-                <p>"Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto"</p>
-                <div className="testimonial-author">
-                  <h4>Javier</h4>
-                </div>
-              </div>
-            </div>
-            {/* Duplicado de testimonios para el efecto infinito */}
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅"</p>
-                <div className="testimonial-author">
-                  <h4>María</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!"</p>
-                <div className="testimonial-author">
-                  <h4>Carlos</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad."</p>
-                <div className="testimonial-author">
-                  <h4>Ana</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino."</p>
-                <div className="testimonial-author">
-                  <h4>David</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen."</p>
-                <div className="testimonial-author">
-                  <h4>Sofía</h4>
-                </div>
-              </div>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-content">
-                <p>"Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto"</p>
-                <div className="testimonial-author">
-                  <h4>Javier</h4>
-                </div>
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+            <div className="flex items-start gap-4">
+              <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <div className="space-y-2 flex-1">
+                <h3 className="text-xl font-bold text-secondary">Tu profesor IA personalizado</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Recibe feedback inteligente, análisis de tus métricas y consejos personalizados para mejorar tu preparación.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="planes" className="pricing-section">
-        <h2>Planes y Precios</h2>
-        <p style={{ color: "#3e5055", fontWeight: "500" }}>Elige el plan que se ajusta a ti. Empieza hoy, sin compromiso.</p>
-        <div className="pricing-container">
-          <div className="pricing-block" data-aos="fade-up">
-            <h3>Explora sin presión</h3>
-                          <p className="price">9.99 €/mes</p>
-            <ul>
-              <li>Flexibilidad total, cancela cuando quieras</li>
-              <li>7 días gratis</li>
+
+      <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
+              Lo que dicen nuestros estudiantes
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Descubre las experiencias de quienes ya están preparando su plaza con Simulia
+            </p>
+          </div>
+
+          <div className="relative overflow-hidden">
+            <div className="flex gap-6 animate-scroll">
+              {[
+                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
+                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
+                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+              ].concat([
+                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
+                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
+                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+              ]).map((testimonial, idx) => (
+                <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
+                  <div className="p-6 space-y-4">
+                    <p className="text-muted-foreground italic leading-relaxed">"{testimonial.text}"</p>
+                    <p className="font-semibold text-secondary">{testimonial.name}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="max-w-3xl mx-auto text-center space-y-6 mb-12">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
+            Elige tu plan, elige tu preparación, elige tu plaza
+          </h2>
+          <p className="text-lg sm:text-xl text-foreground">
+            Selecciona el plan que mejor se adapte a tus necesidades y empieza tu preparación hoy mismo.
+          </p>
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-6 py-2 text-sm font-medium text-secondary">
+            <span className="text-lg">🔥</span>
+            <span>Únete ya a los enfermeros dentro de Simulia</span>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl p-8 space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2 text-secondary">Explora sin presión</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-primary">9.99 €</span>
+                <span className="text-muted-foreground text-lg">/mes</span>
+              </div>
+            </div>
+
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="text-success text-xl mt-0.5">✓</span>
+                <span className="text-secondary">Flexibilidad total, cancela cuando quieras</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-success text-xl mt-0.5">✓</span>
+                <span className="text-secondary">7 días gratis para probar</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-success text-xl mt-0.5">✓</span>
+                <span className="text-secondary">Acceso completo a todas las funciones</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-success text-xl mt-0.5">✓</span>
+                <span className="text-secondary">Actualizaciones y nuevas preguntas incluidas</span>
+              </li>
             </ul>
+
             <button
-                              onClick={() => window.location.href = 'https://buy.stripe.com/28E14n2ck6LC1lvbmC6Zy0e'}
-              className="pricing-btn"
+              onClick={() => window.location.href = 'https://buy.stripe.com/28E14n2ck6LC1lvbmC6Zy0e'}
+              className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all bg-transparent py-3 rounded-full font-semibold shadow-md hover:shadow-lg"
             > 
-              Flexibilidad a tu medida
+              Comenzar prueba gratuita
             </button>
           </div>
-          <div className="pricing-block" data-aos="fade-up" style={{ 
-            border: "2px solid #7da0a7", 
-            boxShadow: "0 8px 20px rgba(125, 160, 167, 0.2)"
-          }}>
-          <div className="popular-badge" style={{ backgroundColor: "#7da0a7", color: "white" }}> Mejor valorado</div>
-            <h3>Prepara tu plaza (Pro)</h3>
-                          <p className="price">39.99 €/año</p>
-            <ul className="bg-indigo-100" style={{ 
-              backgroundColor: "rgba(125, 160, 167, 0.1)", 
-              padding: "20px",
-              borderRadius: "10px",
-              marginBottom: "20px"
-            }}>
-              <li>Acceso ilimitado, paga una vez, despreocúpate</li>
-              <li>7 días gratis</li>
-            </ul>
+
+          <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 space-y-6">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="bg-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+                Más popular • Ahorra 50%
+              </span>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-primary">39.99 €</span>
+                <span className="text-muted-foreground text-lg">/año</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                <span className="line-through">79.99 €</span> • Solo 3.33 €/mes
+              </div>
+            </div>
+
+            <div className="bg-primary/10 rounded-xl p-6 border border-primary/20">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Acceso completo durante todo el año</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">7 días gratis para probar</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Ahorra más de 40 € al año</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Actualizaciones y nuevas preguntas incluidas</span>
+                </li>
+              </ul>
+            </div>
+
             <button
-                              onClick={() => window.location.href = 'https://buy.stripe.com/8x214neZ69XO6FPfCS6Zy0d'}
-              className="pricing-btn"
-              style={{ backgroundColor: "#7da0a7", fontWeight: "600" }}
+              onClick={() => window.location.href = 'https://buy.stripe.com/8x214neZ69XO6FPfCS6Zy0d'}
+              className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold animate-pulse-subtle"
             >
-              Preparate sin límites
+              Comenzar prueba gratuita
             </button>
           </div>
         </div>
+
       </section>
 
-      {/* Sección "Quién está detrás de Simulia" */}
-      <section className="about-founder-section">
-        <div className="about-founder-container">
-          <div className="about-founder-content">
-            <div className="founder-image-container" data-aos="fade-right">
-              <img 
-                src="/founder-cristina-peris.jpg" 
-                alt="Cristina Peris - Fundadora de Simulia, enfermera graduada en 2022"
-                className="founder-image"
-                loading="lazy"
-              />
-            </div>
-            <div className="founder-text" data-aos="fade-left">
-              <h2>Sobre Simulia (Autenticidad)</h2>
-              <div className="founder-intro">
-                <p><strong>¿Quién está detrás?</strong></p>
-              </div>
-              
-              <p>
-                Soy <strong>Cristina Peris</strong>, enfermera.
-              </p>
-              
-              <p>
-                Cuando acabé la carrera vi lo difícil que era prepararse bien el EIR, por eso creé Simulia: una herramienta pensada para enfermeras como yo, que buscan una forma práctica, moderna y eficaz de estudiar y ganar tranquilidad.
-              </p>
-              
-              <div className="founder-intro">
-                <p><strong>Misión:</strong></p>
-              </div>
-              
-              <p>
-                Que el día del examen sientas que ya lo has vivido muchas veces, llegues segura, organizada y con la confianza de que has entrenado como nunca.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section id="faq" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 text-secondary">
+            Preguntas Frecuentes
+          </h2>
 
-      <section id="faq" className="faq-section">
-        <h2>Preguntas Frecuentes</h2>
-        
-        <div className="faq-grid">
-          {/* Columna izquierda - Preguntas sobre entrenamiento */}
-          <div className="faq-column">
-            <div className="faq-item" data-aos="fade-up">
-              <details>
-                <summary>¿Me ayudará a mejorar mis resultados reales?</summary>
-                <p>Sí. Practicar con simulacros EIR te prepara para el examen de verdad, eliminando sorpresas y miedos.</p>
+          <div className="space-y-4">
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Por qué practicar con simulacros EIR mejora tus resultados reales?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Practicar con simulacros realistas te entrena bajo presión, mejora tu memoria y te prepara para enfrentarte al examen EIR con seguridad y estrategia.
+                </p>
               </details>
             </div>
 
-            <div className="faq-item" data-aos="fade-up">
-              <details>
-                <summary>¿Puedo enfocarme en los temas que más me cuestan?</summary>
-                <p>Sí. El sistema te permite entrenar por asignaturas y repetir tus errores hasta que los domines.</p>
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Cuántas preguntas incluye Simulia y con qué frecuencia se actualizan?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Dispones de más de 5000 preguntas EIR y cada semana se incorporan nuevas. Así estudias con material actualizado, útil y alineado con los exámenes reales.
+                </p>
               </details>
             </div>
 
-            <div className="faq-item" data-aos="fade-up">
-              <details>
-                <summary>¿Está actualizado con las preguntas oficiales EIR?</summary>
-                <p>Sí. Simulia se alinea y actualiza continuamente para ofrecerte las preguntas más relevantes y recientes.</p>
-              </details>
-            </div>
-          </div>
-
-          {/* Columna derecha - Preguntas sobre la plataforma */}
-          <div className="faq-column">
-            <div className="faq-item" data-aos="fade-up">
-              <details>
-                <summary>¿Qué tipo de análisis obtengo?</summary>
-                <p>Obtienes estadísticas sobre tus aciertos, fallos, progreso por asignatura y recomendaciones personalizadas.</p>
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Qué tipo de análisis obtengo después de cada simulacro?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Recibirás estadísticas detalladas de tu rendimiento, podrás revisar cada error y entender por qué fallaste. Así conviertes tus errores en tus mejores aliados.
+                </p>
               </details>
             </div>
 
-            <div className="faq-item" data-aos="fade-up">
-              <details>
-                <summary>¿Puedo usar la plataforma desde cualquier dispositivo?</summary>
-                <p>Sí, puedes acceder desde móvil, ordenador o tablet, sin límites.</p>
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Puedo centrarme en las asignaturas que más me cuestan?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Sí, puedes practicar por asignaturas específicas para reforzar justo donde lo necesitas. Tú eliges el enfoque de estudio según tu evolución.
+                </p>
+              </details>
+            </div>
+
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Simulia es compatible con móviles, tablets y ordenadores?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Totalmente. Accede desde cualquier dispositivo y estudia donde quieras, cuando quieras, sin perder tu progreso.
+                </p>
+              </details>
+            </div>
+
+            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+              <details className="py-4">
+                <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
+                  ¿Las preguntas están alineadas con los exámenes oficiales del EIR?
+                </summary>
+                <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
+                  Sí. Todas las preguntas están inspiradas en exámenes anteriores y protocolos actualizados del Ministerio de Sanidad.
+                </p>
               </details>
             </div>
           </div>
         </div>
       </section>
-      <div style={{ backgroundColor: "#3f5056", color: "white", padding: "40px 0 20px 0", marginTop: "50px" }}>
-        <section id="contacto" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 20px" }}>
-          <h2 style={{ textAlign: "center", marginBottom: "20px", color: "white" }}>Contacto</h2>
-          <p style={{ textAlign: "center", marginBottom: "20px", color: "#e0e0e0" }}>
-            ¿Tienes dudas o necesitas ayuda? Estamos aquí para ti. Escríbenos y te responderemos lo antes posible.
-          </p>
-          <div style={{ textAlign: "center", marginBottom: "50px" }}>
-            <a href="mailto:simuliaproject@simulia.es" style={{ 
-              backgroundColor: "rgba(255,255,255,0.2)", 
-              padding: "12px 25px", 
-              borderRadius: "50px", 
-              color: "white", 
-              textDecoration: "none",
-              display: "inline-block"
-            }}>
-              simuliaproject@simulia.es
-            </a>
-          </div>
-          
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "30px", textAlign: "center" }}>
-            <p style={{ fontSize: "14px", marginBottom: "15px" }}>© {new Date().getFullYear()} Simulia – Todos los derechos reservados</p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
-              <a href="/aviso-legal" style={{ color: "#e0e0e0", textDecoration: "none", fontSize: "14px" }}>Aviso legal</a>
-              <a href="/politica-privacidad" style={{ color: "#e0e0e0", textDecoration: "none", fontSize: "14px" }}>Política de privacidad</a>
-              <a href="/terminos-condiciones" style={{ color: "#e0e0e0", textDecoration: "none", fontSize: "14px" }}>Términos y condiciones</a>
+      <footer className="bg-secondary text-secondary-foreground">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="text-center space-y-8">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">Contacto</h2>
+              <p className="text-secondary-foreground/80 mb-6 text-base sm:text-lg max-w-2xl mx-auto">
+                ¿Tienes dudas o necesitas ayuda? Estamos aquí para ti. Escríbenos y te responderemos lo antes posible.
+              </p>
+              <a
+                href="mailto:simuliaproject@simulia.es"
+                className="inline-block bg-primary/20 hover:bg-primary hover:text-white px-8 py-3 rounded-full transition-all font-medium shadow-md hover:shadow-lg"
+              >
+                simuliaproject@simulia.es
+              </a>
+            </div>
+
+            <div className="border-t border-secondary-foreground/20 pt-8 space-y-4">
+              <p className="text-sm text-secondary-foreground/70">
+                © {new Date().getFullYear()} Simulia – Todos los derechos reservados
+              </p>
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <a href="/aviso-legal" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                  Aviso legal
+                </a>
+                <a
+                  href="/politica-privacidad"
+                  className="text-secondary-foreground/70 hover:text-primary transition-colors"
+                >
+                  Política de privacidad
+                </a>
+                <a
+                  href="/terminos-condiciones"
+                  className="text-secondary-foreground/70 hover:text-primary transition-colors"
+                >
+                  Términos y condiciones
+                </a>
+              </div>
             </div>
           </div>
-        </section>
-      </div>
+        </div>
+      </footer>
       
       {/* Demo Modal */}
       <DemoModal 
