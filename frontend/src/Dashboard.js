@@ -1992,10 +1992,9 @@ const handleErroresClick = () => {
             <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-8 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                  <p className="text-muted-foreground">
+                  <h1 className="text-3xl font-bold tracking-tight">
                     {currentUser?.name || authUser?.displayName ? `¡${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¡Listo para practicar?'}
-                  </p>
+                  </h1>
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Racha de acceso */}
