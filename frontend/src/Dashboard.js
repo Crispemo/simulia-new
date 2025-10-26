@@ -8,7 +8,7 @@ import { FaMoon, FaSun, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import './Dashboard.css';
 import AEleccion from './Aeleccion';
 import Contrarreloj from './Contrarreloj';
-import { PanelLeft, Menu, X, MessageSquare, Bot, Moon, Sun } from 'lucide-react';
+import { PanelLeft, Menu, X, MessageSquare, Bot, Moon, Sun, Flame } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import jwtDecode from "jwt-decode"
@@ -20,9 +20,21 @@ import { API_URL } from './config';
 import { useAuth } from './context/AuthContext';
 import { toast } from 'react-hot-toast';
 
+// Importar nuevos componentes
+import Sidebar from './components/sidebar';
+import ExamModeSelector from './components/exam-mode-selector';
+import ExamHistoryTable from './components/exam-history-table';
+import TopFailedSubjects from './components/top-failed-subjects';
+import StreakCounter from './components/streak-counter';
+import AIAssistant from './components/ai-assistant';
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
+import { Button } from './components/ui/button';
+import { cn } from './lib/utils';
+
 function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser }) {
   // Feature flags
-  const RECURRENCE_ENABLED = false; // Desactiva la funcionalidad de racha/recurrencia
+  const RECURRENCE_ENABLED = true; // Activa la funcionalidad de racha/recurrencia
   const navigate = useNavigate();
   const [examData, setExamData] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
@@ -1913,221 +1925,228 @@ const handleErroresClick = () => {
 
   return (
     <GoogleOAuthProvider clientId="465394843030-lvkbmmj7h4rv8h67lo4h9aqpi6h0v1cs.apps.googleusercontent.com">
-      <div className="dashboard">
-        {/* Barra de navegación */}
-        <div className={`navbar ${isDarkMode ? 'dark' : ''}`}>
-          <div className="navbar-container">
-            <div className="navbar-left">
-              <button 
-                className="toggle-sidebar-btn mobile-only" 
-                onClick={toggleMobileMenu}
-                aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-              >
-                {isMobileMenuOpen ? 
-                  <FiX size={20} /> : 
-                  <FiMenu size={20} />
-                }
-              </button>
-            </div>
-            
-
-            
-            <div className="navbar-right">
-              <button 
-                className="feature-btn disabled"
-                aria-label="Comunidad (desactivado)"
-              >
-                <span className="feature-icon">
-                  <FiUsers size={18} />
-                </span>
-                <span className="feature-btn-text">Comunidad</span>
-                <span className="feature-tooltip">Función no disponible</span>
-              </button>
-              
-              <button 
-                className="feature-btn disabled"
-                aria-label="Chatbot (desactivado)"
-              >
-                <span className="feature-icon">
-                  <FiMessageSquare size={18} />
-                </span>
-                <span className="feature-btn-text">Chatbot</span>
-                <span className="feature-tooltip">Función no disponible</span>
-              </button>
-              
-              <button 
-                className="navbar-switch" 
-                onClick={handleToggleDarkMode}
-                aria-label={isDarkMode ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-              >
-                <span className="mode-icon">
-                  {isDarkMode ? 
-                    <FiSun size={18} /> : 
-                    <FiMoon size={18} />
-                  }
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Contenedor para sidebar y main content */} 
-        <div className="dashboard-body"> 
-          {/* Sidebar */} 
-          <div ref={sidebarRef} className={`sidebar ${isMobileMenuOpen ? 'mobile-active' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
-              <div className="sidebar-header">
-                  <img src="/Logo_oscuro.png" alt="Logo" className="sidebar-logo" />
-                  <h1>Simulia</h1>
-              </div>
-              <ul className="sidebar-menu">
-                  <li className="menu-item">
-                      <button onClick={() => handleMobileMenuClick(handleSimulacroClick)}>
-                          <img src="/icono7.png" alt="" className="menu-icon" />
-                          <span>Simulacro EIR</span>
-                      </button>
-                  </li>
-                  <li className="menu-item">
-                      <button onClick={() => handleMobileMenuClick(handleQuizzClick)}>
-                          <img src="/icono5.png" alt="" className="menu-icon" />
-                          <span>Quizz</span>
-                      </button>
-                  </li>
-                  <li className="menu-item">
-                      <button onClick={() => handleMobileMenuClick(handleErroresClick)}>
-                          <img src="/icono2.png" alt="" className="menu-icon" />
-                          <span>Repite tus errores</span>
-                      </button>
-                  </li>
-                  <li className="menu-item">
-                      <button onClick={() => handleMobileMenuClick(handleExamenEleccionClick)}>
-                          <img src="/icono8.png" alt="" className="menu-icon" />
-                          <span>Diseña tu examen</span>
-                      </button>
-                  </li>
-                  <li className="menu-item">
-                      <button onClick={() => handleMobileMenuClick(handleContrarrelojClick)}>
-                          <img src="/icono6.png" alt="" className="menu-icon" />
-                          <span>Contrarreloj</span>
-                      </button>
-                  </li>
-                  <li className="menu-item">
-                      <button
-                          onClick={() =>
-                              handleMobileMenuClick(() => {
-                                  localStorage.removeItem("userAnswers");
-                                  localStorage.removeItem("progresoExamen");
-                                  navigate("/protocolos");
-                              })
-                          }
-                      >
-                          <img src="/icono11.png" alt="" className="menu-icon" />
-                          <span>Protocolario</span>
-                      </button>
-                  </li>
-                  <li className="menu-item" style={{ position: 'relative' }}>
-                    <button
-                      className="disabled"
-                      tabIndex={-1}
-                      style={{ pointerEvents: 'none', opacity: 0.5, position: 'relative' }}
-                    >
-                      <img src="/evaluacion-de-salud.png" alt="" className="menu-icon" />
-                      <span>Escalas</span>
-                      <span className="disabled-tooltip">Función no disponible</span>
-                    </button>
-                  </li> 
-              </ul>
-              <div className="sidebar-collapse">
-                  <button 
-                    className="collapse-button"
-                    onClick={toggleSidebar}
-                    aria-label={isCollapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-                  >
-                    {isCollapsed ? <FiChevronRight size={16} /> : <FiChevronLeft size={16} />}
-                  </button>
-              </div>
-                  <div className="sidebar-footer">
-                  <div className="sidebar-footer-row">
-                    {RECURRENCE_ENABLED && (
-                      <button onClick={openRecurrencePopup} className="billing-button">
-                          <span>Racha</span>
-                      </button>
-                    )}
-                    <button onClick={openTutorialModal} className="billing-button">
-                        <span>Tutorial</span>
-                    </button>
-                  </div>
-                  <button onClick={handleSettingsClick} className="billing-button">
-                      <span>Gestionar suscripción</span>
-                  </button>
-              </div>
-          </div>
-
-          {/* Contenido Principal */} 
-          <div className={`main-content ${isCollapsed ? 'collapsed' : 'expanded'}`}>
-              <TimelineProgress />
-              <div className="dashboard-metrics">
-                  <div className="metrics-tabs">
-                      <button
-                          className={`tab-button ${activeTab === 'summary' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('summary')}
-                      >
-                          Resumen
-                      </button>
-                      <button
-                          className={`tab-button ${activeTab === 'progress' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('progress')}
-                      >
-                          Progreso
-                      </button>
-                      <button
-                          className={`tab-button ${activeTab === 'subjects' ? 'active' : ''}`}
-                          onClick={() => setActiveTab('subjects')}
-                      >
-                          Asignaturas
-                      </button>
-                  </div>
-                  <div className="metrics-content">
-                      {renderDashboardMetrics()}
-                  </div>
-              </div>
-              {renderExamHistoryTable()}
-          </div>
-        </div>
-
+      <div className="flex h-screen bg-background">
+        {/* Sidebar */}
+        <Sidebar 
+          isCollapsed={isCollapsed}
+          toggleCollapsed={toggleSidebar}
+          isDarkMode={isDarkMode}
+          toggleDarkMode={handleToggleDarkMode}
+        />
         
+        {/* Main Content */}
+        <div className={cn('flex-1 overflow-y-auto transition-all duration-300', isCollapsed ? 'ml-16' : 'ml-64')}>
+          <main className="container mx-auto p-6 space-y-6">
+            {/* Header con gradient */}
+            <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-8 shadow-sm">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                  <p className="text-muted-foreground">
+                    Bienvenido de vuelta, aquí tienes un resumen de tu progreso
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Racha activada */}
+                  <StreakCounter streak={3} label="Racha" textColor="#3b82f6" />
+                  <StreakCounter streak={timeLeft.days || 0} label="Días hasta examen" textColor="#ef4444" />
+                </div>
+              </div>
+              
+              {/* Timeline */}
+              <div className="mt-6">
+                <TimelineProgress />
+              </div>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <ExamModeSelector />
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={openTutorialModal}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Tutorial
+                </Button>
+                <AIAssistant />
+                <Button variant="outline" onClick={handleToggleDarkMode}>
+                  {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                <Button variant="outline" onClick={handleSettingsClick}>
+                  Configuración
+                </Button>
+              </div>
+            </div>
+
+            {/* Tabs Section */}
+            <Tabs value={activeTab} onChange={setActiveTab} className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="summary">Resumen</TabsTrigger>
+                <TabsTrigger value="progress">Progreso</TabsTrigger>
+                <TabsTrigger value="subjects">Asignaturas</TabsTrigger>
+              </TabsList>
+
+              {/* Summary Tab */}
+              <TabsContent value="summary" className="space-y-4">
+                {/* Métricas principales */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Exámenes Completados
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-blue-600">{stats.completedExams}</div>
+                      <p className="text-xs text-muted-foreground">
+                        de {stats.totalExams} totales
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-l-4 border-l-green-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Puntuación Media
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">
+                        {typeof stats.averageScore === 'number' ? stats.averageScore.toFixed(2) : '0.00'}
+                      </div>
+                      <p className="text-xs text-muted-foreground">puntos promedio</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-l-4 border-l-purple-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Mejor Puntuación
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {stats.bestScore && typeof stats.bestScore.score === 'number' 
+                          ? stats.bestScore.score.toFixed(2) 
+                          : '0.00'}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {stats.bestScore && stats.bestScore.date 
+                          ? `${new Date(stats.bestScore.date).toLocaleDateString()} - ${getExamTypeName(stats.bestScore.type)}`
+                          : 'No hay datos'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-l-4 border-l-orange-500">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Tiempo Medio
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-600">{formatTime(stats.averageTimeUsed || 0)}</div>
+                      <p className="text-xs text-muted-foreground">por examen</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Gráficos */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card className="border-l-4 border-l-accent">
+                    <CardHeader>
+                      <CardTitle>Distribución de Respuestas</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={answersDistributionData}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={false}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          >
+                            {answersDistributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardHeader>
+                      <CardTitle>Asignaturas con más fallos</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {errorsBySubject && errorsBySubject.length > 0 ? (
+                        <div className="space-y-2">
+                          {errorsBySubject.slice(0, 5).map((subject, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                              <span className="text-sm">{subject.name}</span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-24 h-2 bg-secondary rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-red-400 to-red-600"
+                                    style={{ width: `${Math.min(100, (subject.count / errorsBySubject[0].count) * 100)}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm font-bold text-red-600 w-10 text-right">
+                                  {subject.count}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="outline" 
+                            className="w-full mt-4" 
+                            onClick={handleErroresClick}
+                          >
+                            Ver todas las asignaturas →
+                          </Button>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Completa exámenes para ver tus asignaturas con más fallos
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Progress Tab */}
+              <TabsContent value="progress" className="space-y-4">
+                {renderDashboardMetrics()}
+              </TabsContent>
+
+              {/* Subjects Tab */}
+              <TabsContent value="subjects" className="space-y-4">
+                {renderDashboardMetrics()}
+              </TabsContent>
+            </Tabs>
+
+            {/* Exam History Table */}
+            <ExamHistoryTable 
+              exams={filteredExams}
+              onReviewClick={handleReviewExam}
+              getExamTypeName={getExamTypeName}
+            />
+          </main>
+        </div>
 
         {/* Popups, Overlays, ChatBot, Community */} 
         {showEleccionPopup && <AEleccion onClose={closePopup} />}
         {showContrarrelojPopup && <Contrarreloj onClose={closePopup} />}
         {renderErrorPopup()}
-        {/* Componentes de Community y ChatBot desactivados temporalmente
-        {showCommunity && (
-          <div className={`community-overlay ${isDarkMode ? 'dark-mode' : ''}`}>
-            <div className="community-content">
-              <div className="community-header-container">
-                <h2>Comunidad de Simulia</h2>
-                <button 
-                  className="close-community-overlay" 
-                  onClick={closeCommunity} 
-                  aria-label="Cerrar comunidad"
-                >
-                  <FiX size={18} />
-                </button>
-              </div>
-              <Community 
-                currentUser={currentUser || {id: 'guest', name: 'Invitado'}} 
-                setShowAvatarPopup={setShowAvatarPopup}
-                hideTitle={true}
-              /> 
-            </div>
-          </div>
-        )}
-        {showChatBot && <ChatBot onClose={closeChatBot} />}
-        */}
         {renderAvatarPopup()}
         {RECURRENCE_ENABLED && renderRecurrencePopup()}
         {renderTutorialModal()}
-
       </div>
     </GoogleOAuthProvider>
   );
