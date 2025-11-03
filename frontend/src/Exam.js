@@ -144,29 +144,13 @@ const loadQuestions = async () => {
     // Determinar el tipo de examen
     const currentExamType = getExamType(examMode);
     console.log(`Cargando preguntas para examen tipo: ${currentExamType}`);
-    console.log('🔧 EXAM DEBUG - API_URL:', API_URL);
+    console.log('🔧 EXAM DEBUG - API_URL desde config:', API_URL);
     console.log('🔧 EXAM DEBUG - NODE_ENV:', process.env.NODE_ENV);
     console.log('🔧 EXAM DEBUG - hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
     
-    // SOLUCIÓN DEFINITIVA: Detectar entorno y usar URL correcta
-    let effectiveAPI_URL;
+    // Usar API_URL directamente desde config.js (ya tiene la lógica de detección de entorno)
+    const effectiveAPI_URL = API_URL;
     
-    // Detectar si estamos en producción (simulia.es)
-    const isProduction = typeof window !== 'undefined' && 
-      (window.location.hostname === 'www.simulia.es' || 
-       window.location.hostname === 'simulia.es' ||
-       window.location.protocol === 'https:');
-    
-    if (isProduction) {
-      effectiveAPI_URL = 'https://backend-production-cc6b.up.railway.app';
-      console.log('🔧 EXAM DEBUG - PRODUCCIÓN DETECTADA - Usando Railway');
-    } else {
-      effectiveAPI_URL = 'http://localhost:3001';
-      console.log('🔧 EXAM DEBUG - DESARROLLO DETECTADO - Usando localhost');
-    }
-    
-    console.log('🔧 EXAM DEBUG - hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
-    console.log('🔧 EXAM DEBUG - protocol:', typeof window !== 'undefined' ? window.location.protocol : 'undefined');
     console.log('🔧 EXAM DEBUG - effectiveAPI_URL:', effectiveAPI_URL);
     
     let allQuestions = [];
@@ -192,39 +176,71 @@ const loadQuestions = async () => {
       // Para otros tipos de examen, mantener el comportamiento original
       // Obtener preguntas completas
       const completosURL = `${effectiveAPI_URL}/random-question-completos`;
-      console.log('🔧 EXAM DEBUG - Completos URL:', completosURL);
-      const completosResponse = await fetch(completosURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          count: 200,
-          examType: currentExamType
-        })
-      });
+      let completosData = [];
+      
+      try {
+        const completosResponse = await fetch(completosURL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ 
+            count: 200,
+            examType: currentExamType
+          })
+        });
 
-      if (!completosResponse.ok) {
-        throw new Error(`Error al cargar preguntas completas: ${completosResponse.status}`);
+        if (completosResponse.ok) {
+          completosData = await completosResponse.json();
+          console.log(`Recibidas ${completosData.length} preguntas completas`);
+        } else {
+          // Manejar error de forma más elegante
+          if (completosResponse.status === 0 || completosResponse.statusText === '') {
+            throw new Error('Error de conexión con el servidor. Verifica que el backend esté corriendo.');
+          }
+          throw new Error(`Error al cargar preguntas completas: ${completosResponse.status}`);
+        }
+      } catch (fetchError) {
+        // Si es error CORS o de red, mostrar mensaje más útil
+        if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
+          throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5000 y que CORS esté configurado correctamente.');
+        }
+        throw fetchError;
       }
 
-      const completosData = await completosResponse.json();
-      console.log(`Recibidas ${completosData.length} preguntas completas`);
+      // Obtener preguntas con fotos (opcional - si falla, continuar sin fotos)
+      let fotosData = [];
+      try {
+        const fotosURL = `${effectiveAPI_URL}/random-fotos`;
+        const fotosResponse = await fetch(fotosURL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ count: 10 })
+        });
 
-      // Obtener preguntas con fotos
-      const fotosURL = `${effectiveAPI_URL}/random-fotos`;
-      console.log('🔧 EXAM DEBUG - Fotos URL:', fotosURL);
-      const fotosResponse = await fetch(fotosURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: 10 })
-      });
-
-      if (!fotosResponse.ok) {
-        throw new Error(`Error al cargar preguntas con fotos: ${fotosResponse.status}`);
+        if (fotosResponse.ok) {
+          fotosData = await fotosResponse.json();
+          console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
+        } else {
+          // No crítico - continuar sin fotos
+          console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
+        }
+      } catch (fotosError) {
+        // No crítico - continuar sin fotos
+        if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
+          console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
+        }
       }
 
-      const fotosData = await fotosResponse.json();
-      console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
-
+      // Validar que tengamos preguntas antes de continuar
+      if (completosData.length === 0 && fotosData.length === 0) {
+        throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
+      }
+      
       // Combinar las preguntas
       allQuestions = [...completosData, ...fotosData];
       
@@ -1309,10 +1325,7 @@ const loadQuestions = async () => {
         
         // Realizar una solicitud síncrona (deprecated pero necesario para este caso)
         const xhr = new XMLHttpRequest();
-        const saveURL = (typeof window !== 'undefined' && 
-          (window.location.hostname === 'www.simulia.es' || window.location.hostname === 'simulia.es')) 
-          ? 'https://backend-production-cc6b.up.railway.app/save-exam-progress'
-          : `${API_URL}/save-exam-progress`;
+        const saveURL = `${API_URL}/save-exam-progress`;
         xhr.open('POST', saveURL, false); // false = síncrono
         xhr.setRequestHeader('Content-Type', 'application/json');
         try {

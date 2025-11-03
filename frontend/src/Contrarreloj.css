@@ -3,13 +3,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #3E5055; /* Fondo gris oscuro */ 
-  padding: 0.25rem 0.5rem;
-  height: 45px;
+  background: linear-gradient(135deg, #7da0a7 0%, #5a7d84 100%);
+  padding: 0 1.5rem;
+  height: 56px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 } 
 body.dark .contrarreloj-header {
-  background-color: #5A6E71;
-  color: #FFFFFF; /* Texto claro */
+  background: linear-gradient(135deg, #3e5156 0%, #2a3439 100%);
+  color: #FFFFFF;
 }
 .contrarreloj-header .logo {
   display: flex;
@@ -17,10 +18,11 @@ body.dark .contrarreloj-header {
   margin-left: 16px;
 }
 .contrarreloj-header .logo h1 {
-  font-size: 30px;
-  margin-left: 10px;
-  font-weight: bold;
-  color: #7ea0a7;
+  font-size: 20px;
+  margin-left: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
 }
 
 /* Texto SIMULIA en blanco */
@@ -111,22 +113,25 @@ body.dark .time-display {
 }
 /* Rectángulo para las preguntas (entre barra superior y leyenda) */
 .contrarreloj-question-box {
-  margin-top: 30px; /* Reducido desde 30px */
-  margin-bottom: 5px; /* Reducido desde 10px */
-  padding: 10px; /* Reducido desde 20px */
-  background-color: #f4f4f9;
-  border: 2px solid #7ea0a7; /* Reducido el grosor del borde */
-  border-radius: 8px; /* Menos redondeo */
-  width: 70%; /* Ajustado el ancho */
+  margin-top: 76px;
+  margin-bottom: 20px;
+  padding: 24px 28px 85px 28px;
+  background: #ffffff;
+  border: 1px solid #dce4e6;
+  border-radius: 12px;
+  width: 75%;
+  max-width: 960px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombras más sutiles */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   margin-left: auto;
   margin-right: auto;
 }
 
 body.dark .contrarreloj-question-box {
-  background-color: transparent !important;
+  background: #1e2428 !important;
   color: #FFFFFF;
+  border-color: #3e5156;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .selected {
@@ -146,31 +151,42 @@ body.dark .selected {
 }
 
 .contrarreloj-options-container button {
-  background-color: #f4f4f9;
-  border: 2px solid #7ea0a7;
-  padding: 10px;
-  border-radius: 5px;
-  font-size: 16px;
-  color: #333;
+  background-color: #ffffff;
+  border: 1px solid #dce4e6;
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #3e5156;
   cursor: pointer;
-  transition: all 0.3s ease;
-  width: 100%; /* Las opciones ocuparán todo el ancho */
+  transition: all 0.2s ease;
+  width: 100%;
 }
 
 body.dark .contrarreloj-options-container button {
-  background-color: #3E5055;
+  background-color: #2a3439;
+  border-color: #3e5156;
   color: #FFFFFF;
 }
 
 .contrarreloj-options-container button:hover {
-  background-color: #7ea0a7;
-  color: white;
+  background-color: #f5f8f9;
+  color: #3e5156;
+  border-color: #7da0a7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(125, 160, 167, 0.15);
+}
+
+body.dark .contrarreloj-options-container button:hover {
+  background-color: #3e5156;
+  border-color: #7da0a7;
 }
 
 .contrarreloj-options-container button.selected {
-  background-color: #7ea0a7;
-  border: 2px solid #7ea0a7;
-  color: white;
+  background-color: #7da0a7 !important;
+  border: 1px solid #7da0a7 !important;
+  color: white !important;
+  box-shadow: 0 0 0 3px rgba(125, 160, 167, 0.1) !important;
 }
 
 /* Botones de navegación */
@@ -212,42 +228,45 @@ body.dark .contrarreloj-options-container button {
 }
 
 .contrarreloj-question-number {
-  display: flex; /* Para centrar el contenido */
-  align-items: center; /* Centrar verticalmente */
-  justify-content: center; /* Centrar horizontalmente */
-  width: 40px;
-  height: 29px;
-  background-color: #f4f4f9;
-  border: 1.5px solid #3E5055;
-  border-radius: 25%;
-  font-size: 13px;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #f5f8f9;
+  border: 1px solid #dce4e6;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  color: rgb(0, 0, 0); 
-  transition: background-color 0.3s;
-  margin-block-end: 1;
+  color: #3e5156;
+  transition: all 0.2s ease;
 }
 body.dark .contrarreloj-question-number {
-  background-color: #3E5055;
+  background-color: #2a3439;
+  border-color: #3e5156;
   color: #FFFFFF;
 }
 
 .contrarreloj-question-number:hover {
-  background-color: #3E5055;
-  border: 1.5px solid #3E5055;
-  color: rgb(255, 255, 255);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 body.dark .contrarreloj-question-number:hover {
-  background-color: #5A6B72;
-  color: #FFFFFF;
+  background-color: #3e5156;
 }
 .active {
-  background-color: #fab469; /* Color activo */
+  background-color: #7da0a7 !important;
+  color: white !important;
+  border-color: #7da0a7 !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(125, 160, 167, 0.2) !important;
 }
 
 .answered {
-  background-color: #3E5055; /* Color cuando está respondida */
-  color: rgb(255, 255, 255);
+  background-color: #3e5156 !important;
+  color: #ffffff !important;
+  border-color: #3e5156 !important;
 }
 
 /* Pop-up genérico (usado tanto para inicio como para finalizar examen) */
@@ -270,17 +289,20 @@ body.dark .contrarreloj-question-number:hover {
 
 .popup {
   background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 50%; /* Ajusta el tamaño del pop-up */
-  max-width: 500px; /* Limitar el ancho máximo del pop-up */
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 50%;
+  max-width: 520px;
   text-align: center;
+  border: 1px solid #e9ecef;
 }
 
 body.dark .popup {
-  background-color: #2A2A2A;
+  background-color: #1e2428;
   color: #FFFFFF;
+  border-color: #3e5156;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 .popup-buttons {
   display: flex;
@@ -289,17 +311,22 @@ body.dark .popup {
 }
 
 .control-btn {
-  background-color: transparent;
-  border: 2px solid #7ea0a7;
-  color: #7ea0a7;
+  background-color: #7da0a7;
+  border: none;
+  color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 20px;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn:hover {
-  background-color: #7ea0a7;
+  background-color: #5a7d84;
   color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .dark-mode-toggle {

@@ -148,20 +148,14 @@ const sendSubscriptionEmail = async (email, plan, expirationDate) => {
 
 // Función para enviar impugnaciones
 const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId) => {
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('📧 INICIO ENVÍO IMPUGNACIÓN - LOGS DETALLADOS');
-  console.log('═══════════════════════════════════════════════════════');
-  console.log('⏰ Timestamp:', new Date().toISOString());
-  console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
-  console.log('📍 Platform:', process.platform);
-  console.log('🔧 Node Version:', process.version);
+
   
   if (!question) {
     console.error('❌ ERROR: Faltan datos para enviar la impugnación (pregunta).');
     console.log('═══════════════════════════════════════════════════════');
     return false;
   }
-
+  console.log(question);
   const subject = 'impugnación';
   const message = `
     Se ha recibido una nueva impugnación:
@@ -171,35 +165,18 @@ const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId)
     
     Pregunta: ${question}
     
-    Respuesta seleccionada: ${userAnswer || 'No seleccionada'}
+    Respuesta seleccionada: ${userAnswer.selectedAnswer || 'No seleccionada'}
     
     Razón de impugnación: ${reason || 'No especificada'}
     
     Fecha: ${new Date().toLocaleString()}
   `;
 
-  // Logs detallados de configuración
-  console.log('📋 CONFIGURACIÓN DE EMAIL:');
-  console.log('  - EMAIL existe:', !!process.env.EMAIL);
-  console.log('  - EMAIL value:', process.env.EMAIL ? `${process.env.EMAIL.substring(0, 3)}***` : 'NO CONFIGURADO');
-  console.log('  - EMAIL_PASSWORD existe:', !!process.env.EMAIL_PASSWORD);
-  console.log('  - EMAIL_PASSWORD length:', process.env.EMAIL_PASSWORD ? process.env.EMAIL_PASSWORD.length : 0);
-  console.log('  - Transporter inicializado:', !!transporter);
+  
 
   // Si no hay transporter configurado, solo loguear la impugnación
   if (!transporter) {
-    console.log('⚠️  ADVERTENCIA: No hay transporter configurado');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📝 IMPUGNACIÓN RECIBIDA (Sin configuración de email)');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('⚠️  PROBLEMA: Las credenciales de email no están configuradas en producción');
-    console.log(`👤 Usuario ID: ${userId || 'No disponible'}`);
-    console.log(`📧 Email: ${userEmail || 'No disponible'}`);
-    console.log(`❓ Pregunta: ${question.substring(0, 100)}...`);
-    console.log(`✍️  Respuesta seleccionada: ${userAnswer || 'No seleccionada'}`);
-    console.log(`💭 Razón: ${reason || 'No especificada'}`);
-    console.log(`📅 Fecha: ${new Date().toLocaleString()}`);
-    console.log('═══════════════════════════════════════════════════════');
+  
     return true; // Simular éxito para que el frontend no muestre error
   }
 

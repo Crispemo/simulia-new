@@ -27,7 +27,13 @@ const path = require('path');
 const disputeRoutes = require('./routes/disputeRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
 const axios = require('axios');
+const OpenAI = require('openai');
 const app = express();
+
+// Inicializar OpenAI
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+}) : null;
 
 // Configuración de URLs para desarrollo y producción
 const FRONTEND_URL = process.env.NODE_ENV === 'production' 
@@ -152,21 +158,145 @@ app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 // Para todas las demás rutas, usar JSON parsing
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// CORS seguro con credenciales y whitelist
+const corsWhitelist = [
+  'http://localhost:3000',
+  'https://www.simulia.es',
+  'https://simulia.es',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && corsWhitelist.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+  }
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  // Responder preflight rápidamente
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://www.simulia.es',
-    'https://simulia.es'  // Dominio apex
-  ],
+  origin: function (origin, callback) {
+    // Permitir herramientas sin origin (Postman/cURL) y orígenes en whitelist
+    if (!origin || corsWhitelist.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
+  credentials: true
 }));
+
+// Asegurar manejo de OPTIONS en todas las rutas
+app.options('*', cors());
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
 // Rutas de práctica y preferencias
 app.use(practiceRoutes);
+
+// Ruta para el asistente de IA con ChatGPT
+app.post('/ai-assistant/chat', async (req, res) => {
+  try {
+    const { message, messages } = req.body;
+
+    if (!message && (!messages || messages.length === 0)) {
+      return res.status(400).json({ error: 'Mensaje requerido' });
+    }
+
+    // Verificar si OpenAI está configurado
+    if (!openai || !process.env.OPENAI_API_KEY) {
+      console.warn('⚠️ OpenAI no configurado, usando respuesta por defecto');
+      return res.status(503).json({ 
+        error: 'Servicio de IA no disponible',
+        fallback: true 
+      });
+    }
+
+    // Preparar el historial de mensajes para ChatGPT
+    const systemPrompt = `Eres un asistente virtual experto en ayudar a estudiantes de enfermería a prepararse para el Examen de Enfermero Interno Residente (EIR) en la plataforma Simulia.
+
+Tu función es:
+- Responder preguntas sobre el examen EIR, asignaturas, técnicas de estudio y preparación
+- Ayudar a los estudiantes a entender cómo usar la plataforma Simulia
+- Proporcionar consejos de estudio efectivos y motivación
+- Explicar conceptos de enfermería de manera clara y concisa
+- Ayudar con estrategias para mejorar el rendimiento en los exámenes
+
+Mantén tus respuestas:
+- Concisas pero completas (máximo 200 palabras por respuesta)
+- Empatéticas y motivadoras
+- En español
+- Específicas y prácticas
+- Orientadas a ayudar al estudiante a alcanzar sus objetivos
+
+NO inventes información que no tengas certeza. Si no sabes algo, admítelo y sugiere consultar fuentes oficiales.`;
+
+    let conversationMessages = [
+      { role: 'system', content: systemPrompt }
+    ];
+
+    // Si hay historial de mensajes, convertirlo al formato de OpenAI
+    if (messages && Array.isArray(messages) && messages.length > 0) {
+      messages.forEach(msg => {
+        if (msg.sender === 'user') {
+          conversationMessages.push({ role: 'user', content: msg.text });
+        } else if (msg.sender === 'bot') {
+          conversationMessages.push({ role: 'assistant', content: msg.text });
+        }
+      });
+    }
+
+    // Agregar el nuevo mensaje del usuario
+    if (message) {
+      conversationMessages.push({ role: 'user', content: message });
+    }
+
+    console.log(`🤖 ChatGPT: Procesando mensaje (historial: ${conversationMessages.length - 1} mensajes)`);
+
+    // Llamar a la API de OpenAI
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini', // Modelo más económico y rápido
+      messages: conversationMessages,
+      temperature: 0.7,
+      max_tokens: 300,
+    });
+
+    const aiResponse = completion.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta.';
+
+    console.log(`✅ ChatGPT: Respuesta generada (${aiResponse.length} caracteres)`);
+
+    res.json({
+      response: aiResponse,
+      model: 'gpt-4o-mini'
+    });
+
+  } catch (error) {
+    console.error('❌ Error en ChatGPT:', error.message);
+    
+    // Si hay error de rate limit o cuota, devolver un error específico
+    if (error.status === 429 || error.code === 'insufficient_quota') {
+      return res.status(503).json({ 
+        error: 'Límite de uso alcanzado. Inténtalo más tarde.',
+        fallback: true
+      });
+    }
+
+    res.status(500).json({ 
+      error: 'Error al procesar la solicitud',
+      message: error.message,
+      fallback: true
+    });
+  }
+});
 
 // Ruta de diagnóstico para verificar configuración de email
 app.get('/debug-email-config', (req, res) => {

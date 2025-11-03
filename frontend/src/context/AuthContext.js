@@ -11,6 +11,10 @@ export function useAuth() {
 }
 
 export const AuthProvider = ({ children }) => {
+  // Configuración global de axios para CORS con credenciales
+  axios.defaults.withCredentials = true;
+  axios.defaults.headers.post['Content-Type'] = 'application/json';
+  axios.defaults.headers.get['Content-Type'] = 'application/json';
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);

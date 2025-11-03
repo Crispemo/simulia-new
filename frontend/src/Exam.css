@@ -3,20 +3,20 @@
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  background: #3f5056 !important; /* Fondo correcto para navbar */
-  padding: 0 1rem !important;
-  height: 60px !important;
+  background: linear-gradient(135deg, #7da0a7 0%, #5a7d84 100%) !important; /* Gradiente de marca */
+  padding: 0 1.5rem !important;
+  height: 56px !important;
   width: 100% !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   z-index: 1000 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06) !important;
   transition: background-color 0.3s ease;
 } 
 
 body.dark .exam-header {
-  background: #1E2428 !important;
+  background: linear-gradient(135deg, #3e5156 0%, #2a3439 100%) !important;
   color: #FFFFFF;
 }
 
@@ -32,15 +32,16 @@ body.dark .exam-header .logo h2 {
 }
 
 .exam-header .logo h1, .exam-header .logo h2 {
-  font-size: 30px;
-  margin-left: 10px;
-  font-weight: bold;
-  color: #7ea0a7;
+  font-size: 20px;
+  margin-left: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
   transition: color 0.3s ease;
 }
 
 body.dark .exam-header .logo h1, body.dark .exam-header .logo h2 {
-  color: #a8c5cc;
+  color: #ffffff;
 }
 
 .right-buttons {
@@ -59,27 +60,30 @@ body.dark .exam-header .logo h1, body.dark .exam-header .logo h2 {
 }
 
 .popup-buttons button {
-  background: #3f5056 !important;
+  background: #7da0a7 !important;
   color: white !important;
-  padding: 10px 20px !important;
+  padding: 10px 24px !important;
   border: none !important;
-  border-radius: 5px !important;
+  border-radius: 8px !important;
   cursor: pointer !important;
   font-weight: 500 !important;
   min-width: 120px !important;
-  transition: background-color 0.3s ease !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 body.dark .popup-buttons button {
-  background: #516166 !important;
+  background: #7da0a7 !important;
 }
 
 .popup-buttons button:hover {
-  background-color: #516166 !important;
+  background-color: #5a7d84 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }
 
 body.dark .popup-buttons button:hover {
-  background-color: #617177 !important;
+  background-color: #6a8f96 !important;
 }
 
 .left-buttons {
@@ -88,77 +92,87 @@ body.dark .popup-buttons button:hover {
 }
 
 .control-btn {
-  background-color: #3f5056;
-  border: 1.5px solid #7ea0a7; /* Reducido el grosor del borde */
-  padding: 0.4rem 0.8rem; /* Reducido desde 0.5rem 1rem */
-  font-size: 14px; /* Reducido el tamaño de fuente */
+  background-color: #7da0a7;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  font-weight: 500;
   color: white;
   cursor: pointer;
-  border-radius: 15px; /* Menos redondeo */
-  transition: all 0.3s ease;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 body.dark .control-btn {
-  background-color: #3f5056;
-  border-color: #a8c5cc;
+  background-color: #7da0a7;
+  border: none;
   color: white;
 }
 .control-btn:hover {
-  background-color: #526670;
+  background-color: #5a7d84;
   color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 body.dark .control-btn:hover {
-  background-color: #526670; /* Fondo más claro al hacer hover en modo oscuro */
+  background-color: #6a8f96;
   color: white;
 }
 .time-display {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 600;
   text-align: center;
   transition: color 0.3s ease;
-  background: transparent !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(8px);
+  padding: 6px 12px;
+  border-radius: 8px;
   color: white !important;
+  letter-spacing: 0.5px;
 }
 body.dark .time-display {
-  color: #FFFFFF !important; /* Texto claro */
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
 }
 
 /* Rectángulo para las preguntas - con overflow auto para scroll */
 .question-box {
   position: relative !important;
-  margin-top: 70px !important;
-  margin-bottom: 10px;
-  padding: 15px 20px 75px 20px !important; /* Mantener padding inferior */
-  background: white !important;
-  border: 2px solid #7ea0a7;
-  border-radius: 8px;
-  width: 75%; /* Ancho fijo */
+  margin-top: 76px !important;
+  margin-bottom: 20px;
+  padding: 24px 28px 85px 28px !important;
+  background: #ffffff !important;
+  border: 1px solid #dce4e6;
+  border-radius: 12px;
+  width: 75%;
+  max-width: 960px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(126, 160, 167, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
   margin-left: auto;
   margin-right: auto;
-  min-height: 390px; /* Altura mínima */
-  max-height: 550px; /* Altura máxima */
+  min-height: 390px;
+  max-height: 600px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto !important; /* Permitir scroll vertical cuando sea necesario */
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  overflow-y: auto !important;
+  transition: all 0.3s ease;
 }
 
 body.dark .question-box {
-  background: transparent !important;
+  background: #1e2428 !important;
   color: #FFFFFF;
-  border-color: #5A6B72;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  border-color: #3e5156;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Estilo para el enunciado de las preguntas - tamaño fijo */
 .question-box h3 {
-  color: #3f5056;
+  color: #3e5156;
   font-weight: 600;
-  margin-bottom: 1px;
-  font-size: 17px !important; /* Tamaño fijo según solicitado */
-  line-height: 1.4;
+  margin-bottom: 24px;
+  font-size: 18px !important;
+  line-height: 1.6;
   overflow-wrap: break-word;
   word-wrap: break-word;
   hyphens: auto;
@@ -166,6 +180,7 @@ body.dark .question-box {
   margin-left: auto;
   margin-right: auto;
   transition: color 0.3s ease;
+  text-align: left;
 }
 
 body.dark .question-box h3 {
@@ -173,12 +188,15 @@ body.dark .question-box h3 {
 }
 
 .selected {
-  background-color: #7ea0a7;
-  color: white;
-  transition: background-color 0.3s ease;
+  background-color: #7da0a7 !important;
+  color: white !important;
+  border-color: #7da0a7 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 0 0 3px rgba(125, 160, 167, 0.1) !important;
 }
 body.dark .selected {
-  background-color: #5A6B72;
+  background-color: #7da0a7 !important;
+  border-color: #7da0a7 !important;
 }
 
 /* Contenedor de preguntas - Mejor espaciado */
@@ -214,32 +232,37 @@ body.dark .selected {
 
 .options-container button {
   text-align: left !important;
-  padding: 12px 20px !important;
-  min-height: 40px;
-  line-height: 1 !important; /* Mejor espaciado entre líneas */
-  font-size: 16px !important;
+  padding: 14px 20px !important;
+  min-height: 48px;
+  line-height: 1.5 !important;
+  font-size: 15px !important;
   white-space: normal !important;
-  border: 1.5px solid #7ea0a7 !important;
+  border: 1px solid #dce4e6 !important;
+  border-radius: 8px !important;
   transition: all 0.2s ease !important;
-  background-color: transparent !important;
-  color: #3f5056 !important;
+  background-color: #ffffff !important;
+  color: #3e5156 !important;
+  font-weight: 500;
 }
 
 body.dark .options-container button {
-  border-color: #5A6B72 !important;
+  border-color: #3e5156 !important;
+  background-color: #2a3439 !important;
   color: #FFFFFF !important;
 }
 
 .options-container button:hover {
-  background-color: #7ea0a7 !important;
-  color: white !important;
-  border-color: #7ea0a7 !important;
+  background-color: #f5f8f9 !important;
+  color: #3e5156 !important;
+  border-color: #7da0a7 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(125, 160, 167, 0.15) !important;
 }
 
 body.dark .options-container button:hover {
-  background-color: #5A6B72 !important;
-  color: white !important;
-  border-color: #5A6B72 !important;
+  background-color: #3e5156 !important;
+  color: #ffffff !important;
+  border-color: #7da0a7 !important;
 }
 
 /* Estilo para preguntas con imagen - formato de columnas */
@@ -833,20 +856,22 @@ body.dark .page-indicator {
 
 .popup {
   background: white !important;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 50%; /* Ajusta el tamaño del pop-up */
-  max-width: 500px; /* Limitar el ancho máximo del pop-up */
+  padding: 28px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 50%;
+  max-width: 520px;
   text-align: center;
-  color: #3f5056;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: #3e5156;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
 }
 
 body.dark .popup {
-  background-color: #2a3439 !important;
+  background-color: #1e2428 !important;
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: #3e5156;
 }
 
 .popup-buttons {
@@ -883,36 +908,39 @@ body.dark .popup {
 }
 
 .exam-question-number {
-  width: 26px !important;
-  height: 26px !important;
-  font-size: 11px !important;
-  background-color: #ffffff !important;
-  border: 1.5px solid #3E5055 !important;
-  color: #333333 !important;
-  border-radius: 50% !important; /* Asegurar que sean completamente circulares */
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  background-color: #f5f8f9 !important;
+  border: 1px solid #dce4e6 !important;
+  color: #3e5156 !important;
+  border-radius: 8px !important;
   padding: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  transition: all 0.2s ease !important;
 }
 
 .exam-question-number.active {
-  background-color: #7ea0a7 !important;
+  background-color: #7da0a7 !important;
   color: white !important;
-  border: 1px solid #7ea0a7 !important;
-  transform: scale(1.1);
+  border: 1px solid #7da0a7 !important;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px rgba(125, 160, 167, 0.2) !important;
 }
 
 body.dark .exam-question-number.active {
-  background-color: #5A6B72 !important;
+  background-color: #7da0a7 !important;
   color: white !important;
-  border: 1px solid #5A6B72 !important;
+  border: 1px solid #7da0a7 !important;
 }
 
 .exam-question-number.answered {
-  background-color: #7ea0a7 !important;
+  background-color: #3e5156 !important;
   color: #ffffff !important;
-  border-color: #7ea0a7 !important;
+  border-color: #3e5156 !important;
 }
 
 /* Estilo para preguntas con duda */
@@ -1370,19 +1398,24 @@ body.dark {
 
 .exam-container {
   transition: background-color 0.3s ease;
-  background: linear-gradient(135deg, #f4f4f9 0%, #7ea0a7 100%) !important;
+  background: linear-gradient(to bottom, #ffffff 0%, #f5f8f9 100%) !important;
+  min-height: 100vh;
 }
 
 body.dark .exam-container {
-  background-color: #121518 !important;
-  background: none !important;
+  background: linear-gradient(to bottom, #121518 0%, #1e2428 100%) !important;
 }
 
 /* Ajuste para los números de pregunta en modo oscuro */
 body.dark .exam-question-number {
-  background-color: #2A3439 !important;
-  border-color: #5A6B72 !important;
+  background-color: #2a3439 !important;
+  border-color: #3e5156 !important;
   color: #FFFFFF !important;
+}
+
+.exam-question-number:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 body.dark .exam-question-number.active {

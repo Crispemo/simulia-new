@@ -110,13 +110,28 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   useEffect(() => {
     const fetchAllSubjects = async () => {
       try {
-        const response = await fetch(`${API_URL}/subjects`);
+        const response = await fetch(`${API_URL}/subjects`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+        
         if (response.ok) {
           const data = await response.json();
           setAllSubjects(data.map(subject => subject.id || subject.nombre));
+        } else {
+          // No crítico - solo log si no es CORS/403
+          if (response.status !== 403 && response.status !== 404 && response.status !== 0) {
+            console.warn('No se pudieron cargar las asignaturas:', response.status);
+          }
         }
       } catch (error) {
-        console.error("Error al cargar asignaturas:", error);
+        // Silenciar errores CORS/red - no crítico para la funcionalidad
+        if (!error.message?.includes('CORS') && !error.message?.includes('Failed to fetch')) {
+          console.warn('Error al cargar asignaturas (no crítico):', error);
+        }
       }
     };
     
@@ -192,14 +207,21 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     setShowTutorialModal(true);
   };
 
-  // Cargar preferencias de práctica del usuario (desactivado)
+  // Cargar preferencias de práctica del usuario
   useEffect(() => {
     if (!RECURRENCE_ENABLED) return;
     const fetchPracticePreferences = async () => {
       if (!userId) return;
       try {
         setLoadingPracticePrefs(true);
-        const response = await fetch(`${API_URL}/practice-preferences/${userId}`);
+        const response = await fetch(`${API_URL}/practice-preferences/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+        
         if (response.ok) {
           const data = await response.json();
           const cadence = parseInt(data?.cadenceDays);
@@ -210,9 +232,17 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
             emailOverride: data?.emailOverride || '',
             phoneE164: data?.phoneE164 || ''
           });
+        } else {
+          // No crítico - usar valores por defecto si falla
+          if (response.status !== 403 && response.status !== 404 && response.status !== 0) {
+            console.warn('No se pudieron cargar las preferencias de práctica:', response.status);
+          }
         }
       } catch (err) {
-        console.error('Error al cargar preferencias de práctica:', err);
+        // Silenciar errores CORS/red - usar valores por defecto
+        if (!err.message?.includes('CORS') && !err.message?.includes('Failed to fetch')) {
+          console.warn('Error al cargar preferencias de práctica (no crítico):', err);
+        }
       } finally {
         setLoadingPracticePrefs(false);
       }
@@ -224,20 +254,27 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   useEffect(() => {
     const fetchErrorData = async () => {
       if (!userId) {
-        console.log('No userId disponible para fetchErrorData');
         return;
       }
       
       try {
-        console.log(`Obteniendo preguntas falladas para userId: ${userId}`);
-        const response = await fetch(`${API_URL}/failed-questions/${userId}`);
+        const response = await fetch(`${API_URL}/failed-questions/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+        
         if (!response.ok) {
-          console.error('Error al obtener preguntas falladas:', response.status);
+          // No crítico si falla, solo log si no es CORS/403
+          if (response.status !== 403 && response.status !== 404 && response.status !== 0) {
+            console.warn('No se pudieron obtener preguntas falladas:', response.status);
+          }
           return;
         }
         
         const failedData = await response.json();
-        console.log('Datos de preguntas falladas recibidos:', failedData);
         
         // Process the failed questions
         const processedFailedQuestions = failedData.questions ? failedData.questions.map(q => ({
@@ -246,8 +283,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
             [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5]
               .filter(option => option && option !== '-')
         })) : [];
-        
-        console.log('Preguntas falladas procesadas:', processedFailedQuestions.length);
         
         // Group and count failed questions by subject
         const subjectGroups = {};
@@ -259,8 +294,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
           subjectGroups[subject]++;
         });
         
-        console.log('Grupos de asignaturas:', subjectGroups);
-        
         // Convert to array format for chart display
         const errorsArray = Object.entries(subjectGroups)
           .map(([name, count]) => ({
@@ -269,94 +302,129 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
           }))
           .sort((a, b) => b.count - a.count);
         
-        console.log('Array de errores por asignatura:', errorsArray);
         setErrorsBySubject(errorsArray);
       } catch (error) {
-        console.error('Error al procesar preguntas falladas:', error);
+        // Silenciar errores CORS/red
+        if (!error.message?.includes('CORS') && !error.message?.includes('Failed to fetch')) {
+          console.warn('Error al procesar preguntas falladas (no crítico):', error);
+        }
       }
     };
     
     fetchErrorData();
 
-    // Fetch unanswered questions stats and the actual unanswered questions
+    // Fetch unanswered questions stats and the actual unanswered questions (opcional, no crítico)
     const fetchUnansweredStats = async () => {
       if (!userId) return;
       
       try {
-        // First fetch the stats
-        const statsResponse = await fetch(`${API_URL}/unanswered-stats/${userId}`);
-        if (!statsResponse.ok) {
-          console.error('Error al obtener estadísticas de preguntas sin responder:', statsResponse.status);
-          return;
-        }
-        
-        const stats = await statsResponse.json();
-        console.log('Estadísticas de preguntas sin responder:', stats);
-        
-        setUnansweredStats(stats);
-        
-        // Then fetch the actual unanswered questions using the same endpoint as in errores.js
-        const questionsResponse = await fetch(`${API_URL}/unanswered-questions/${userId}`);
-        if (!questionsResponse.ok) {
-          console.error('Error al obtener preguntas sin contestar:', questionsResponse.status);
-          return;
-        }
-        
-        const questionsData = await questionsResponse.json();
-        console.log('Preguntas sin contestar:', questionsData);
-        
-        // Process questions to ensure they have valid options, similar to errores.js
-        const processedUnansweredQuestions = questionsData.questions ? questionsData.questions.map(q => ({
-          ...q,
-          options: q.options ? q.options.filter(opt => opt && opt !== '-') : 
-            [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5]
-              .filter(option => option && option !== '-')
-        })) : [];
-        
-        setUnansweredQuestions(processedUnansweredQuestions);
-        
-        // If there are more questions available than what we received in the first page, fetch more
-        const totalAvailable = questionsData.totalAvailable || 0;
-        const limit = questionsData.pagination?.limit || 100;
-        const totalPages = questionsData.pagination?.totalPages || 1;
-        
-        if (totalAvailable > processedUnansweredQuestions.length && totalPages > 1) {
-          console.log(`Obteniendo ${totalPages - 1} páginas adicionales de preguntas sin contestar...`);
+        // First fetch the stats (opcional - si falla, no afecta la app)
+        try {
+          const statsResponse = await fetch(`${API_URL}/unanswered-stats/${userId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+          });
           
-          let allUnansweredQuestions = [...processedUnansweredQuestions];
-          
-          // Start from page 1 (we already have page 0)
-          for (let page = 1; page < totalPages; page++) {
-            try {
-              const nextPageResponse = await fetch(
-                `${API_URL}/unanswered-questions/${userId}?page=${page}&limit=${limit}`
-              );
-              
-              if (!nextPageResponse.ok) {
-                console.warn(`Error al obtener página ${page} de preguntas no contestadas: ${nextPageResponse.status}`);
-                continue;
-              }
-              
-              const nextPageData = await nextPageResponse.json();
-              const nextPageQuestions = nextPageData.questions ? nextPageData.questions.map(q => ({
-                ...q,
-                options: q.options ? q.options.filter(opt => opt && opt !== '-') : 
-                  [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5]
-                    .filter(option => option && option !== '-')
-              })) : [];
-              
-              allUnansweredQuestions = [...allUnansweredQuestions, ...nextPageQuestions];
-              console.log(`Obtenida página ${page}: ${nextPageQuestions.length} preguntas adicionales`);
-            } catch (pageError) {
-              console.error(`Error al obtener página ${page}:`, pageError);
+          if (statsResponse.ok) {
+            const stats = await statsResponse.json();
+            setUnansweredStats(stats);
+          } else {
+            // No crítico, solo log si es un error inesperado (no 403/404)
+            if (statsResponse.status !== 403 && statsResponse.status !== 404) {
+              console.warn('No se pudieron obtener estadísticas de preguntas sin responder:', statsResponse.status);
             }
           }
+        } catch (statsError) {
+          // Silenciar errores de CORS/red para este endpoint opcional
+          if (!statsError.message?.includes('CORS') && !statsError.message?.includes('Failed to fetch')) {
+            console.warn('Error al obtener estadísticas de preguntas sin responder (no crítico):', statsError);
+          }
+        }
+        
+        // Then fetch the actual unanswered questions
+        try {
+          const questionsResponse = await fetch(`${API_URL}/unanswered-questions/${userId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include'
+          });
           
-          console.log(`Total de preguntas sin contestar cargadas: ${allUnansweredQuestions.length}/${totalAvailable}`);
-          setUnansweredQuestions(allUnansweredQuestions);
+          if (questionsResponse.ok) {
+            const questionsData = await questionsResponse.json();
+            
+            // Process questions to ensure they have valid options
+            const processedUnansweredQuestions = questionsData.questions ? questionsData.questions.map(q => ({
+              ...q,
+              options: q.options ? q.options.filter(opt => opt && opt !== '-') : 
+                [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5]
+                  .filter(option => option && option !== '-')
+            })) : [];
+            
+            setUnansweredQuestions(processedUnansweredQuestions);
+            
+            // If there are more questions available than what we received in the first page, fetch more
+            const totalAvailable = questionsData.totalAvailable || 0;
+            const limit = questionsData.pagination?.limit || 100;
+            const totalPages = questionsData.pagination?.totalPages || 1;
+            
+            if (totalAvailable > processedUnansweredQuestions.length && totalPages > 1) {
+              let allUnansweredQuestions = [...processedUnansweredQuestions];
+              
+              // Start from page 1 (we already have page 0)
+              for (let page = 1; page < totalPages; page++) {
+                try {
+                  const nextPageResponse = await fetch(
+                    `${API_URL}/unanswered-questions/${userId}?page=${page}&limit=${limit}`,
+                    {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      credentials: 'include'
+                    }
+                  );
+                  
+                  if (nextPageResponse.ok) {
+                    const nextPageData = await nextPageResponse.json();
+                    const nextPageQuestions = nextPageData.questions ? nextPageData.questions.map(q => ({
+                      ...q,
+                      options: q.options ? q.options.filter(opt => opt && opt !== '-') : 
+                        [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5]
+                          .filter(option => option && option !== '-')
+                    })) : [];
+                    
+                    allUnansweredQuestions = [...allUnansweredQuestions, ...nextPageQuestions];
+                  }
+                } catch (pageError) {
+                  // Continuar con las siguientes páginas si hay error
+                  break;
+                }
+              }
+              
+              setUnansweredQuestions(allUnansweredQuestions);
+            }
+          } else {
+            // No crítico
+            if (questionsResponse.status !== 403 && questionsResponse.status !== 404) {
+              console.warn('No se pudieron obtener preguntas sin contestar:', questionsResponse.status);
+            }
+          }
+        } catch (questionsError) {
+          // Silenciar errores de CORS/red para este endpoint opcional
+          if (!questionsError.message?.includes('CORS') && !questionsError.message?.includes('Failed to fetch')) {
+            console.warn('Error al obtener preguntas sin contestar (no crítico):', questionsError);
+          }
         }
       } catch (error) {
-        console.error('Error al procesar datos de preguntas sin responder:', error);
+        // Este endpoint es opcional, no debería afectar la funcionalidad principal
+        if (!error.message?.includes('CORS') && !error.message?.includes('Failed to fetch')) {
+          console.warn('Error general al procesar datos de preguntas sin responder (no crítico):', error);
+        }
       }
     };
     
@@ -609,25 +677,34 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       try {
         if (!userId) return;
 
-        console.log('Fetching exam history for user:', userId);
-        
         // Usar directamente el endpoint proporcionado
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/all-exams/${userId}`, {
+          method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          },
+          credentials: 'include'
         });
         
         if (!response.ok) {
+          // Si es error de CORS o 403, mostrar mensaje más amigable
+          if (response.status === 403) {
+            console.warn('Acceso denegado al historial de exámenes. Verifica tu autenticación.');
+            setExamData([]);
+            return;
+          }
+          if (response.status === 0 || response.statusText === '') {
+            // Probable error de CORS
+            console.warn('Error de conexión con el servidor. Verifica que el backend esté corriendo y CORS esté configurado.');
+            setExamData([]);
+            return;
+          }
           throw new Error(`Error al obtener exámenes: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('Exámenes obtenidos:', data.length);
-        
-        // NUEVO: Mostrar la respuesta completa para depuración
-        console.log('======= RESPUESTA COMPLETA DE EXÁMENES =======');
-        console.log('Datos raw:', data);
         
         // Asegurarse de que cada examen tiene la información correcta
         const examsWithStats = data.map(exam => {
@@ -657,32 +734,16 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
           };
         });
 
-        // NUEVO: Mostrar resumen detallado de cada examen
-        console.log('======= RESUMEN DE EXÁMENES PROCESADOS =======');
-        examsWithStats.forEach((exam, index) => {
-          console.log(`Examen #${index + 1}:`, {
-            id: exam._id,
-            tipo: exam.type,
-            fecha: new Date(exam.date).toLocaleString(),
-            estado: exam.status,
-            puntuación: exam.score,
-            correctas: exam.correct,
-            incorrectas: exam.incorrect,
-            totalPreguntas: exam.totalQuestions,
-            tiempoUsado: exam.timeUsed ? `${Math.floor(exam.timeUsed / 60)} min ${exam.timeUsed % 60} seg` : 'No disponible',
-            tieneQuestions: !!exam.questions,
-            questionsLength: exam.questions?.length || 0,
-            tieneUserAnswers: !!exam.userAnswers,
-            userAnswersLength: exam.userAnswers?.length || 0,
-            estructuraCompleta: exam
-          });
-        });
-        console.log('=======================================');
-
-        console.log('Exámenes procesados:', examsWithStats.length);
         setExamData(examsWithStats);
       } catch (error) {
-        console.error('Error al cargar historial:', error);
+        // Manejar errores de red/CORS de forma más elegante
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('CORS')) {
+          console.warn('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:5000');
+          setExamData([]);
+        } else {
+          console.error('Error al cargar historial:', error);
+          setExamData([]);
+        }
       }
     };
   
@@ -1050,58 +1111,45 @@ const handleErroresClick = () => {
   // Calcular todos los fallos por asignatura usando examData como fuente principal
   const subjectsPerformanceData = useMemo(() => {
     if (!userId) {
-      console.log('No userId en subjectsPerformanceData');
       return { bloque1: [], bloque2: [] };
     }
-    
-    console.log('Calculando subjectsPerformanceData desde examData:', examData.length, 'exámenes');
     
     // Usar examData como fuente principal para calcular errores por asignatura
     const subjectGroups = {};
     
     if (examData && examData.length > 0) {
-      console.log('Procesando exámenes completados para calcular errores por asignatura');
+      const completedExams = examData.filter(exam => exam.status === 'completed');
       
-      examData
-        .filter(exam => exam.status === 'completed')
-        .forEach(exam => {
-          console.log(`Procesando examen ${exam.type} con ${exam.userAnswers?.length || 0} respuestas`);
-          
-          // Los exámenes en ExamenResultado tienen userAnswers con questionData, no questions separadas
-          if (exam.userAnswers && Array.isArray(exam.userAnswers)) {
-            console.log(`Examen tiene userAnswers: ${exam.userAnswers.length} respuestas`);
+      completedExams.forEach(exam => {
+        // Los exámenes en ExamenResultado tienen userAnswers con questionData, no questions separadas
+        if (exam.userAnswers && Array.isArray(exam.userAnswers)) {
+          exam.userAnswers.forEach((userAnswer) => {
+            // Obtener la asignatura desde questionData dentro de userAnswer
+            const subject = userAnswer.questionData?.subject || 'General';
             
-            exam.userAnswers.forEach((userAnswer) => {
-              // Obtener la asignatura desde questionData dentro de userAnswer
-              const subject = userAnswer.questionData?.subject || 'General';
-              
-              // Filtrar asignaturas inválidas
-              if (!subject || subject === 'undefined' || subject === 'test' || subject === 'Test' || subject === 'ERROR' || subject === 'Error' || subject === 'null') {
-                return;
+            // Filtrar asignaturas inválidas
+            if (!subject || subject === 'undefined' || subject === 'test' || subject === 'Test' || subject === 'ERROR' || subject === 'Error' || subject === 'null') {
+              return;
+            }
+            
+            // Verificar si la respuesta es incorrecta
+            const isCorrect = userAnswer.isCorrect === true;
+            const hasAnswered = userAnswer.selectedAnswer !== undefined && userAnswer.selectedAnswer !== null && userAnswer.selectedAnswer !== '';
+            
+            // Si la pregunta fue respondida pero incorrectamente, contarla
+            if (hasAnswered && !isCorrect) {
+              if (!subjectGroups[subject]) {
+                subjectGroups[subject] = 0;
               }
-              
-              // Verificar si la respuesta es incorrecta
-              const isCorrect = userAnswer.isCorrect === true;
-              const hasAnswered = userAnswer.selectedAnswer !== undefined && userAnswer.selectedAnswer !== null && userAnswer.selectedAnswer !== '';
-              
-              // Si la pregunta fue respondida pero incorrectamente, contarla
-              if (hasAnswered && !isCorrect) {
-                if (!subjectGroups[subject]) {
-                  subjectGroups[subject] = 0;
-                }
-                subjectGroups[subject]++;
-                console.log(`Error en asignatura "${subject}": ${subjectGroups[subject]}`);
-              }
-            });
-          }
-        });
+              subjectGroups[subject]++;
+            }
+          });
+        }
+      });
     }
-    
-    console.log('SubjectGroups calculados desde examData:', subjectGroups);
     
     // Si no hay datos desde examData, usar errorsBySubject como fallback
     if (Object.keys(subjectGroups).length === 0 && errorsBySubject.length > 0) {
-      console.log('Usando errorsBySubject como fallback');
       errorsBySubject.forEach(({ name, count }) => {
         subjectGroups[name] = count;
       });
@@ -1112,8 +1160,6 @@ const handleErroresClick = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count); // Orden descendente por cantidad de errores
     
-    console.log('SubjectsArray final (ranking de errores):', subjectsArray);
-    
     // Dividir en dos bloques para la visualización
     const mitad = Math.ceil(subjectsArray.length / 2);
     const result = {
@@ -1121,7 +1167,10 @@ const handleErroresClick = () => {
       bloque2: subjectsArray.slice(mitad)
     };
     
-    console.log('Resultado subjectsPerformanceData:', result);
+    // Log solo cuando hay datos para depuración
+    if (subjectsArray.length > 0) {
+      console.log(`Ranking de asignaturas calculado: ${subjectsArray.length} asignaturas con errores`);
+    }
     
     return result;
   }, [examData, errorsBySubject, userId]);
@@ -1319,31 +1368,30 @@ const handleErroresClick = () => {
         return (
           <div className="subjects-performance">
             <h3>Rendimiento por asignaturas</h3>
-            {subjectsPerformanceData.bloque1.length > 0 ? (
+            {subjectsPerformanceData.bloque1.length > 0 || subjectsPerformanceData.bloque2.length > 0 ? (
               <div className="subjects-scroll-container">
                 <div className="subjects-chart">
                   <ResponsiveContainer width="100%" height={500} style={{ overflow: 'visible' }}>
                     <BarChart
                       data={[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2]}
                       layout="horizontal"
-                      margin={{ top: 5, right: 30, left: 150, bottom: 80 }}
+                      margin={{ top: 5, right: 30, left: 200, bottom: 80 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
-                        dataKey="name"
-                        type="category"
-                        tick={{ fontSize: 11 }}
-                        height={120}
-                        angle={-45}
-                        textAnchor="end"
-                      />
-                      <YAxis 
                         type="number"
                         domain={[0, 'dataMax + 1']}
-                        label={{ value: 'Número de fallos', angle: -90, position: 'insideLeft' }}
+                        label={{ value: 'Número de fallos', angle: 0, position: 'bottom' }}
+                      />
+                      <YAxis 
+                        dataKey="name"
+                        type="category"
+                        width={180}
+                        tick={{ fontSize: 11 }}
                       />
                       <Tooltip 
-                        formatter={(value, name, props) => [`${value} fallos`, 'Fallos']} 
+                        formatter={(value, name, props) => [`${value} fallos`, 'Fallos']}
+                        labelFormatter={(label) => `Asignatura: ${label}`}
                       />
                       <Bar dataKey="count" name="Fallos" fill="#ff7c7c">
                         {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].map((entry, index) => (
@@ -1366,6 +1414,18 @@ const handleErroresClick = () => {
                   <div className="ranking-info">
                     <p><strong>Ranking de errores:</strong> Las asignaturas están ordenadas por número de fallos (de mayor a menor)</p>
                     <p><strong>Total de asignaturas con errores:</strong> {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].length}</p>
+                    {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].length > 0 && (
+                      <div style={{ marginTop: '15px' }}>
+                        <p><strong>Top 5 peores asignaturas:</strong></p>
+                        <ol style={{ textAlign: 'left', marginLeft: '20px' }}>
+                          {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].slice(0, 5).map((subject, idx) => (
+                            <li key={idx} style={{ marginBottom: '5px' }}>
+                              {subject.name}: <strong>{subject.count} errores</strong>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1993,7 +2053,7 @@ const handleErroresClick = () => {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h1 className="text-3xl font-bold tracking-tight">
-                    {currentUser?.name || authUser?.displayName ? `¡${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¡Listo para practicar?'}
+                    {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¿Listo para practicar?'}
                   </h1>
                 </div>
                 <div className="flex items-center gap-2">
