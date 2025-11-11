@@ -1,28 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import './Exam.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { debounce } from 'lodash';
-import Pagination from './components/Pagination';
-import QuestionBox from './components/QuestionBox';
-import ExamHeader from './components/ExamHeader';
 import { finalizeExam, getExamType, resumeExam as resumeExamUtil, saveExamProgress } from './lib/examUtils';
 import SuccessNotification from './components/SuccessNotification';
-import { downloadCurrentExamPdf, downloadExamPdfFromData } from './lib/pdfUtils';
+import { downloadExamPdfFromData } from './lib/pdfUtils';
 import { API_URL } from './config';
+import ExamView from './views/exam/exam';
 
 // Debug: Verificar que API_URL se importa correctamente
 console.log('🔧 EXAM DEBUG - API_URL importado:', API_URL);
 
 const ErrorDisplay = ({ onRetry, onReturn }) => {
   return (
-    <div className="exam-error">
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh',
+      padding: '20px',
+      textAlign: 'center'
+    }}>
       <h2>No se pudieron cargar las preguntas</h2>
       <p>Por favor, intenta de nuevo o vuelve al dashboard</p>
-      <div className="error-actions">
-        <button onClick={onRetry} className="retry-button">
+      <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+        <button onClick={onRetry} style={{ padding: '10px 20px', cursor: 'pointer' }}>
           Intentar de nuevo
         </button>
-        <button onClick={onReturn} className="return-button">
+        <button onClick={onReturn} style={{ padding: '10px 20px', cursor: 'pointer' }}>
           Volver al Dashboard
         </button>
       </div>
@@ -60,30 +65,20 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]); // Añadido estado para userAnswers
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showStartPopup, setShowStartPopup] = useState(true);
-  const [showFinalizePopup, setShowFinalizePopup] = useState(false);
   const [isDisputing, setIsDisputing] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [examType, setExamType] = useState('simulacro');
   console.log('Inicialización del tipo de examen:', examMode, '->', examType);
   const [examId, setExamId] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [examState, setExamState] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [markedAsDoubt, setMarkedAsDoubt] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
   const questionsPerPage = 25;
-  const [showCorrectness, setShowCorrectness] = useState(false);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  useEffect(() => {
-    console.log('questions', questions);
-    console.log('userAnswers', userAnswers);
-  }, [questions, userAnswers]);
   
   // Variable para rastrear si ya hay un guardado en progreso y evitar llamadas simultáneas
   const [isSaving, setIsSaving] = useState(false);
@@ -99,6 +94,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     doubtMarks: {} // Preguntas marcadas como duda que han cambiado
   });
   const [lastBatchTime, setLastBatchTime] = useState(Date.now());
+  
+  useEffect(() => {
+    console.log('questions', questions);
+    console.log('userAnswers', userAnswers);
+  }, [questions, userAnswers]);
   
   // Debounced save function
   const debouncedSave = useCallback(
@@ -117,7 +117,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   );
  
   // Función auxiliar para determinar el tipo de examen
-  const getExamType = (mode) => {
+  const getExamTypeFromMode = (mode) => {
     switch (mode) {
       case 'errors':
         return 'errores';
@@ -133,170 +133,170 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
 
   // Modificar loadQuestions para inicializar userAnswers con el formato completo
-const loadQuestions = async () => {
-  try {
-    setIsLoading(true);
-    setIsError(false);
-    
-    // Asegurar que se crea un nuevo examen
-    setExamId(null);
-    
-    // Determinar el tipo de examen
-    const currentExamType = getExamType(examMode);
-    console.log(`Cargando preguntas para examen tipo: ${currentExamType}`);
-    console.log('🔧 EXAM DEBUG - API_URL desde config:', API_URL);
-    console.log('🔧 EXAM DEBUG - NODE_ENV:', process.env.NODE_ENV);
-    console.log('🔧 EXAM DEBUG - hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
-    
-    // Usar API_URL directamente desde config.js (ya tiene la lógica de detección de entorno)
-    const effectiveAPI_URL = API_URL;
-    
-    console.log('🔧 EXAM DEBUG - effectiveAPI_URL:', effectiveAPI_URL);
-    
-    let allQuestions = [];
-    
-    // Para el tipo 'errors', cargar desde localStorage en lugar de hacer llamadas API
-    if (currentExamType === 'errores') {
-      const storedData = localStorage.getItem('errorQuestions');
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        allQuestions = parsedData.questions || [];
-        
-        // Establecer el tiempo desde localStorage
-        const storedTime = parsedData.timeAssigned || 0;
-        setTimeLeft(storedTime);
-        setTotalTime(storedTime);
-        
-        console.log(`Cargadas ${allQuestions.length} preguntas de errores desde localStorage`);
-        console.log(`Tiempo asignado: ${formatTime(storedTime)}`);
-      } else {
-        throw new Error('No se encontraron preguntas de errores en localStorage');
-      }
-    } else {
-      // Para otros tipos de examen, mantener el comportamiento original
-      // Obtener preguntas completas
-      const completosURL = `${effectiveAPI_URL}/random-question-completos`;
-      let completosData = [];
+  const loadQuestions = async () => {
+    try {
+      setIsLoading(true);
+      setIsError(false);
       
-      try {
-        const completosResponse = await fetch(completosURL, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ 
-            count: 200,
-            examType: currentExamType
-          })
-        });
-
-        if (completosResponse.ok) {
-          completosData = await completosResponse.json();
-          console.log(`Recibidas ${completosData.length} preguntas completas`);
+      // Asegurar que se crea un nuevo examen
+      setExamId(null);
+      
+      // Determinar el tipo de examen
+      const currentExamType = getExamTypeFromMode(examMode);
+      console.log(`Cargando preguntas para examen tipo: ${currentExamType}`);
+      console.log('🔧 EXAM DEBUG - API_URL desde config:', API_URL);
+      console.log('🔧 EXAM DEBUG - NODE_ENV:', process.env.NODE_ENV);
+      console.log('🔧 EXAM DEBUG - hostname:', typeof window !== 'undefined' ? window.location.hostname : 'undefined');
+      
+      // Usar API_URL directamente desde config.js (ya tiene la lógica de detección de entorno)
+      const effectiveAPI_URL = API_URL;
+      
+      console.log('🔧 EXAM DEBUG - effectiveAPI_URL:', effectiveAPI_URL);
+      
+      let allQuestions = [];
+      
+      // Para el tipo 'errors', cargar desde localStorage en lugar de hacer llamadas API
+      if (currentExamType === 'errores') {
+        const storedData = localStorage.getItem('errorQuestions');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          allQuestions = parsedData.questions || [];
+          
+          // Establecer el tiempo desde localStorage
+          const storedTime = parsedData.timeAssigned || 0;
+          setTimeLeft(storedTime);
+          setTotalTime(storedTime);
+          
+          console.log(`Cargadas ${allQuestions.length} preguntas de errores desde localStorage`);
+          console.log(`Tiempo asignado: ${formatTime(storedTime)}`);
         } else {
-          // Manejar error de forma más elegante
-          if (completosResponse.status === 0 || completosResponse.statusText === '') {
-            throw new Error('Error de conexión con el servidor. Verifica que el backend esté corriendo.');
+          throw new Error('No se encontraron preguntas de errores en localStorage');
+        }
+      } else {
+        // Para otros tipos de examen, mantener el comportamiento original
+        // Obtener preguntas completas
+        const completosURL = `${effectiveAPI_URL}/random-question-completos`;
+        let completosData = [];
+        
+        try {
+          const completosResponse = await fetch(completosURL, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 
+              count: 200,
+              examType: currentExamType
+            })
+          });
+
+          if (completosResponse.ok) {
+            completosData = await completosResponse.json();
+            console.log(`Recibidas ${completosData.length} preguntas completas`);
+          } else {
+            // Manejar error de forma más elegante
+            if (completosResponse.status === 0 || completosResponse.statusText === '') {
+              throw new Error('Error de conexión con el servidor. Verifica que el backend esté corriendo.');
+            }
+            throw new Error(`Error al cargar preguntas completas: ${completosResponse.status}`);
           }
-          throw new Error(`Error al cargar preguntas completas: ${completosResponse.status}`);
+        } catch (fetchError) {
+          // Si es error CORS o de red, mostrar mensaje más útil
+          if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
+            throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5000 y que CORS esté configurado correctamente.');
+          }
+          throw fetchError;
         }
-      } catch (fetchError) {
-        // Si es error CORS o de red, mostrar mensaje más útil
-        if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
-          throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5000 y que CORS esté configurado correctamente.');
-        }
-        throw fetchError;
-      }
 
-      // Obtener preguntas con fotos (opcional - si falla, continuar sin fotos)
-      let fotosData = [];
-      try {
-        const fotosURL = `${effectiveAPI_URL}/random-fotos`;
-        const fotosResponse = await fetch(fotosURL, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ count: 10 })
-        });
+        // Obtener preguntas con fotos (opcional - si falla, continuar sin fotos)
+        let fotosData = [];
+        try {
+          const fotosURL = `${effectiveAPI_URL}/random-fotos`;
+          const fotosResponse = await fetch(fotosURL, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ count: 10 })
+          });
 
-        if (fotosResponse.ok) {
-          fotosData = await fotosResponse.json();
-          console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
-        } else {
+          if (fotosResponse.ok) {
+            fotosData = await fotosResponse.json();
+            console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
+          } else {
+            // No crítico - continuar sin fotos
+            console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
+          }
+        } catch (fotosError) {
           // No crítico - continuar sin fotos
-          console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
+          if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
+            console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
+          }
         }
-      } catch (fotosError) {
-        // No crítico - continuar sin fotos
-        if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
-          console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
-        }
-      }
 
-      // Validar que tengamos preguntas antes de continuar
-      if (completosData.length === 0 && fotosData.length === 0) {
-        throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
+        // Validar que tengamos preguntas antes de continuar
+        if (completosData.length === 0 && fotosData.length === 0) {
+          throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
+        }
+        
+        // Combinar las preguntas
+        allQuestions = [...completosData, ...fotosData];
+        
+        // Ajustar el tiempo según el tipo de examen
+        if (currentExamType === 'protocolos') {
+          // Para protocolos: 30 minutos
+          setTimeLeft(1800);
+          setTotalTime(1800);
+        } else if (currentExamType === 'contrarreloj') {
+          // Para contrarreloj: 14 minutos
+          setTimeLeft(840);
+          setTotalTime(840);
+        } else if (currentExamType === 'quizz') {
+          // Para quizz: 65 minutos
+          setTimeLeft(3900);
+          setTotalTime(3900);
+        } else {
+          // Para simulacro: 4h 30min (16200 segundos)
+          setTimeLeft(16200);
+          setTotalTime(16200);
+        }
       }
       
-      // Combinar las preguntas
-      allQuestions = [...completosData, ...fotosData];
+      console.log(`Total de preguntas: ${allQuestions.length}`);
+      setQuestions(allQuestions);
       
-      // Ajustar el tiempo según el tipo de examen
-      if (currentExamType === 'protocolos') {
-        // Para protocolos: 30 minutos
-        setTimeLeft(1800);
-        setTotalTime(1800);
-      } else if (currentExamType === 'contrarreloj') {
-        // Para contrarreloj: 14 minutos
-        setTimeLeft(840);
-        setTotalTime(840);
-      } else if (currentExamType === 'quizz') {
-        // Para quizz: 65 minutos
-        setTimeLeft(3900);
-        setTotalTime(3900);
-      } else {
-        // Para simulacro: 4h 30min (16200 segundos)
-        setTimeLeft(16200);
-        setTotalTime(16200);
-      }
+      // Inicializar userAnswers con objetos completos para todas las preguntas
+      const initialUserAnswers = allQuestions.map(question => ({
+        questionId: question._id,
+        selectedAnswer: null,
+        isCorrect: null,
+        markedAsDoubt: false,
+        questionData: {
+          question: question.question || '',
+          option_1: question.option_1 || question.options?.[0] || '',
+          option_2: question.option_2 || question.options?.[1] || '',
+          option_3: question.option_3 || question.options?.[2] || '',
+          option_4: question.option_4 || question.options?.[3] || '',
+          option_5: question.option_5 || question.options?.[4] || '',
+          answer: question.answer || question.correctAnswer || '',
+          subject: question.subject || question.categoria || 'General',
+          image: question.image || null,
+          long_answer: question.long_answer || ''
+        }
+      }));
+      
+      setUserAnswers(initialUserAnswers);
+      setCurrentQuestion(0);
+
+    } catch (error) {
+      console.error('Error al cargar preguntas:', error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
     }
-    
-    console.log(`Total de preguntas: ${allQuestions.length}`);
-    setQuestions(allQuestions);
-    
-    // Inicializar userAnswers con objetos completos para todas las preguntas
-    const initialUserAnswers = allQuestions.map(question => ({
-      questionId: question._id,
-      selectedAnswer: null,
-      isCorrect: null,
-      markedAsDoubt: false,
-      questionData: {
-        question: question.question || '',
-        option_1: question.option_1 || question.options?.[0] || '',
-        option_2: question.option_2 || question.options?.[1] || '',
-        option_3: question.option_3 || question.options?.[2] || '',
-        option_4: question.option_4 || question.options?.[3] || '',
-        option_5: question.option_5 || question.options?.[4] || '',
-        answer: question.answer || question.correctAnswer || '',
-        subject: question.subject || question.categoria || 'General',
-        image: question.image || null,
-        long_answer: question.long_answer || ''
-      }
-    }));
-    
-    setUserAnswers(initialUserAnswers);
-    setCurrentQuestion(0);
-
-  } catch (error) {
-    console.error('Error al cargar preguntas:', error);
-    setIsError(true);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // Implementar la función que usa la utilidad centralizada
   const resumeExam = async () => {
@@ -556,6 +556,10 @@ const loadQuestions = async () => {
           // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
           if (!progressRestored || !questions || questions.length === 0) {
             loadQuestions();
+          } else {
+            // Si se restauró, no mostrar popup de inicio
+            setShowStartPopup(false);
+            setHasStarted(true);
           }
         })
         .catch(error => {
@@ -669,7 +673,7 @@ const loadQuestions = async () => {
       const result = await saveExamProgress(
         effectiveUserId,
         examId || null, // Pasar null explícitamente si no hay examId
-        getExamType(examMode),
+        getExamTypeFromMode(examMode),
         questions,
         currentUserAnswers,  // Usar la copia actual del estado
         currentSelectedAnswers,  // Usar la copia actual del estado
@@ -952,16 +956,22 @@ const loadQuestions = async () => {
     addToBatch('answer', { questionId, answer: updatedAnswer });
   };
 
-  // NEW: Handler for item selection from Pagination component
+  // Handler for item selection from Pagination component
   const handleItemSelect = (index) => {
     setCurrentQuestion(index);
+    // Calcular y establecer la página correcta
+    const newPage = Math.floor(index / questionsPerPage);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
+    }
     // Optional: If clicking a number should always trigger save
     addToBatch('question', { newQuestion: index });
   };
 
   // Función para manejar el botón "Finalizar"
   const handleFinalizeClick = () => {
-    setShowFinalizePopup(true);
+    // La nueva vista maneja el popup internamente
+    // Esta función se pasará a ExamView como onFinalize
   };
         
   const handleDisputeSubmit = async (questionId) => {
@@ -1000,10 +1010,6 @@ const loadQuestions = async () => {
     }
   };
 
-  const handleCancelFinish = () => {
-    setShowFinalizePopup(false);
-  };
-  
   // La función confirmFinalize es necesaria - debe mantenerse
   const confirmFinalize = async () => {
     try {
@@ -1018,7 +1024,6 @@ const loadQuestions = async () => {
 
       // Mostrar indicador de carga
       console.log('Finalizando examen...');
-      setShowFinalizePopup(false); // Cerrar el popup rápidamente
 
       // PASO CRUCIAL: Guardar los cambios pendientes primero
       if (hasPendingChanges) {
@@ -1033,7 +1038,7 @@ const loadQuestions = async () => {
       }
 
       const timeUsedValue = totalTime - timeLeft;
-      const currentExamType = getExamType(examMode);
+      const currentExamType = getExamTypeFromMode(examMode);
       
       // Verificar si las preguntas tienen long_answer
       console.log("======= VERIFICACIÓN DE PREGUNTAS ANTES DE FINALIZAR =======");
@@ -1120,18 +1125,6 @@ const loadQuestions = async () => {
     }
   };
 
-  const handleClosePopup = () => {
-    setShowFinalizePopup(false); // Cierra el pop-up
-  };
-  
-  const currentOptions = questions[currentQuestion]
-    ? [questions[currentQuestion].option_1, questions[currentQuestion].option_2, 
-       questions[currentQuestion].option_3, questions[currentQuestion].option_4]
-      .filter(option => option && option !== '-')
-    : [];
-
-  const examName = questions[currentQuestion]?.exam_name || '-';
-
   // Formato de tiempo
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600);
@@ -1140,120 +1133,10 @@ const loadQuestions = async () => {
     return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Modificar la función de pausar - Modificado
+  // Modificar la función de pausar
   const handlePause = () => {
     // Simply toggle the pause state without saving
     setPaused(!isPaused);
-  };
-
-  // Modificar el useEffect para cargar el estado guardado
-  useEffect(() => {
-    const savedState = localStorage.getItem('examState');
-    if (savedState) {
-      setExamState(JSON.parse(savedState));
-    }
-  }, []);
-
-  // Renderizado de imágenes mejorado
-  const renderQuestionImage = (imagePath) => {
-    if (!imagePath) return null;
-    
-    // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
-    const timestamp = new Date().getTime();
-    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/') 
-      ? `${imagePath}?t=${timestamp}`
-      : `/examen_fotos/${imagePath}?t=${timestamp}`;
-    
-    return (
-      <>
-        <div className="question-image">
-          <img
-            src={fullPath}
-            alt="Imagen de la pregunta"
-            className="exam-image"
-            onClick={() => {
-              setSelectedImage(fullPath);
-              setShowImageModal(true);
-            }}
-            style={{ cursor: 'pointer' }}
-            onLoad={() => console.log('Imagen cargada correctamente:', fullPath)}
-            onError={(e) => {
-              console.error('Error al cargar imagen:', fullPath);
-              e.target.style.display = 'none';
-              
-              const errorMsg = document.createElement('div');
-              errorMsg.className = 'image-error-message';
-              errorMsg.textContent = 'Imagen no disponible';
-              e.target.parentNode.appendChild(errorMsg);
-            }}
-          />
-        </div>
-
-        {showImageModal && selectedImage && (
-          <div className="image-modal-overlay" onClick={() => setShowImageModal(false)}>
-            <div className="image-modal">
-              <img src={selectedImage} alt="Imagen ampliada" />
-              <button className="close-modal" onClick={() => setShowImageModal(false)}>×</button>
-            </div>
-          </div>
-        )}
-      </>
-    );
-  };
-
-  // En el componente principal, añadir logs para debugging
-  useEffect(() => {
-    if (questions.length > 0) {
-      console.log(`Recibidas ${questions.length} preguntas en total`);
-      
-      // Contar preguntas con imagen
-      const withImages = questions.filter(q => q.image).length;
-      console.log(`Preguntas con imágenes: ${withImages}`);
-      
-      // Revisar una pregunta con imagen
-      const sampleWithImage = questions.find(q => q.image);
-      if (sampleWithImage) {
-        console.log('Ejemplo de pregunta con imagen:', sampleWithImage);
-      } else {
-        console.log('No se encontraron preguntas con imágenes');
-      }
-      
-      // Revisar las primeras opciones para verificar formato
-      console.log('Primera pregunta:', questions[0]);
-    }
-  }, [questions]);
-
-  // 4. Mejorar la validación de preguntas actual
-  const validateCurrentState = () => {
-    if (!questions || questions.length === 0) {
-      setIsError(true);
-      return false;
-    }
-
-    if (!questions[currentQuestion]) {
-      setIsError(true);
-      return false;
-    }
-
-    return true;
-  };
-
-  // Add helper function to generate item status for Pagination
-  const generateItemStatus = (selectedAnswers, markedAsDoubt, questions, userAnswers) => {
-    const status = {};
-    if (!questions || questions.length === 0) return status;
-
-    for (let i = 0; i < questions.length; i++) {
-      if (markedAsDoubt[i]) {
-        status[i] = 'doubt';
-      } else if (selectedAnswers[i] || (userAnswers[i] && 
-                 (typeof userAnswers[i] === 'object' ? 
-                  userAnswers[i].selectedAnswer : 
-                  userAnswers[i]))) {
-        status[i] = 'answered';
-      }
-    }
-    return status;
   };
 
   // Modificar toggleDoubtMark para actualizar correctamente el estado
@@ -1285,19 +1168,57 @@ const loadQuestions = async () => {
     setIsDisputing(true);
   };
 
+  // Función para guardar manualmente
+  const handleManualSave = () => {
+    if (isSaving) {
+      console.log('Ya hay un guardado en progreso...');
+      return;
+    }
+    
+    console.log('Guardando manualmente y finalizando con estado "en proceso"...');
+    setIsSaving(true);
+    
+    // Calcular tiempo usado para enviar junto con el guardado
+    const timeUsedValue = Math.max(0, totalTime - timeLeft);
+    
+    // Forzar guardado inmediato con feedback visual
+    // Pasamos true como isCompleted para que ejecute la funcionalidad de finalizar
+    // pero forzamos el estado a 'in_progress' en lugar de 'completed'
+    saveExamProgressLocal(false, false, 'in_progress')
+      .then(result => {
+        if (result && result.error) {
+          console.warn('Error al guardar manualmente:', result.error);
+          alert(`Error al guardar: ${result.error}`);
+        } else {
+          console.log('Guardado y finalizado con estado "en proceso" completado con éxito');
+          setHasPendingChanges(false);
+          
+          // Mostrar notificación visual de éxito
+          setSuccessMessage('Guardado completado');
+          setShowSuccessNotification(true);
+        }
+      })
+      .catch(error => {
+        console.error('Error durante el guardado manual:', error);
+        alert(`Error al guardar: ${error.message || 'Error de conexión'}`);
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
+  };
+
   // Uso al salir de la página - mejorado para asegurar un guardado correcto
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       // Intentar guardar sin esperar la respuesta
       if (!isSubmitted) {
         console.log('Usuario intentando salir de la página, guardando estado...');
-        console.log('IMPORTANTE: Cambiando URL de puerto 5000 a 3003 para consistencia en handleBeforeUnload');
         
         // Forzar un guardado síncrono (no podemos esperar promesas en beforeunload)
         const dataToSend = {
           userId: effectiveUserId,
           examId, 
-          type: getExamType(examMode), 
+          type: getExamTypeFromMode(examMode), 
           questions: questions.map(q => ({
             _id: q._id,
             question: q.question || '',
@@ -1345,61 +1266,35 @@ const loadQuestions = async () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isSubmitted, effectiveUserId, examId, questions, userAnswers, selectedAnswers, timeLeft, currentQuestion, markedAsDoubt, totalTime, examType, examMode]);
 
-  // Función para guardar manualmente
-  const handleManualSave = () => {
-    if (isSaving) {
-      console.log('Ya hay un guardado en progreso...');
-      return;
+  // Add helper function to generate item status for Pagination
+  const generateItemStatus = () => {
+    const status = {};
+    if (!questions || questions.length === 0) return status;
+
+    for (let i = 0; i < questions.length; i++) {
+      if (markedAsDoubt[i]) {
+        status[i] = 'doubt';
+      } else if (selectedAnswers[i] || (userAnswers[i] && 
+                 (typeof userAnswers[i] === 'object' ? 
+                  userAnswers[i].selectedAnswer : 
+                  userAnswers[i]))) {
+        status[i] = 'answered';
+      }
     }
-    
-    console.log('Guardando manualmente y finalizando con estado "en proceso"...');
-    setIsSaving(true);
-    
-    // Calcular tiempo usado para enviar junto con el guardado
-    const timeUsedValue = totalTime - timeLeft;
-    
-    // Forzar guardado inmediato con feedback visual
-    // Pasamos true como isCompleted para que ejecute la funcionalidad de finalizar
-    // pero forzamos el estado a 'in_progress' en lugar de 'completed'
-    saveExamProgressLocal(true, false, 'in_progress')
-      .then(result => {
-        if (result && result.error) {
-          console.warn('Error al guardar manualmente:', result.error);
-          alert(`Error al guardar: ${result.error}`);
-        } else {
-          console.log('Guardado y finalizado con estado "en proceso" completado con éxito');
-          setHasPendingChanges(false);
-          
-          // Mostrar notificación visual de éxito
-          const saveConfirmation = document.createElement('div');
-          saveConfirmation.className = 'save-confirmation';
-          saveConfirmation.textContent = 'Guardado completado';
-          document.body.appendChild(saveConfirmation);
-          
-          // Eliminar la notificación después de 2 segundos
-          setTimeout(() => {
-            if (saveConfirmation.parentNode) {
-              saveConfirmation.parentNode.removeChild(saveConfirmation);
-            }
-          }, 2000);
-        }
-      })
-      .catch(error => {
-        console.error('Error durante el guardado manual:', error);
-        alert(`Error al guardar: ${error.message || 'Error de conexión'}`);
-      })
-      .finally(() => {
-        setIsSaving(false);
-      });
+    return status;
   };
 
-  // Efecto para guardar el modo oscuro en localStorage
-  useEffect(() => {
-    // Guardar preferencia en localStorage
-    if (isDarkMode !== undefined) {
-      localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+  // Manejar navegación de preguntas desde ExamView
+  const handleNavigate = (index) => {
+    setCurrentQuestion(index);
+    // Calcular y establecer la página correcta
+    const newPage = Math.floor(index / questionsPerPage);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
     }
-  }, [isDarkMode]);
+    // Marcar cambios pendientes
+    addToBatch('question', { newQuestion: index });
+  };
 
   // 6. Mejorar el manejo de errores general
   if (isError) {
@@ -1411,210 +1306,131 @@ const loadQuestions = async () => {
     );
   }
 
-  // Update places where renderCurrentQuestion is used
-  return (
-    <div id="exam-root" className={`exam-container ${isDarkMode ? 'dark' : ''}`}>
-      {showStartPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            {examMode === 'errors' ? (
-              <>
-                <h2><strong>¡Comienza tu repaso de errores!</strong></h2>
-                <p>
-                  Este examen consta de <strong>{questions.length} preguntas</strong> seleccionadas 
-                  de tus errores anteriores. Dispones de <strong>{formatTime(timeLeft)}</strong> para 
-                  completarlo. Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
-                  tus respuestas antes de finalizar.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2><strong>¡Comienza tu simulacro!</strong></h2>
-                <p>
-                  Este examen consta de <strong>210 preguntas</strong> y dispones de 
-                  <strong> 4 horas y 30 minutos</strong> para completarlo. De estas preguntas, 
-                  <strong> 10 incluyen imágenes</strong>. Administra bien tu tiempo y recuerda 
-                  que puedes revisar y ajustar tus respuestas antes de finalizar.
-                </p>
-              </>
-            )}
-            <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
-          </div>
-        </div>
-      )}
+  // Si está cargando, mostrar indicador
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <div>Cargando examen...</div>
+      </div>
+    );
+  }
 
-      <ExamHeader
-        timeLeft={timeLeft}
-        onPause={handlePause}
+  // Si no hay preguntas aún, no renderizar nada
+  if (!questions || questions.length === 0) {
+    return null;
+  }
+
+  // Renderizar popup de inicio si es necesario
+  if (showStartPopup) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+        }}>
+          {examMode === 'errors' ? (
+            <>
+              <h2><strong>¡Comienza tu repaso de errores!</strong></h2>
+              <p>
+                Este examen consta de <strong>{questions.length} preguntas</strong> seleccionadas 
+                de tus errores anteriores. Dispones de <strong>{formatTime(timeLeft)}</strong> para 
+                completarlo. Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
+                tus respuestas antes de finalizar.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2><strong>¡Comienza tu simulacro!</strong></h2>
+              <p>
+                Este examen consta de <strong>210 preguntas</strong> y dispones de 
+                <strong> 4 horas y 30 minutos</strong> para completarlo. De estas preguntas, 
+                <strong> 10 incluyen imágenes</strong>. Administra bien tu tiempo y recuerda 
+                que puedes revisar y ajustar tus respuestas antes de finalizar.
+              </p>
+            </>
+          )}
+          <button 
+            onClick={handleStartExam} 
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#7ea0a7',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500'
+            }}
+          >
+            Estoy list@
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Renderizar la nueva vista de examen
+  return (
+    <>
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswers}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={markedAsDoubt}
+        toggleDoubtMark={toggleDoubtMark}
         onSave={handleManualSave}
-        onFinish={handleFinalizeClick}
-        isPaused={isPaused}
-        isSaving={isSaving}
-        hasPendingChanges={hasPendingChanges}
-        toggleDarkMode={toggleDarkMode}
+        onFinalize={confirmFinalize}
+        onPause={handlePause}
         onDownload={() => downloadExamPdfFromData({
           questions: questions,
           title: 'SIMULIA',
-          subtitle: `Examen: ${getExamType(examMode).toUpperCase()}`,
+          subtitle: `Examen: ${getExamTypeFromMode(examMode).toUpperCase()}`,
           logoUrl: '/Logo_oscuro.png',
           examId: examId || '',
           date: new Date().toISOString().slice(0,10),
           durationMin: Math.round(totalTime / 60),
           showAnswerKey: false,
           showBubbleSheet: true,
-          fileName: `examen-${getExamType(examMode)}.pdf`
+          fileName: `examen-${getExamTypeFromMode(examMode)}.pdf`
         })}
+        onExit={() => navigate('/dashboard')}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={isPaused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType={getExamTypeFromMode(examMode)}
+        isReviewMode={false}
+        disabledButtons={[]}
+        isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onImpugnarSubmit={async (questionId, reason) => {
+          setDisputeReason(reason);
+          await handleDisputeSubmit(questionId);
+        }}
       />
-
-      {/* Render question if not loading, otherwise show spinner/message */}
-      {isLoading ? (
-          <div className="loading-indicator">Cargando examen...</div>
-      ) : isError ? (
-          <ErrorDisplay onRetry={loadQuestions} onReturn={() => navigate('/dashboard')} />
-      ) : (
-          <QuestionBox 
-            currentQuestion={currentQuestion}
-            questions={questions}
-            userAnswers={userAnswers}
-            handleAnswerClick={handleAnswerClick}
-            markedAsDoubt={markedAsDoubt}
-            toggleDoubtMark={toggleDoubtMark}
-            onNavigate={(index) => {
-              setCurrentQuestion(index);
-              // Set the correct page if different from current
-              const newPage = Math.floor(index / questionsPerPage);
-              if (newPage !== currentPage) {
-                setCurrentPage(newPage);
-              }
-            }}
-            onImpugnar={handleImpugnar}
-            isDarkMode={isDarkMode}
-            showCorrectness={showCorrectness}
-          />
-      )}
-
-    
-     
-
-      {/* Filters remain the same */}
-      <div className="exam-filters">
-        <input
-          type="number"
-          placeholder="Ir a pregunta #"
-          onChange={(e) => {
-            const val = parseInt(e.target.value);
-            if (!isNaN(val) && val >= 1 && val <= questions.length) {
-              setCurrentQuestion(val - 1);
-              // Calcular y establecer la página correcta
-              setCurrentPage(Math.floor((val - 1) / 25));
-            }
-          }}
-          className="question-search"
-        />
-        <button className="control-btn filter-btn" onClick={() => {
-          const firstUnanswered = Array.from({ length: questions.length }).findIndex((_, i) => 
-            !userAnswers[i] || (typeof userAnswers[i] === 'object' && 
-            (!userAnswers[i].selectedAnswer || userAnswers[i].selectedAnswer === null || userAnswers[i].selectedAnswer === ''))
-          );
-          if (firstUnanswered >= 0) {
-            setCurrentQuestion(firstUnanswered);
-            // Establecer la página correcta
-            setCurrentPage(Math.floor(firstUnanswered / 25));
-          }
-        }}>
-          Ir a no contestadas
-        </button>
-        <button className="control-btn filter-btn" onClick={() => {
-          const firstDoubt = Object.keys(markedAsDoubt).find(key => markedAsDoubt[key]);
-          if (firstDoubt) {
-            const index = parseInt(firstDoubt);
-            setCurrentQuestion(index);
-            // Establecer la página correcta
-            setCurrentPage(Math.floor(index / 25));
-          }
-        }}>
-          Ir a con duda
-        </button>
-      </div>
-
-      {/* Use the Pagination component */}
-      {!isLoading && !isError && questions.length > 0 && (
-        <Pagination
-          totalItems={questions.length}
-          itemsPerPage={questionsPerPage}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          onItemSelect={(index) => setCurrentQuestion(index)}
-          activeItemIndex={currentQuestion}
-          itemStatus={generateItemStatus(selectedAnswers, markedAsDoubt, questions, userAnswers)}
-          isDarkMode={isDarkMode}
-        />
-      )}
-
-      {showConfirmPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¿Estás seguro de que deseas salir el examen? Se guardará el progreso.</h2>
-            <div className="popup-buttons">
-              <button onClick={handleCancelFinish} className="control-btn">No salir del examen</button>
-              <button onClick={confirmFinalize} className="control-btn">Salir del examen</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showFinalizePopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¿Finalizar el examen?</h2>
-            <p>Has respondido {userAnswers.filter(answer => 
-              answer !== null && answer !== undefined && 
-              (typeof answer === 'object' ? answer.selectedAnswer !== undefined && answer.selectedAnswer !== null && answer.selectedAnswer !== '' : false)
-            ).length} de {questions.length} preguntas.</p>
-            <div className="popup-buttons">
-              <button onClick={handleCancelFinish} className="control-btn">
-                Continuar revisando
-              </button>
-              <button onClick={confirmFinalize} className="control-btn">
-                Finalizar examen
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de impugnación - Ahora como un overlay independiente para evitar superposición */}
-      {isDisputing && (
-        <div className="popup-overlay">
-          <div className="dispute-modal">
-            <button 
-              className="modal-close-button"
-              onClick={() => {
-                setIsDisputing(false);
-                setDisputeReason('');
-              }}
-            >
-              ×
-            </button>
-            <h3>Escribe tu razón para impugnar</h3>
-            <textarea
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-              placeholder="Escribe tu razón para impugnar"
-            ></textarea>
-            <div className="modal-actions">
-              <button
-                onClick={() => {
-                  handleDisputeSubmit(currentQuestion);
-                }}
-                className="submit-dispute-btn"
-              >
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showSuccessNotification && (
         <SuccessNotification
@@ -1623,7 +1439,7 @@ const loadQuestions = async () => {
           autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
         />
       )}
-    </div>
+    </>
   );
 }
 

@@ -4,12 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { debounce } from 'lodash';
 import { FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { API_URL } from './config';
-import Pagination from './components/Pagination';
-import QuestionBox from './components/QuestionBox';
-import ExamHeader from './components/ExamHeader';
 import { finalizeExam, getExamType, saveExamProgress } from './lib/examUtils';
 import SuccessNotification from './components/SuccessNotification';
 import { downloadExamPdfFromData } from './lib/pdfUtils';
+import ExamView from './views/exam/exam';
 
 const createDebounce = (func, wait) => {
   let timeout;
@@ -1037,9 +1035,13 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
     }, 100); // Pequeño timeout para asegurar que el estado se ha actualizado
   };
 
-  // NEW: Handler for item selection from Pagination component
-  const handleItemSelect = (index) => {
+  // Handler for navigation
+  const handleNavigate = (index) => {
     setCurrentQuestion(index);
+    const newPage = Math.floor(index / questionsPerPage);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
+    }
     addToBatch('question', { newQuestion: index });
   };
 
@@ -1064,29 +1066,6 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
     setPaused(!isPaused);
   };
 
-  // Update renderCurrentQuestion to use QuestionBox component
-  const renderCurrentQuestion = () => {
-    if (isLoading) return <div>Cargando preguntas...</div>;
-    if (error) return <div>Error: {error}</div>;
-    if (!questions || questions.length === 0 || !questions[currentQuestion]) {
-      return <div>No hay preguntas disponibles o índice inválido.</div>;
-    }
-
-    return (
-      <QuestionBox
-        currentQuestion={currentQuestion}
-        questions={questions}
-        userAnswers={userAnswers}
-        handleAnswerClick={handleAnswerClick}
-        markedAsDoubt={markedAsDoubt}
-        toggleDoubtMark={toggleDoubtMark}
-        onNavigate={handleItemSelect}
-        onImpugnar={() => setIsDisputing(true)}
-        isDarkMode={isDarkMode}
-      />
-    );
-  };
-
   if (isLoading) {
     return <div className="loading">Cargando preguntas para el Quizz...</div>;
   }
@@ -1103,18 +1082,39 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
+  // Si no hay preguntas aún, no renderizar nada
+  if (!questions || questions.length === 0) {
+    return null;
+  }
+
+  // Renderizar popup de inicio si es necesario
+  if (showStartPopup) {
+    return (
+      <div className="popup-overlay">
+        <div className="popup">
+          <h2>¿Listo para el desafío?</h2>
+          <p>
+            Responde <strong>50 preguntas</strong> en <strong>65 minutos</strong>. 
+            Este modo de examen no incluye <strong>imágenes</strong>, todas son preguntas de texto
+            extraídas de la base oficial. Podrás revisar y ajustar tus respuestas antes de finalizar.
+          </p>
+          <button onClick={handleStartExam} className="control-btn">Comenzar</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div id="exam-root" className={`quizz-container ${isDarkMode ? 'dark' : ''}`}>
-      <ExamHeader
-        timeLeft={timeLeft}
-        onPause={handlePause}
+    <>
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswers}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={markedAsDoubt}
+        toggleDoubtMark={toggleDoubtMark}
         onSave={handleManualSave}
-        onFinish={handleFinalizeClick}
-        isPaused={isPaused}
-        isSaving={isSaving}
-        hasPendingChanges={hasPendingChanges}
-        toggleDarkMode={toggleDarkMode}
-        disabledButtons={[]}
+        onFinalize={confirmFinalize}
+        onPause={handlePause}
         onDownload={() => downloadExamPdfFromData({
           questions: questions,
           title: 'SIMULIA',
@@ -1127,46 +1127,23 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
           showBubbleSheet: true,
           fileName: 'examen-quizz.pdf'
         })}
+        onExit={() => navigate('/dashboard')}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={isPaused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType="quizz"
+        isReviewMode={false}
+        disabledButtons={[]}
+        isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onImpugnarSubmit={async (questionId, reason) => {
+          setDisputeReason(reason);
+          await handleDisputeSubmit(questionId);
+        }}
       />
-
-      <div className="exam-container">
-        {isLoading ? (
-            <div className="loading-indicator">Cargando quizz...</div>
-        ) : error ? (
-            <div className="error-indicator">Error al cargar: {error}</div>
-        ) : (
-            renderCurrentQuestion()
-        )}
-
-      
-        {/* Use the Pagination component */}
-        {!isLoading && !error && questions.length > 0 && (
-          <Pagination
-            totalItems={questions.length}
-            itemsPerPage={questionsPerPage}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            onItemSelect={handleItemSelect}
-            activeItemIndex={currentQuestion}
-            itemStatus={generateItemStatus()}
-            isDarkMode={isDarkMode}
-          />
-        )}
-      </div>
-      
-      {showStartPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¿Listo para el desafío?</h2>
-            <p>
-              Responde <strong>50 preguntas</strong> en <strong>65 minutos</strong>. 
-              Este modo de examen no incluye <strong>imágenes</strong>, todas son preguntas de texto
-              extraídas de la base oficial. Podrás revisar y ajustar tus respuestas antes de finalizar.
-            </p>
-            <button onClick={handleStartExam} className="control-btn">Comenzar</button>
-          </div>
-        </div>
-      )}
       
       {showFinalizePopup && (
         <div className="popup-overlay">
@@ -1225,7 +1202,7 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
           autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
         />
       )}
-    </div>
+    </>
   );
 };
 

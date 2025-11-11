@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 import './Protocolos.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaArrowRight, FaDoorOpen } from 'react-icons/fa';
-import ExamHeader from './components/ExamHeader';
-import QuestionBox from './components/QuestionBox';
-import Pagination from './components/Pagination';
-import { finalizeExam } from './lib/examUtils';
+import { finalizeExam, saveExamProgress } from './lib/examUtils';
 import SuccessNotification from './components/SuccessNotification';
 import { API_URL } from './config';
 import { downloadCurrentExamPdf, downloadExamPdfFromData } from './lib/pdfUtils';
+import ExamView from './views/exam/exam';
 
 // Componente para mostrar errores
 const ErrorDisplay = ({ onRetry, onReturn }) => {
@@ -60,7 +59,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]); // Añadido estado para userAnswers
   const [questionMarkedAsDoubt, setQuestionMarkedAsDoubt] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showStartPopup, setShowStartPopup] = useState(true);
   const [showFinalizePopup, setShowFinalizePopup] = useState(false);
@@ -614,7 +613,11 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
     // Actualizar el estado selectedAnswers (para visualización)
     setSelectedAnswers((prevAnswers) => {
       const newAnswers = { ...prevAnswers };
-      newAnswers[questionId] = selectedOption;
+      if (newAnswers[questionId] === selectedOption) {
+        delete newAnswers[questionId];
+      } else {
+        newAnswers[questionId] = selectedOption;
+      }
       return newAnswers;
     });
     
@@ -663,20 +666,38 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
       
       return newAnswers;
     });
+
+    setHasPendingChanges(true);
   };
 
   // Navegación de preguntas
-  const handleNextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+  const handleNavigate = (index) => {
+    setCurrentQuestion(index);
+    const newPage = Math.floor(index / 25);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
     }
+    setHasPendingChanges(true);
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+  // Debounced save
+  const debouncedSave = useCallback(
+    debounce(() => {
+      if (hasPendingChanges && !isSaving && hasStarted) {
+        handleManualSave();
+      }
+    }, 3000),
+    [hasPendingChanges, isSaving, hasStarted]
+  );
+
+  useEffect(() => {
+    if (hasPendingChanges && hasStarted) {
+      debouncedSave();
     }
-  };
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [hasPendingChanges, hasStarted, debouncedSave]);
 
   // Función para manejar el botón "Finalizar"
   const handleFinalizeClick = () => {
@@ -684,16 +705,16 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
         
   // Enviar impugnación
-  const handleDisputeSubmit = async () => {
+  const handleDisputeSubmit = async (questionId) => {
     if (!disputeReason.trim()) {
       return;
     }
     
-    const currentQ = questions[currentQuestion];
+    const currentQ = questions[questionId || currentQuestion];
     const disputeData = {
       question: currentQ?.question || "Pregunta no disponible",
       reason: disputeReason,
-      userAnswer: selectedAnswers[currentQuestion] || "Sin respuesta",
+      userAnswer: selectedAnswers[questionId || currentQuestion] || "Sin respuesta",
       userId: testUserId
     };
 
@@ -742,10 +763,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
       // Guardar cambios pendientes primero
       if (hasPendingChanges) {
         try {
-          const prevSaveResult = await saveExamProgressLocal(false, null, "in_progress");
-          if (prevSaveResult?.error) {
-            console.warn('Advertencia al guardar cambios previos:', prevSaveResult.error);
-          }
+          await handleManualSave();
         } catch (prevSaveError) {
           console.warn('Error al guardar cambios previos:', prevSaveError);
         }
@@ -753,11 +771,34 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
 
       const timeUsed = totalTime - timeLeft;
 
+      // Formatear userAnswers correctamente
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: userAnswer?.isCorrect || null,
+          markedAsDoubt: questionMarkedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || q.categoria || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
+          }
+        };
+      });
+
       const result = await finalizeExam(
         testUserId,
         'protocolos',
         questions,
-        userAnswers,
+        formattedUserAnswers,
         selectedAnswers,
         timeUsed,
         totalTime,
@@ -824,8 +865,14 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
     return `${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Función mejorada para pausar
-  const handlePause = async () => {
+  // Función para pausar/reanudar
+  const handlePause = () => {
+    setPaused(!paused);
+    setHasPendingChanges(true);
+  };
+
+  // Función mejorada para pausar (antigua, mantener por compatibilidad)
+  const handlePauseOld = async () => {
     try {
       // Cambiar el estado de pausa primero
       const newPausedState = !paused;
@@ -936,48 +983,62 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
       
       return newState;
     });
+
+    setHasPendingChanges(true);
   };
 
   // Guardar manualmente
   const handleManualSave = async () => {
-    if (isSaving) {
-      console.log('Ya hay un guardado en progreso...');
-      return;
-    }
+    if (isSaving || !hasPendingChanges) return;
     
-    console.log('Guardando manualmente...');
     setIsSaving(true);
-    
-    // Forzar guardado inmediato con feedback visual
     try {
-      const result = await saveExamProgressLocal(false);
-      
-      if (result && result.error) {
-        console.warn('Error al guardar manualmente:', result.error);
-        alert(`Error al guardar: ${result.error}`);
-        setSaveStatus('error');
-      } else {
-        console.log('Guardado manual completado con éxito');
-        setSaveStatus('saved');
-        setLastSaved(new Date());
-        setHasPendingChanges(false);
-        
-        // Mostrar notificación visual de éxito
-        const saveConfirmation = document.createElement('div');
-        saveConfirmation.className = 'save-confirmation';
-        saveConfirmation.textContent = 'Guardado completado';
-        document.body.appendChild(saveConfirmation);
-        
-        // Eliminar la notificación después de 2 segundos
-        setTimeout(() => {
-          if (saveConfirmation.parentNode) {
-            saveConfirmation.parentNode.removeChild(saveConfirmation);
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: userAnswer?.isCorrect || null,
+          markedAsDoubt: questionMarkedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || q.categoria || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
           }
-        }, 2000);
+        };
+      });
+
+      const result = await saveExamProgress(
+        testUserId,
+        examId,
+        'protocolos',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeLeft,
+        currentQuestion,
+        questionMarkedAsDoubt,
+        totalTime - timeLeft,
+        totalTime,
+        false,
+        paused ? 'paused' : 'in_progress'
+      );
+
+      if (result && result.examId) {
+        setExamId(result.examId);
       }
+      setHasPendingChanges(false);
+      setSaveStatus('saved');
+      setLastSaved(new Date());
     } catch (error) {
-      console.error('Error durante el guardado manual:', error);
-      alert(`Error al guardar: ${error.message || 'Error de conexión'}`);
+      console.error('Error al guardar:', error);
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
@@ -1035,35 +1096,40 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
-  const currentOptions = getCurrentOptions();
-  const examName = questions[currentQuestion]?.exam_name || '';
+  // Si no hay preguntas aún, no renderizar nada
+  if (!questions || questions.length === 0) {
+    return null;
+  }
+
+  // Renderizar popup de inicio si es necesario
+  if (showStartPopup) {
+    return (
+      <div className="popup-overlay">
+        <div className="popup">
+          <h2><strong>¡Comienza tu examen de Protocolos!</strong></h2>
+          <p>
+            Este examen consta de <strong>30 preguntas</strong> y dispones de 
+            <strong> 30 minutos</strong> para completarlo. Estas preguntas son extraídas 
+            del <strong>Ministerio de Sanidad</strong>. Administra bien tu tiempo y recuerda 
+            que puedes revisar y ajustar tus respuestas antes de finalizar.
+          </p>
+          <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div id="exam-root" className="exam-container">
-      {showStartPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2><strong>¡Comienza tu examen de Protocolos!</strong></h2>
-            <p>
-              Este examen consta de <strong>30 preguntas</strong> y dispones de 
-              <strong> 30 minutos</strong> para completarlo. Estas preguntas son extraídas 
-              del <strong>Ministerio de Sanidad</strong>. Administra bien tu tiempo y recuerda 
-              que puedes revisar y ajustar tus respuestas antes de finalizar.
-            </p>
-            <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
-          </div>
-        </div>
-      )}
-
-      <ExamHeader
-        timeLeft={timeLeft}
-        onPause={() => setPaused(!paused)}
+    <>
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswers}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={questionMarkedAsDoubt}
+        toggleDoubtMark={toggleDoubtMark}
         onSave={handleManualSave}
-        onFinish={handleFinalizeClick}
-        isPaused={paused}
-        isSaving={saveStatus === 'saving'}
-        hasPendingChanges={false}
-        toggleDarkMode={toggleDarkMode}
+        onFinalize={confirmFinalize}
+        onPause={handlePause}
         onDownload={() => downloadExamPdfFromData({
           questions: questions,
           title: 'SIMULIA',
@@ -1071,96 +1137,28 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
           logoUrl: '/Logo_oscuro.png',
           examId: examId || '',
           date: new Date().toISOString().slice(0,10),
-          durationMin: Math.round(timeLeft > 0 ? totalTime/60 : 30),
+          durationMin: Math.round(totalTime / 60),
           showAnswerKey: false,
           showBubbleSheet: true,
           fileName: 'examen-protocolos.pdf'
         })}
-      />
-
-      {questions.length > 0 && (
-        <QuestionBox
-          currentQuestion={currentQuestion}
-          questions={questions}
-          userAnswers={userAnswers}
-          handleAnswerClick={handleAnswerClick}
-          markedAsDoubt={questionMarkedAsDoubt}
-          toggleDoubtMark={toggleDoubtMark}
-          onNavigate={setCurrentQuestion}
-          onImpugnar={() => setIsDisputing(true)}
-          isDarkMode={isDarkMode}
-        />
-      )}
-      
-      {/* Reemplazar la paginación personalizada con el componente Pagination */}
-      <Pagination
-        totalItems={questions.length}
-        itemsPerPage={30} // Cambiar de 10 a 25 preguntas por página
-        currentPage={currentPage - 1} // Convertir a base cero para el componente
-        onPageChange={(page) => setCurrentPage(page + 1)} // Convertir de vuelta a base uno
-        onItemSelect={setCurrentQuestion}
-        activeItemIndex={currentQuestion}
-        itemStatus={generateItemStatus()}
+        onExit={() => navigate('/dashboard')}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={paused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType="protocolos"
+        isReviewMode={false}
+        disabledButtons={[]}
         isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onImpugnarSubmit={async (questionId, reason) => {
+          setDisputeReason(reason);
+          await handleDisputeSubmit(questionId);
+        }}
       />
-
-      {showFinalizePopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¿Finalizar el examen?</h2>
-            <p>Has respondido {Object.keys(selectedAnswers).length} de {questions.length} preguntas.</p>
-            <div className="popup-buttons">
-              <button onClick={handleCancelFinish} className="control-btn">
-                Continuar revisando
-              </button>
-              <button onClick={confirmFinalize} className="control-btn">
-                Finalizar examen
-              </button>
-            </div>
-            {isDarkMode !== undefined && (
-              <button
-                className="dark-mode-toggle"
-                onClick={toggleDarkMode}
-                title="Activar/Desactivar Modo Oscuro"
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {isDisputing && (
-        <div className="popup-overlay">
-          <div className="dispute-modal">
-            <button 
-              className="modal-close-button"
-              onClick={() => {
-                setIsDisputing(false);
-                setDisputeReason('');
-              }}
-            >
-              ×
-            </button>
-            <h3>Escribe tu razón para impugnar</h3>
-            <textarea
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-              placeholder="Escribe tu razón para impugnar"
-            ></textarea>
-            <div className="modal-actions">
-              <button
-                onClick={() => {
-                  handleDisputeSubmit(currentQuestion);
-                }}
-                className="submit-dispute-btn"
-              >
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showSuccessNotification && (
         <SuccessNotification
@@ -1169,8 +1167,8 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
           autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
         />
       )}
-    </div>
+    </>
   );
-}
+};
 
 export default Protocolos;

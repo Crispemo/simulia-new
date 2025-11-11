@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 import './Exam.css';
 import { useNavigate } from 'react-router-dom';
 import { useLogo } from './context/LogoContext';
 import SuccessNotification from './components/SuccessNotification';
 import { API_URL } from './config';
+import { finalizeExam, saveExamProgress } from './lib/examUtils';
+import { downloadExamPdfFromData } from './lib/pdfUtils';
+import ExamView from './views/exam/exam';
 
 const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   const navigate = useNavigate();
@@ -28,6 +32,11 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [markedAsDoubt, setMarkedAsDoubt] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isFinishing, setIsFinishing] = useState(false);
  
   // Cargar datos del examen personalizado
   useEffect(() => {
@@ -109,72 +118,85 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     };
   }, [paused, hasStarted, timeLeft]);
   
-  // Función para guardar progreso en la base de datos
-  const saveProgressToDB = async (isCompleted = false) => {
-    if (!userId) {
-      console.error('No se encontró userId');
-      return;
-    }
+  // Guardar manualmente
+  const handleManualSave = async () => {
+    if (isSaving || !hasPendingChanges) return;
     
+    setIsSaving(true);
     try {
-      const response = await fetch(`${API_URL}/save-exam-progress`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          examId: examId,
-          type: 'personalizado', 
-          questions: questions,
-          userAnswers: userAnswers,
-          timeUsed: totalTime - timeLeft,
-          completed: isCompleted
-        }),
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: userAnswer?.isCorrect || null,
+          markedAsDoubt: markedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || q.categoria || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
+          }
+        };
       });
-      
-      const data = await response.json();
-      
-      if (isCompleted && data.examId) {
-        navigate(`/review/${data.examId}`);
+
+      const result = await saveExamProgress(
+        userId || 'test_user_1',
+        examId,
+        'personalizado',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeLeft,
+        currentQuestion,
+        markedAsDoubt,
+        totalTime - timeLeft,
+        totalTime,
+        false,
+        paused ? 'paused' : 'in_progress'
+      );
+
+      if (result && result.examId) {
+        setExamId(result.examId);
       }
-      
-      return data;
+      setHasPendingChanges(false);
     } catch (error) {
-      console.error('Error al guardar progreso:', error);
+      console.error('Error al guardar:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Uso en useEffect para guardar periódicamente
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (timeLeft > 0 && !isSubmitted) {
-        saveProgressToDB(false);
+  // Debounced save
+  const debouncedSave = useCallback(
+    debounce(() => {
+      if (hasPendingChanges && !isSaving && hasStarted) {
+        handleManualSave();
       }
-    }, 30000); // Guardar cada 30 segundos
+    }, 3000),
+    [hasPendingChanges, isSaving, hasStarted, handleManualSave]
+  );
 
-    return () => clearInterval(interval);
-  }, [timeLeft, userAnswers, isSubmitted]);
-
-  // Uso al terminar el examen
-  const handleFinishExam = async () => {
-    setIsSubmitted(true);
-    await saveProgressToDB(true);
-  };
-
-  // Uso al salir de la página
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (!isSubmitted) {
-        saveProgressToDB(false);
-        e.preventDefault();
-        e.returnValue = '';
-      }
+    if (hasPendingChanges && hasStarted) {
+      debouncedSave();
+    }
+    return () => {
+      debouncedSave.cancel();
     };
+  }, [hasPendingChanges, hasStarted, debouncedSave]);
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isSubmitted, userAnswers]);
+  // Función para pausar/reanudar
+  const handlePause = () => {
+    setPaused(!paused);
+    setHasPendingChanges(true);
+  };
 
   const handleAnswerClick = (questionId, selectedOption) => {
     setSelectedAnswers((prevAnswers) => {
@@ -189,22 +211,108 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     
     setUserAnswers(prev => {
       const newAnswers = [...prev];
-      newAnswers[questionId] = selectedOption;
+      const question = questions[questionId];
+      newAnswers[questionId] = {
+        questionId: question?._id || `question_${questionId}`,
+        selectedAnswer: selectedOption,
+        isCorrect: null,
+        markedAsDoubt: markedAsDoubt[questionId] || false,
+        questionData: {
+          question: question?.question || "",
+          option_1: question?.option_1 || question?.options?.[0] || "",
+          option_2: question?.option_2 || question?.options?.[1] || "",
+          option_3: question?.option_3 || question?.options?.[2] || "",
+          option_4: question?.option_4 || question?.options?.[3] || "",
+          option_5: question?.option_5 || question?.options?.[4] || "-",
+          answer: question?.answer || "",
+          subject: question?.subject || question?.categoria || "General",
+          image: question?.image || null,
+          _id: question?._id || `question_${questionId}`
+        }
+      };
       return newAnswers;
     });
+
+    setHasPendingChanges(true);
   };
 
   // Navegación de preguntas
-  const handleNextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+  const handleNavigate = (index) => {
+    setCurrentQuestion(index);
+    const newPage = Math.floor(index / 25);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
     }
+    setHasPendingChanges(true);
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-    }
+  // Marcar pregunta como duda
+  const toggleDoubtMark = (questionIndex) => {
+    setMarkedAsDoubt(prev => {
+      const newState = { ...prev };
+      const isDubious = !newState[questionIndex];
+      newState[questionIndex] = isDubious;
+      
+      // Actualizar también markedAsDoubt en userAnswers
+      setUserAnswers(prevUserAnswers => {
+        const newUserAnswers = [...prevUserAnswers];
+        if (questionIndex < newUserAnswers.length) {
+          if (newUserAnswers[questionIndex]) {
+            if (typeof newUserAnswers[questionIndex] === 'object') {
+              newUserAnswers[questionIndex] = {
+                ...newUserAnswers[questionIndex],
+                markedAsDoubt: isDubious
+              };
+            } else {
+              const question = questions[questionIndex];
+              newUserAnswers[questionIndex] = {
+                questionId: question._id || `question_${questionIndex}`,
+                selectedAnswer: newUserAnswers[questionIndex],
+                isCorrect: null,
+                markedAsDoubt: isDubious,
+                questionData: {
+                  question: question.question || "",
+                  option_1: question.option_1 || question.options?.[0] || "",
+                  option_2: question.option_2 || question.options?.[1] || "",
+                  option_3: question.option_3 || question.options?.[2] || "",
+                  option_4: question.option_4 || question.options?.[3] || "",
+                  option_5: question.option_5 || question.options?.[4] || "-",
+                  answer: question.answer || "",
+                  subject: question.subject || question.categoria || "General",
+                  image: question.image || null,
+                  _id: question._id || `question_${questionIndex}`
+                }
+              };
+            }
+          } else {
+            const question = questions[questionIndex];
+            newUserAnswers[questionIndex] = {
+              questionId: question._id || `question_${questionIndex}`,
+              selectedAnswer: null,
+              isCorrect: null,
+              markedAsDoubt: isDubious,
+              questionData: {
+                question: question.question || "",
+                option_1: question.option_1 || question.options?.[0] || "",
+                option_2: question.option_2 || question.options?.[1] || "",
+                option_3: question.option_3 || question.options?.[2] || "",
+                option_4: question.option_4 || question.options?.[3] || "",
+                option_5: question.option_5 || question.options?.[4] || "-",
+                answer: question.answer || "",
+                subject: question.subject || question.categoria || "General",
+                image: question.image || null,
+                _id: question._id || `question_${questionIndex}`
+              }
+            };
+          }
+        }
+        return newUserAnswers;
+      });
+      
+      return newState;
+    });
+
+    setHasPendingChanges(true);
   };
 
   // Función para manejar el botón "Finalizar"
@@ -213,9 +321,15 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
         
   const handleDisputeSubmit = async (questionId) => {
+    if (!disputeReason.trim()) {
+      return;
+    }
+    
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
       reason: disputeReason,
+      userAnswer: selectedAnswers[questionId] || "Sin respuesta",
+      userId: userId || 'test_user_1'
     };
 
     try {
@@ -247,88 +361,85 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
 
   const confirmFinalize = async () => {
     try {
-      // Calcular tiempo usado
+      setIsFinishing(true);
+      setShowFinalizePopup(false);
+      
+      // Guardar cambios pendientes primero
+      if (hasPendingChanges) {
+        try {
+          await handleManualSave();
+        } catch (prevSaveError) {
+          console.warn('Error al guardar cambios previos:', prevSaveError);
+        }
+      }
+
       const timeUsed = totalTime - timeLeft;
 
-      // 1. Validar respuestas
-      const answersToValidate = {
-        answers: Object.entries(selectedAnswers).map(([questionIndex, answer]) => ({
-          questionId: questions[questionIndex]._id,
-          answer
-        })),
-        questions: questions
-      };
-
-      const validationResponse = await fetch(`${API_URL}/validate-answers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(answersToValidate)
-      });
-
-      if (!validationResponse.ok) throw new Error('Error al validar respuestas');
-      const results = await validationResponse.json();
-
-      // 2. Guardar en MongoDB
-      const examHistoryResponse = await fetch(`${API_URL}/save-exam-history`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          examData: {
-            type: 'personalizado',
-            questions: questions,
-            userAnswers: selectedAnswers,
-            correct: results.correct,
-            incorrect: results.incorrect,
-            totalQuestions: questions.length,
-            timeUsed: timeUsed,
-            score: results.score,
-            status: 'completed',
-            date: new Date()
+      // Formatear userAnswers correctamente
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: userAnswer?.isCorrect || null,
+          markedAsDoubt: markedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || q.categoria || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
           }
-        })
+        };
       });
 
-      if (!examHistoryResponse.ok) throw new Error('Error al guardar el historial');
+      const result = await finalizeExam(
+        userId || 'test_user_1',
+        'personalizado',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeUsed,
+        totalTime,
+        markedAsDoubt,
+        examId
+      );
 
-      // 3. Limpiar sessionStorage
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Limpiar sessionStorage
       sessionStorage.removeItem('personalizadoState');
-      
-      setShowFinalizePopup(false);
-      navigate('/dashboard');
+
+      // Mostrar notificación de éxito
+      setSuccessMessage('¡Examen personalizado finalizado con éxito!');
+      setShowSuccessNotification(true);
+
+      // Esperar 2 segundos antes de redirigir
+      setTimeout(() => {
+        if (result.examId) {
+          navigate(`/review/${result.examId}`);
+        } else {
+          navigate('/dashboard');
+        }
+      }, 2000);
+
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al finalizar el examen. Por favor, inténtalo de nuevo.');
+      console.error('Error general al finalizar examen:', error);
+      alert(`Error al finalizar el examen: ${error.message || 'Inténtalo de nuevo más tarde'}`);
+      setIsFinishing(false);
     }
   };
 
   const handleCancelFinish = () => {
-    setShowConfirmPopup(false);
-    navigate('/dashboard');
-  };
-
-  const handleClosePopup = () => {
     setShowFinalizePopup(false);
   };
-  
-  const getCurrentOptions = () => {
-    if (!questions[currentQuestion]) return [];
-    
-    if (questions[currentQuestion].options && Array.isArray(questions[currentQuestion].options)) {
-      return questions[currentQuestion].options;
-    }
-    
-    return [
-      questions[currentQuestion].option_1, 
-      questions[currentQuestion].option_2,
-      questions[currentQuestion].option_3, 
-      questions[currentQuestion].option_4,
-      questions[currentQuestion].option_5
-    ].filter(Boolean);
-  };
-  
-  const currentOptions = getCurrentOptions();
-  const examName = questions[currentQuestion]?.exam_name || '';
 
   // Formato de tiempo
   const formatTime = (seconds) => {
@@ -354,174 +465,69 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
+  // Si no hay preguntas aún, no renderizar nada
+  if (!questions || questions.length === 0) {
+    return null;
+  }
+
+  // Renderizar popup de inicio si es necesario
+  if (showStartPopup) {
+    return (
+      <div className="popup-overlay">
+        <div className="popup">
+          <h2><strong>¡Comienza tu examen personalizado!</strong></h2>
+          <p>
+            Este examen consta de <strong>{questions.length} preguntas</strong> y dispones de 
+            <strong> {formatTime(totalTime)}</strong> para completarlo.
+            Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
+            tus respuestas antes de finalizar.
+          </p>
+          <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="exam-container">
-      {showStartPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2><strong>¡Comienza tu examen personalizado!</strong></h2>
-            <p>
-              Este examen consta de <strong>{questions.length} preguntas</strong> y dispones de 
-              <strong> {formatTime(timeLeft)}</strong> para completarlo.
-              Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
-              tus respuestas antes de finalizar.
-            </p>
-            <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
-          </div>
-        </div>
-      )}
-
-      <div className="exam-header">
-        <div className="logo">
-          <img src={logoSrc} alt="Logo" width="37" height="39" />
-          <h2>SIMULIA - Examen Personalizado</h2>
-        </div>
-        <div className="time-display">{formatTime(timeLeft)}</div>
-        <div className="right-buttons">
-          <button onClick={() => setPaused(!paused)} className="control-btn icon-only" aria-label={paused ? 'Reanudar' : 'Pausar'}>
-            {paused ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" style={{margin: '0'}}>
-                <path fill="currentColor" d="M8 5V19L19 12L8 5Z"/>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" style={{margin: '0'}}>
-                <path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-              </svg>
-            )}
-          </button>
-          <button onClick={handleFinalizeClick} className="control-btn icon-only" aria-label="Salir">
-            <svg width="18" height="18" viewBox="0 0 24 24" style={{margin: '0'}}>
-              <path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {questions.length > 0 && (
-        <div className="question-box">
-          <h3>
-            {examName ? `(${examName}) ` : ''}
-            {questions[currentQuestion]?.question || 'Pregunta no disponible'}
-          </h3>
-          
-          <div className="question-content">
-            <div className="options-container">
-              {currentOptions.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleAnswerClick(currentQuestion, option)}
-                  className={selectedAnswers[currentQuestion] === option ? 'selected' : ''}
-                >
-                  {option}
-                </button>
-              ))}
-              <button onClick={() => setIsDisputing(true)} className="control-btn impugnar">
-                Impugnar
-              </button>
-            </div>
-          </div>
-          
-          {isDisputing && (
-            <div className="popup-overlay">
-              <div className="dispute-modal">
-                <button 
-                  className="modal-close-button"
-                  onClick={() => {
-                    setIsDisputing(false);
-                    setDisputeReason('');
-                  }}
-                >
-                  ×
-                </button>
-                <h3>Escribe tu razón para impugnar</h3>
-                <textarea
-                  value={disputeReason}
-                  onChange={(e) => setDisputeReason(e.target.value)}
-                  placeholder="Escribe tu razón para impugnar"
-                ></textarea>
-                <div className="modal-actions">
-                  <button
-                    onClick={() => {
-                      handleDisputeSubmit(currentQuestion);
-                    }}
-                    className="submit-dispute-btn"
-                  >
-                    Enviar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="navigation-buttons">
-            {currentQuestion > 0 && (
-              <button
-                onClick={handlePreviousQuestion}
-                className="control-btn"
-              >
-                Anterior
-              </button>
-            )}
-            {currentQuestion < questions.length - 1 ? (
-              <button
-                onClick={handleNextQuestion}
-                className="control-btn"
-              >
-                Siguiente
-              </button>
-            ) : (
-              <button onClick={handleFinalizeClick} className="control-btn">
-                Finalizar
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-      
-      <div className="exam-question-index">
-        {Array.from({ length: questions.length }, (_, index) => (
-          <button
-            key={index}
-            className={`exam-question-number ${currentQuestion === index ? 'active' : (selectedAnswers[index] ? 'answered' : '')}`}
-            onClick={() => setCurrentQuestion(index)}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
-
-      {showConfirmPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¿Estás seguro de que deseas salir del examen? Se guardará el progreso.</h2>
-            <div className="popup-buttons">
-              <button onClick={handleCancelFinish} className="control-btn">No salir del examen</button>
-              <button onClick={handleFinishExam} className="control-btn">Salir del examen</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showFinalizePopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <p>¿Quieres finalizar el examen o revisarlo antes?</p>
-            <div className="popup-buttons">
-              <button onClick={confirmFinalize} className="control-btn">Finalizar y salir</button>
-              <button onClick={handleClosePopup} className="control-btn">Continuar revisando</button>
-            </div>
-            {isDarkMode !== undefined && (
-              <button
-                className="dark-mode-toggle"
-                onClick={toggleDarkMode}
-                title="Activar/Desactivar Modo Oscuro"
-              >
-                {isDarkMode ? '☀️' : '🌙'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+    <>
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswers}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={markedAsDoubt}
+        toggleDoubtMark={toggleDoubtMark}
+        onSave={handleManualSave}
+        onFinalize={confirmFinalize}
+        onPause={handlePause}
+        onDownload={() => downloadExamPdfFromData({
+          questions: questions,
+          title: 'SIMULIA',
+          subtitle: 'Examen: PERSONALIZADO',
+          logoUrl: '/Logo_oscuro.png',
+          examId: examId || '',
+          date: new Date().toISOString().slice(0,10),
+          durationMin: Math.round(totalTime / 60),
+          showAnswerKey: false,
+          showBubbleSheet: true,
+          fileName: 'examen-personalizado.pdf'
+        })}
+        onExit={() => navigate('/dashboard')}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={paused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType="personalizado"
+        isReviewMode={false}
+        disabledButtons={[]}
+        isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onImpugnarSubmit={async (questionId, reason) => {
+          setDisputeReason(reason);
+          await handleDisputeSubmit(questionId);
+        }}
+      />
 
       {showSuccessNotification && (
         <SuccessNotification
@@ -530,7 +536,7 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
           autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
         />
       )}
-    </div>
+    </>
   );
 };
 

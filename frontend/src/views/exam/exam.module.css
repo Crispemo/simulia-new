@@ -1,0 +1,584 @@
+/* Contenedor principal */
+.examContainer {
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.examHeader {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e4e8;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.exitButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #3e5055;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.exitButton:hover {
+  background-color: #f0f4f7;
+  color: #7ea0a7;
+}
+
+.exitButton svg {
+  stroke: currentColor;
+}
+
+.timeDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3e5055;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeDisplay svg {
+  stroke: #7ea0a7;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #ffffff;
+  border: 1px solid #e0e4e8;
+  color: #3e5055;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #f0f4f7;
+  border-color: #7ea0a7;
+  color: #7ea0a7;
+}
+
+.actionButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionButton svg {
+  stroke: currentColor;
+}
+
+.actionButton.saving {
+  background-color: #e8f4f8;
+  border-color: #7ea0a7;
+  color: #7ea0a7;
+}
+
+.actionButton.pendingChanges::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+.finalizeButton {
+  background-color: #7ea0a7;
+  border-color: #7ea0a7;
+  color: #ffffff;
+}
+
+.finalizeButton:hover {
+  background-color: #6a8a91;
+  border-color: #6a8a91;
+}
+
+.completionInfo {
+  display: flex;
+  align-items: center;
+}
+
+.completionText {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Sección de progreso */
+.progressSection {
+  background-color: #ffffff;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e4e8;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.questionCounter {
+  color: #3e5055;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #7ea0a7 0%, #5a8a91 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Contenedor principal */
+.examMain {
+  flex: 1;
+  padding: 24px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Card de justificación */
+.justificationCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #7ea0a7;
+}
+
+.justificationHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.justificationHeader svg {
+  stroke: #7ea0a7;
+  fill: none;
+}
+
+.justificationHeader h3 {
+  margin: 0;
+  color: #3e5055;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.justificationContent {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.justificationContent p {
+  margin: 0 0 12px 0;
+}
+
+.justificationContent p:last-child {
+  margin-bottom: 0;
+}
+
+.subjectInfo {
+  color: #6b7280;
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Popups */
+.popupOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.popup {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.popup h2 {
+  margin: 0 0 16px 0;
+  color: #3e5055;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.popup p {
+  margin: 0 0 24px 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.popupButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.popupButton {
+  padding: 10px 20px;
+  border: 1px solid #e0e4e8;
+  background-color: #ffffff;
+  color: #3e5055;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popupButton:hover {
+  background-color: #f0f4f7;
+  border-color: #7ea0a7;
+}
+
+.popupButtonPrimary {
+  background-color: #7ea0a7;
+  border-color: #7ea0a7;
+  color: #ffffff;
+}
+
+.popupButtonPrimary:hover {
+  background-color: #6a8a91;
+  border-color: #6a8a91;
+}
+
+/* Modal de impugnación */
+.disputeModal {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modalCloseButton:hover {
+  background-color: #f0f4f7;
+  color: #3e5055;
+}
+
+.disputeModal h3 {
+  margin: 0 0 16px 0;
+  color: #3e5055;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.disputeTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #e0e4e8;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 16px;
+  color: #3e5055;
+}
+
+.disputeTextarea:focus {
+  outline: none;
+  border-color: #7ea0a7;
+  box-shadow: 0 0 0 3px rgba(126, 160, 167, 0.1);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submitDisputeButton {
+  padding: 10px 20px;
+  background-color: #7ea0a7;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitDisputeButton:hover {
+  background-color: #6a8a91;
+}
+
+/* Modo oscuro */
+:global(body.dark) .examContainer,
+:global(body.dark-mode) .examContainer {
+  background-color: #1a1a1a;
+}
+
+:global(body.dark) .examHeader,
+:global(body.dark-mode) .examHeader {
+  background-color: #2a2a2a;
+  border-bottom-color: #3a3a3a;
+}
+
+:global(body.dark) .exitButton,
+:global(body.dark-mode) .exitButton {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .exitButton:hover,
+:global(body.dark-mode) .exitButton:hover {
+  background-color: #3a3a3a;
+  color: #7ea0a7;
+}
+
+:global(body.dark) .timeDisplay,
+:global(body.dark-mode) .timeDisplay {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .actionButton,
+:global(body.dark-mode) .actionButton {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #e5e7eb;
+}
+
+:global(body.dark) .actionButton:hover,
+:global(body.dark-mode) .actionButton:hover {
+  background-color: #3a3a3a;
+  border-color: #7ea0a7;
+}
+
+:global(body.dark) .completionText,
+:global(body.dark-mode) .completionText {
+  color: #9ca3af;
+}
+
+:global(body.dark) .progressSection,
+:global(body.dark-mode) .progressSection {
+  background-color: #2a2a2a;
+  border-bottom-color: #3a3a3a;
+}
+
+:global(body.dark) .questionCounter,
+:global(body.dark-mode) .questionCounter {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .progressBarContainer,
+:global(body.dark-mode) .progressBarContainer {
+  background-color: #3a3a3a;
+}
+
+:global(body.dark) .justificationCard,
+:global(body.dark-mode) .justificationCard {
+  background-color: #2a2a2a;
+  border-left-color: #7ea0a7;
+}
+
+:global(body.dark) .justificationHeader h3,
+:global(body.dark-mode) .justificationHeader h3 {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .justificationContent,
+:global(body.dark-mode) .justificationContent {
+  color: #d1d5db;
+}
+
+:global(body.dark) .popup,
+:global(body.dark-mode) .popup {
+  background-color: #2a2a2a;
+}
+
+:global(body.dark) .popup h2,
+:global(body.dark-mode) .popup h2 {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .popup p,
+:global(body.dark-mode) .popup p {
+  color: #9ca3af;
+}
+
+:global(body.dark) .popupButton,
+:global(body.dark-mode) .popupButton {
+  background-color: #3a3a3a;
+  border-color: #4a4a4a;
+  color: #e5e7eb;
+}
+
+:global(body.dark) .disputeModal,
+:global(body.dark-mode) .disputeModal {
+  background-color: #2a2a2a;
+}
+
+:global(body.dark) .disputeModal h3,
+:global(body.dark-mode) .disputeModal h3 {
+  color: #e5e7eb;
+}
+
+:global(body.dark) .disputeTextarea,
+:global(body.dark-mode) .disputeTextarea {
+  background-color: #3a3a3a;
+  border-color: #4a4a4a;
+  color: #e5e7eb;
+}
+
+/* Ajustes adicionales para coincidir con el diseño */
+.examHeader {
+  min-height: 64px;
+}
+
+.actionButton span {
+  font-size: 13px;
+}
+
+.completionInfo {
+  padding-left: 16px;
+  border-left: 1px solid #e0e4e8;
+}
+
+:global(body.dark) .completionInfo,
+:global(body.dark-mode) .completionInfo {
+  border-left-color: #3a3a3a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .examHeader {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .headerLeft {
+    gap: 16px;
+    flex: 1;
+  }
+
+  .headerRight {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .completionInfo {
+    border-left: none;
+    border-top: 1px solid #e0e4e8;
+    padding-left: 0;
+    padding-top: 8px;
+    width: 100%;
+  }
+
+  .actionButtons {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .actionButton {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .actionButton span {
+    display: none;
+  }
+
+  .examMain {
+    padding: 16px;
+  }
+
+  .justificationCard {
+    padding: 16px;
+  }
+}
+

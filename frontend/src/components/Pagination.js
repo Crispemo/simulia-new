@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useRef as usePrevRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './Pagination.module.css'; // Import CSS Module
 
 // Helper function to combine class names conditionally (similar to clsx)
@@ -85,27 +86,61 @@ const Pagination = ({
     return Array.from({ length: endIndex - startIndex }).map((_, i) => startIndex + i);
   };
 
+  // Obtener los índices de las preguntas de la página actual
+  const currentPageIndices = getCurrentPageIndices();
+  
+  // Calcular cuántas preguntas mostrar (máximo 15 según la imagen)
+  const maxVisibleItems = 15;
+  const showMoreIndicator = currentPageIndices.length > maxVisibleItems;
+  
+  // Determinar qué preguntas mostrar (centradas alrededor de la activa si es posible)
+  const getVisibleIndices = () => {
+    if (currentPageIndices.length <= maxVisibleItems) {
+      return currentPageIndices;
+    }
+    
+    // Si hay una pregunta activa, centrarla
+    if (activeItemIndex !== undefined && activeItemIndex !== null) {
+      const activeIndexInPage = currentPageIndices.indexOf(activeItemIndex);
+      if (activeIndexInPage !== -1) {
+        // Centrar alrededor de la pregunta activa
+        const start = Math.max(0, activeIndexInPage - Math.floor(maxVisibleItems / 2));
+        const end = Math.min(currentPageIndices.length, start + maxVisibleItems);
+        const adjustedStart = Math.max(0, end - maxVisibleItems);
+        return currentPageIndices.slice(adjustedStart, end);
+      }
+    }
+    
+    // Si no hay pregunta activa o no está en la página actual, mostrar las primeras
+    return currentPageIndices.slice(0, maxVisibleItems);
+  };
+
+  const visibleIndices = getVisibleIndices();
+  const remainingItems = currentPageIndices.length - visibleIndices.length;
+
   return (
     <div className={cn(styles.paginationComponent, isDarkMode && styles.dark)}>
-      {/* Grid with controls */}
-      <div className={styles.gridPaginationContainer}>
+      <div className={styles.paginationContainer}>
+        {/* Botón Anterior */}
         <button
-          className={cn(styles.sidePaginationBtn, styles.left)}
+          className={cn(styles.navButton, styles.prevButton)}
           onClick={goToPrevPage}
           disabled={currentPage === 0}
-          aria-label="Previous Page"
+          aria-label="Página anterior"
         >
-          <span className="arrow-left">&#9664;</span>
+          <ChevronLeft size={18} />
+          <span>Anterior</span>
         </button>
 
-        <div ref={gridRef} className={styles.examQuestionIndex}>
-          {getCurrentPageIndices().map(index => {
-            const status = itemStatus[index] || ''; // 'answered', 'doubt', 'incorrect', 'unanswered' or ''
+        {/* Números de pregunta */}
+        <div ref={gridRef} className={styles.pagesContainer}>
+          {visibleIndices.map(index => {
+            const status = itemStatus[index] || '';
             return (
               <button
                 key={index}
                 className={cn(
-                  styles.examQuestionNumber,
+                  styles.pageNumber,
                   activeItemIndex === index && styles.active,
                   status === 'answered' && styles.answered,
                   status === 'correct' && styles.correct,
@@ -114,32 +149,29 @@ const Pagination = ({
                   status === 'unanswered' && styles.unanswered
                 )}
                 onClick={() => handleItemClick(index)}
-                aria-label={`Go to item ${index + 1}`}
+                aria-label={`Ir a pregunta ${index + 1}`}
               >
                 {index + 1}
               </button>
             );
           })}
-          {/* Optionally add placeholders if less than itemsPerPage */}
-          {getCurrentPageIndices().length < itemsPerPage &&
-            Array.from({ length: itemsPerPage - getCurrentPageIndices().length }).map((_, i) => (
-              <div key={`placeholder-${i}`} className={styles.paginationPlaceholder}></div>
-          ))}
+          
+          {/* Indicador de más preguntas */}
+          {showMoreIndicator && remainingItems > 0 && (
+            <span className={styles.moreIndicator}>+{remainingItems}</span>
+          )}
         </div>
 
+        {/* Botón Siguiente */}
         <button
-          className={cn(styles.sidePaginationBtn, styles.right)}
+          className={cn(styles.navButton, styles.nextButton)}
           onClick={goToNextPage}
           disabled={currentPage === totalPages - 1}
-          aria-label="Next Page"
+          aria-label="Página siguiente"
         >
-          <span className="arrow-right">&#9654;</span>
+          <span>Siguiente</span>
+          <ChevronRight size={18} />
         </button>
-      </div>
-
-      {/* Page Indicator */}
-      <div className={styles.pageIndicator}>
-        Página {currentPage + 1} de {totalPages}
       </div>
     </div>
   );

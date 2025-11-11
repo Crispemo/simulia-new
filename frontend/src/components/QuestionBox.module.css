@@ -26,7 +26,7 @@ height: auto;
 }
 
 .questionBox {
-  padding: 20px;
+  padding: 24px;
   margin-bottom: 20px;
   width: 100%;
   flex-grow: 1;
@@ -35,18 +35,86 @@ height: auto;
   min-height: auto;
   height: auto;
   overflow: visible;
+  position: relative;
 }
 
-.questionBox h3 {
-  margin-top: 0;
-  margin-bottom: 16px;
+/* Badge del número de pregunta */
+.questionNumberBadge {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #a8d5ba;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 18px;
-  color: #333;
-  line-height: 1.5;
+  font-weight: 600;
+  color: #ffffff;
+  z-index: 10;
 }
 
-.darkTheme .questionBox h3 {
+.questionText {
+  margin-top: 0;
+  margin-bottom: 24px;
+  margin-left: 56px;
+  padding-right: 16px;
+  font-size: 18px;
+  color: #000000;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.darkTheme .questionBox h3,
+.darkTheme .questionText {
   color: #e0e0e0;
+}
+
+.darkTheme .questionNumberBadge {
+  background-color: #5a8a6a;
+}
+
+.darkTheme .optionText {
+  color: #9ca3af;
+}
+
+.darkTheme .optionsContainer button {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.darkTheme .optionsContainer button:hover:not(:disabled) {
+  background-color: #3a3a3a;
+  border-color: #4a4a4a;
+}
+
+.darkTheme .optionsContainer button.selected {
+  background-color: #1e4620;
+  border-color: #28a745;
+  color: #d4edda;
+}
+
+.darkTheme .optionsContainer button.selected:hover:not(:disabled) {
+  background-color: #2a5a2f;
+  border-color: #34ce57;
+}
+
+.darkTheme .radioButton {
+  border-color: #4a4a4a;
+  background-color: #ffffff !important;
+}
+
+.darkTheme .optionsContainer button.selected .radioButton {
+  border-color: #28a745;
+  background-color: #ffffff !important;
+}
+
+.darkTheme .optionsContainer button.correct .radioButton,
+.darkTheme .optionsContainer button.incorrect .radioButton,
+.darkTheme .optionsContainer button.correctAnswer .radioButton {
+  background-color: #ffffff !important;
 }
 
 .questionContent {
@@ -89,33 +157,151 @@ height: auto;
 .optionsContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   margin-bottom: 20px;
 }
 
 .optionsContainer button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   text-align: left;
-  padding: 12px 15px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  padding: 14px 16px;
+  background-color: #ffffff;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   transition: all 0.2s;
-  line-height: 1.4;
+  line-height: 1.5;
+  position: relative;
+  flex-wrap: wrap;
 }
 
-.optionsContainer button:hover {
-  background-color: #e9ecef;
-  border-color: #ced4da;
+.optionsContainer button:hover:not(:disabled) {
+  background-color: #f5f7fa;
+  border-color: #cbd5e0;
 }
 
 .optionsContainer button.selected {
-  background-color: #7ea0a7;
-  border-color: #3f5056;
-  color: white;
+  background-color: #d4edda;
+  border-color: #a8d5ba;
+  color: #155724;
   font-weight: 500;
+}
+
+.optionsContainer button.selected:hover:not(:disabled) {
+  background-color: #c3e6cb;
+  border-color: #95c5a6;
+}
+
+/* Radio button circular - siempre blanco */
+.radioButton {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e0;
+  background-color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  order: 0;
+}
+
+.optionsContainer button.selected .radioButton {
+  border-color: #28a745;
+  background-color: #ffffff !important;
+}
+
+.optionsContainer button.correct .radioButton,
+.optionsContainer button.incorrect .radioButton,
+.optionsContainer button.correctAnswer .radioButton {
+  background-color: #ffffff !important;
+}
+
+
+/* Texto de la opción */
+.optionText {
+  flex: 1;
+  color: #6b7280;
+  order: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.optionsContainer button.selected .optionText {
+  color: #155724;
+}
+
+/* Icono de check */
+.checkIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  order: 2;
+}
+
+.checkIcon svg {
+  stroke-width: 1.5;
+  color: #28a745;
+  stroke: #28a745;
+}
+
+/* Icono de incorrecto */
+.incorrectIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  order: 2;
+}
+
+.incorrectIcon svg {
+  stroke-width: 1.5;
+  color: #dc3545;
+  stroke: #dc3545;
+}
+
+/* Icono de correcto (para respuestas correctas no seleccionadas) */
+.correctIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  order: 2;
+}
+
+.correctIcon svg {
+  stroke-width: 1.5;
+  color: #28a745;
+  stroke: #28a745;
+}
+
+/* Etiquetas para indicar respuesta del usuario y respuesta correcta */
+.userAnswerLabel {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  flex-shrink: 0;
+  order: 3;
+}
+
+.correctAnswerLabel {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #28a745;
+  flex-shrink: 0;
+  order: 3;
 }
 
 /* Styles for correct and incorrect answers */
@@ -209,6 +395,29 @@ height: auto;
   color: #f77575;
 }
 
+.darkTheme .checkIcon svg {
+  color: #5bd778;
+  stroke: #5bd778;
+}
+
+.darkTheme .incorrectIcon svg {
+  color: #f77575;
+  stroke: #f77575;
+}
+
+.darkTheme .correctIcon svg {
+  color: #5bd778;
+  stroke: #5bd778;
+}
+
+.darkTheme .userAnswerLabel {
+  color: #adb5bd;
+}
+
+.darkTheme .correctAnswerLabel {
+  color: #5bd778;
+}
+
 .darkTheme .optionsContainer button {
   background-color: #3f5056;
   border-color: #3a4a5e;
@@ -226,60 +435,12 @@ height: auto;
   font-weight: 600;
 }
 
-.actionNavContainer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  width: 100%;
-}
-
-.sideNavButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #3f5056;
-  color: white;
-  border: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.sideNavButton:hover {
-  background-color: #3f5056;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.sideNavButton:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-  opacity: 0.6;
-}
-
-.darkTheme .sideNavButton {
-  background-color: #3f5056;
-}
-
-.darkTheme .sideNavButton:hover {
-  background-color: #3f5056;
-}
-
-.darkTheme .sideNavButton:disabled {
-  background-color: #3f5056;
-}
-
 .examActionButtons {
   display: flex;
   justify-content: center;
   gap: 10px;
+  margin-top: 20px;
+  width: 100%;
 }
 
 .customImpugnarBtn, .customDoubtBtn {
@@ -521,7 +682,23 @@ height: auto;
   animation: buttonPulse 0.3s ease;
 }
 
-/* Responsive */
+/* Responsive - Tablets */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .questionBox {
+    padding: 20px;
+  }
+
+  .questionText {
+    font-size: 17px;
+  }
+
+  .optionsContainer button {
+    padding: 13px 15px;
+    font-size: 15.5px;
+  }
+}
+
+/* Responsive - Móviles */
 @media (max-width: 768px) {
   .questionContainer {
     padding: 10px 0;
@@ -531,15 +708,77 @@ height: auto;
   .questionBox {
     padding: 15px;
   }
-  
-  .optionsContainer button {
-    padding: 10px 12px;
-    font-size: 15px;
+
+  .questionNumberBadge {
+    top: 15px;
+    left: 15px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .questionText {
+    margin-left: 50px;
+    font-size: 16px;
+    padding-right: 8px;
   }
   
+  .optionsContainer {
+    gap: 10px;
+  }
+  
+  .optionsContainer button {
+    padding: 12px 14px;
+    font-size: 15px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .radioButton {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .optionText {
+    flex: 1 1 100%;
+    min-width: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin-bottom: 4px;
+  }
+
+  .checkIcon,
+  .incorrectIcon,
+  .correctIcon {
+    margin-left: 0;
+    flex-shrink: 0;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkIcon svg,
+  .incorrectIcon svg,
+  .correctIcon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .userAnswerLabel,
+  .correctAnswerLabel {
+    font-size: 11px;
+    margin-left: 4px;
+    white-space: nowrap;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
   .examActionButtons {
     flex-wrap: wrap;
     width: 100%;
+    gap: 8px;
   }
   
   .customImpugnarBtn, .customDoubtBtn {
@@ -556,16 +795,6 @@ height: auto;
     word-break: break-word;
   }
   
-  .actionNavContainer {
-    padding-top: 15px;
-  }
-  
-  .sideNavButton {
-    width: 35px;
-    height: 35px;
-    font-size: 14px;
-  }
-  
   .questionCounterSection {
     margin: 5px 0;
     font-size: 14px;
@@ -573,6 +802,14 @@ height: auto;
   
   .questionCount {
     padding: 4px 12px;
+  }
+
+  .questionImage {
+    margin-bottom: 15px;
+  }
+
+  .examImage {
+    max-height: 250px;
   }
 }
 
@@ -582,15 +819,75 @@ height: auto;
     min-height: auto;
   }
   
-  .questionBox h3 {
-    font-size: 16px;
+  .questionBox {
+    padding: 12px;
+  }
+
+  .questionNumberBadge {
+    top: 12px;
+    left: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .questionText {
+    margin-left: 44px;
+    font-size: 15px;
+    padding-right: 4px;
+    margin-bottom: 16px;
+  }
+  
+  .optionsContainer {
+    gap: 8px;
   }
   
   .optionsContainer button {
-    padding: 8px 10px;
+    padding: 10px 12px;
     font-size: 14px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
-  
+
+  .radioButton {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .optionText {
+    flex: 1 1 100%;
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .checkIcon,
+  .incorrectIcon,
+  .correctIcon {
+    margin-left: 0;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkIcon svg,
+  .incorrectIcon svg,
+  .correctIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .userAnswerLabel,
+  .correctAnswerLabel {
+    font-size: 10px;
+    margin-left: 4px;
+    white-space: nowrap;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
   .questionContent.withImage {
     gap: 10px;
   }
@@ -598,15 +895,9 @@ height: auto;
   .examImage {
     max-height: 200px;
   }
-  
-  .actionNavContainer {
-    padding-top: 10px;
-  }
-  
-  .sideNavButton {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
+
+  .examActionButtons {
+    gap: 6px;
   }
   
   .customImpugnarBtn, .customDoubtBtn {
@@ -620,6 +911,80 @@ height: auto;
     box-sizing: border-box;
     max-width: 100%;
     word-break: break-word;
+  }
+
+  .timeBarContainer {
+    height: 6px;
+    margin: 8px 0;
+  }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 400px) {
+  .questionBox {
+    padding: 10px;
+  }
+
+  .questionNumberBadge {
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .questionText {
+    margin-left: 40px;
+    font-size: 14px;
+    padding-right: 2px;
+    margin-bottom: 12px;
+  }
+
+  .optionsContainer button {
+    padding: 8px 10px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .radioButton {
+    width: 14px;
+    height: 14px;
+  }
+
+  .optionText {
+    flex: 1 1 100%;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .checkIcon,
+  .incorrectIcon,
+  .correctIcon {
+    margin-left: 0;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
+  .checkIcon svg,
+  .incorrectIcon svg,
+  .correctIcon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .userAnswerLabel,
+  .correctAnswerLabel {
+    font-size: 9px;
+    margin-left: 4px;
+    white-space: nowrap;
+    order: 4;
+    display: flex;
+    align-items: center;
+  }
+
+  .examImage {
+    max-height: 150px;
   }
 }
 

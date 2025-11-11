@@ -162,7 +162,7 @@ export const finalizeExam = async (userId, examType, questions, userAnswers, sel
          window.location.hostname === 'simulia.es' ||
          window.location.protocol === 'https:');
       
-      const apiUrl = isProduction ? 'https://backend-production-cc6b.up.railway.app' : 'http://localhost:3001';
+      const apiUrl = isProduction ? 'https://backend-production-cc6b.up.railway.app' : 'http://localhost:5000';
       console.log('🔧 EXAMUTILS DEBUG - isProduction:', isProduction, 'apiUrl:', apiUrl);
       
       const response = await fetch(`${apiUrl}/validate-and-save-exam`, {
@@ -430,7 +430,7 @@ export const saveExamProgress = async (
          window.location.hostname === 'simulia.es' ||
          window.location.protocol === 'https:');
       
-      const apiUrl = isProduction ? 'https://backend-production-cc6b.up.railway.app' : 'http://localhost:3001';
+      const apiUrl = isProduction ? 'https://backend-production-cc6b.up.railway.app' : 'http://localhost:5000';
       console.log('🔧 EXAMUTILS DEBUG - saveExamProgress isProduction:', isProduction, 'apiUrl:', apiUrl);
       
       const response = await fetch(`${apiUrl}/validate-and-save-exam-in-progress`, {

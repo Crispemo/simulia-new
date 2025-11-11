@@ -2,295 +2,327 @@
 .paginationComponent {
   width: 100%;
   margin: 15px 0;
+  padding: 0 20px;
 }
 
-.gridPaginationContainer {
-  position: relative;
+.paginationContainer {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   width: 100%;
-  margin: 10px auto;
-  background: transparent;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.examQuestionIndex {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(26px, max-content));
-  gap: 5px;
-  margin: 0 50px;
-  width: 100%;
-  max-width: 900px;
-  overflow-x: auto;
-  justify-content: center;
-  padding: 5px;
-}
-
-.examQuestionNumber {
-  width: 26px;
-  height: 26px;
-  font-size: 11px;
-  background-color: #ffffff;
-  border: 1.5px solid #3E5055;
-  color: #333333;
-  border-radius: 50%;
-  padding: 0;
+/* Botones de navegación */
+.navButton {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e4e8;
+  background-color: #f5f7fa;
+  color: #3e5055;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.navButton:hover:not(:disabled) {
+  background-color: #e8ecef;
+  border-color: #cbd5e0;
+}
+
+.navButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prevButton {
+  /* Gris claro como en la imagen */
+  background-color: #f5f7fa;
+  border-color: #e0e4e8;
+}
+
+.nextButton {
+  /* Teal-gris oscuro como en la imagen */
+  background-color: #7ea0a7;
+  border-color: #7ea0a7;
+  color: #ffffff;
+}
+
+.nextButton:hover:not(:disabled) {
+  background-color: #6a8a91;
+  border-color: #6a8a91;
+}
+
+.navButton svg {
+  stroke-width: 2.5;
+}
+
+/* Contenedor de números de página */
+.pagesContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f5f7fa;
+}
+
+.pagesContainer::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pagesContainer::-webkit-scrollbar-track {
+  background: #f5f7fa;
+  border-radius: 3px;
+}
+
+.pagesContainer::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.pagesContainer::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Números de página */
+.pageNumber {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e4e8;
+  background-color: #f5f7fa;
+  color: #3e5055;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.examQuestionNumber.active {
-  background-color: #3E5055;
-  color: #ffffff;
-  border-color: #3E5055;
-  font-weight: bold;
-  transform: scale(1.1);
+.pageNumber:hover {
+  background-color: #e8ecef;
+  border-color: #cbd5e0;
 }
 
-.examQuestionNumber.answered {
+.pageNumber.active {
   background-color: #7ea0a7;
-  color: #ffffff;
   border-color: #7ea0a7;
+  color: #ffffff;
+  font-weight: 600;
 }
 
-.examQuestionNumber.correct {
-  background-color: #4CAF50; /* Green color for correct answers */
-  color: #ffffff;
+.pageNumber.active:hover {
+  background-color: #6a8a91;
+  border-color: #6a8a91;
+}
+
+/* Estados de pregunta */
+.pageNumber.answered {
+  background-color: #e8f4f8;
+  border-color: #7ea0a7;
+  color: #3e5055;
+}
+
+.pageNumber.correct {
+  background-color: #4CAF50;
   border-color: #4CAF50;
-}
-
-.examQuestionNumber.doubt {
-  border: 2px dashed #FF9800;
-  background-color: #edd9b5;
-}
-
-.examQuestionNumber.incorrect {
-  background-color: #e74c3c;
   color: #ffffff;
+}
+
+.pageNumber.doubt {
+  border: 2px dashed #FF9800;
+  background-color: #fff3e0;
+  color: #3e5055;
+}
+
+.pageNumber.incorrect {
+  background-color: #e74c3c;
   border-color: #e74c3c;
+  color: #ffffff;
 }
 
-.examQuestionNumber.unanswered {
-  background-color: #f0f0f0;
-  color: #7a7a7a;
-  border-color: #b0b0b0;
+.pageNumber.unanswered {
+  background-color: #f5f7fa;
+  border-color: #e0e4e8;
+  color: #9ca3af;
 }
 
-.paginationPlaceholder {
-  width: 26px;
-  height: 26px;
-}
-
-/* Side pagination buttons */
-.sidePaginationBtn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #3f5056;
-  color: #3f5056;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  font-size: 16px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.sidePaginationBtn.left {
-  left: 15px;
-}
-
-.sidePaginationBtn.right {
-  right: 15px;
-}
-
-.sidePaginationBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-  background-color: #e0e0e0;
-}
-
-.sidePaginationBtn:not(:disabled):hover {
-  background-color: #3f5056;
-  color: white;
-  transform: translateY(-50%) scale(1.1);
-}
-
-/* Page Indicator */
-.pageIndicator {
-  text-align: center;
+/* Indicador de más páginas */
+.moreIndicator {
+  color: #6b7280;
   font-size: 14px;
-  color: #3f5056;
   font-weight: 500;
-  margin-top: 10px;
-  transition: color 0.3s ease;
+  padding: 0 8px;
+  white-space: nowrap;
 }
 
 /* Dark Mode Styles */
-.paginationComponent.dark .examQuestionNumber {
-  background-color: #2A3439;
-  border-color: #5A6B72;
-  color: #FFFFFF;
+.paginationComponent.dark .navButton {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #e5e7eb;
 }
 
-.paginationComponent.dark .examQuestionNumber.active {
+.paginationComponent.dark .navButton:hover:not(:disabled) {
+  background-color: #3a3a3a;
+  border-color: #4a4a4a;
+}
+
+.paginationComponent.dark .prevButton {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.paginationComponent.dark .nextButton {
+  background-color: #5a8a91;
+  border-color: #5a8a91;
+}
+
+.paginationComponent.dark .nextButton:hover:not(:disabled) {
+  background-color: #4a7a81;
+  border-color: #4a7a81;
+}
+
+.paginationComponent.dark .pagesContainer {
+  scrollbar-color: #3a3a3a #2a2a2a;
+}
+
+.paginationComponent.dark .pagesContainer::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.paginationComponent.dark .pagesContainer::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+}
+
+.paginationComponent.dark .pagesContainer::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+.paginationComponent.dark .pageNumber {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #e5e7eb;
+}
+
+.paginationComponent.dark .pageNumber:hover {
+  background-color: #3a3a3a;
+  border-color: #4a4a4a;
+}
+
+.paginationComponent.dark .pageNumber.active {
   background-color: #7ea0a7;
-  color: #121518;
   border-color: #7ea0a7;
+  color: #ffffff;
 }
 
-.paginationComponent.dark .examQuestionNumber.answered {
-  background-color: #5A6B72;
-  color: #FFFFFF;
-  border-color: #5A6B72;
+.paginationComponent.dark .pageNumber.active:hover {
+  background-color: #6a8a91;
+  border-color: #6a8a91;
 }
 
-.paginationComponent.dark .examQuestionNumber.correct {
-  background-color: #388E3C; /* Darker green for dark mode */
-  color: #FFFFFF;
+.paginationComponent.dark .pageNumber.answered {
+  background-color: #2a3a3f;
+  border-color: #5a8a91;
+  color: #e5e7eb;
+}
+
+.paginationComponent.dark .pageNumber.correct {
+  background-color: #388E3C;
   border-color: #388E3C;
+  color: #ffffff;
 }
 
-.paginationComponent.dark .examQuestionNumber.doubt {
+.paginationComponent.dark .pageNumber.doubt {
   border: 2px dashed #FF9800;
   background-color: #614107;
+  color: #e5e7eb;
 }
 
-.paginationComponent.dark .examQuestionNumber.incorrect {
+.paginationComponent.dark .pageNumber.incorrect {
   background-color: #e74c3c;
-  color: #ffffff;
   border-color: #e74c3c;
+  color: #ffffff;
 }
 
-.paginationComponent.dark .examQuestionNumber.unanswered {
-  background-color: #f0f0f0;
-  color: #7a7a7a;
-  border-color: #b0b0b0;
+.paginationComponent.dark .pageNumber.unanswered {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #9ca3af;
 }
 
-.paginationComponent.dark .sidePaginationBtn {
-  background: rgba(30, 36, 40, 0.9);
-  border-color: #5A6B72;
-  color: #a8c5cc;
-}
-
-.paginationComponent.dark .sidePaginationBtn:disabled {
-  background-color: #333;
-}
-
-.paginationComponent.dark .sidePaginationBtn:not(:disabled):hover {
-  background-color: #5A6B72;
-  color: #FFFFFF;
-}
-
-.paginationComponent.dark .pageIndicator {
-  color: #a8c5cc;
+.paginationComponent.dark .moreIndicator {
+  color: #9ca3af;
 }
 
 /* Responsive adjustments */
-@media (max-width: 1200px) {
-  .examQuestionIndex {
-    grid-template-columns: repeat(auto-fill, minmax(26px, max-content));
-    max-width: 700px;
-  }
-}
-
-@media (max-width: 992px) {
-  .examQuestionIndex {
-    grid-template-columns: repeat(auto-fill, minmax(24px, max-content));
-    margin: 0 45px;
-    max-width: 600px;
-  }
-  .sidePaginationBtn {
-      width: 30px;
-      height: 30px;
-      font-size: 14px;
-  }
-}
-
 @media (max-width: 768px) {
-  .examQuestionIndex {
-    grid-template-columns: repeat(auto-fill, minmax(24px, max-content));
+  .paginationComponent {
+    padding: 0 10px;
+  }
+
+  .paginationContainer {
+    gap: 8px;
+  }
+
+  .navButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .navButton span {
+    display: none;
+  }
+
+  .pageNumber {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  .pagesContainer {
     gap: 4px;
-    margin: 0 40px;
-    max-width: 450px;
-  }
-  .examQuestionNumber {
-      width: 24px;
-      height: 24px;
-      font-size: 10px;
-  }
-  .sidePaginationBtn {
-      width: 28px;
-      height: 28px;
-      font-size: 12px;
   }
 }
 
 @media (max-width: 576px) {
-  .gridPaginationContainer {
-    margin: 5px auto;
+  .paginationComponent {
+    padding: 0 5px;
   }
-  .examQuestionIndex {
-    grid-template-columns: repeat(auto-fill, minmax(22px, max-content));
-    gap: 3px;
-    margin: 0 35px;
-    max-width: 350px;
-  }
-  .examQuestionNumber {
-      width: 22px;
-      height: 22px;
-      font-size: 9px;
-  }
-  .sidePaginationBtn {
-      width: 25px;
-      height: 25px;
-      font-size: 10px;
-  }
-  .sidePaginationBtn.left {
-    left: 5px;
-  }
-  .sidePaginationBtn.right {
-    right: 5px;
-  }
-}
 
-@media (max-width: 400px) {
-  .examQuestionIndex {
-    grid-template-columns: repeat(auto-fill, minmax(20px, max-content));
-    gap: 2px;
-    margin: 0 30px;
-    max-width: 280px;
-    padding: 3px;
+  .paginationContainer {
+    gap: 4px;
   }
-  .examQuestionNumber {
-      width: 20px;
-      height: 20px;
-      font-size: 8px;
-  }
-  .sidePaginationBtn {
-      width: 22px;
-      height: 22px;
-      font-size: 9px;
-  }
-  .sidePaginationBtn.left {
-    left: 3px;
-  }
-  .sidePaginationBtn.right {
-    right: 3px;
-  }
-  .pageIndicator {
+
+  .navButton {
+    padding: 6px 10px;
     font-size: 12px;
   }
-} 
+
+  .pageNumber {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .moreIndicator {
+    font-size: 12px;
+  }
+}

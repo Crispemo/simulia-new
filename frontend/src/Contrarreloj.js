@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { debounce } from 'lodash';
 import './Contrarreloj.css';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from './config';
 import Dashboard from './Dashboard';
-import ExamHeader from './components/ExamHeader';
-import QuestionBox from './components/QuestionBox';
-import Pagination from './components/Pagination';
 import { finalizeExam, saveExamProgress, resumeExam as resumeExamUtil } from './lib/examUtils';
 import SuccessNotification from './components/SuccessNotification';
 import { downloadCurrentExamPdf, downloadExamPdfFromData } from './lib/pdfUtils';
+import ExamView from './views/exam/exam';
 
 const Contrarreloj = ({ userId }) => {
   const [questions, setQuestions] = useState([]);
@@ -33,9 +32,13 @@ const Contrarreloj = ({ userId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [userAnswers, setUserAnswers] = useState([]);
   const [doubtMarkedQuestions, setDoubtMarkedQuestions] = useState({}); // Estado para preguntas marcadas como duda
+  const [markedAsDoubt, setMarkedAsDoubt] = useState({});
   const [isDarkMode, setIsDarkMode] = useState(document.body.classList.contains('dark'));
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [totalTime] = useState(840); // 14 minutos
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Detectar cambios en el modo oscuro
   useEffect(() => {
@@ -443,7 +446,25 @@ const Contrarreloj = ({ userId }) => {
       
       // Actualizar userAnswers con la nueva selección, incluyendo markedAsDoubt
       const newUserAnswers = [...userAnswers];
-      newUserAnswers[questionId] = selectedOption;
+      const question = questions[questionId];
+      newUserAnswers[questionId] = {
+        questionId: question?._id || `question_${questionId}`,
+        selectedAnswer: selectedOption,
+        isCorrect: null,
+        markedAsDoubt: doubtMarkedQuestions[questionId] || false,
+        questionData: {
+          question: question?.question || "",
+          option_1: question?.option_1 || question?.options?.[0] || "",
+          option_2: question?.option_2 || question?.options?.[1] || "",
+          option_3: question?.option_3 || question?.options?.[2] || "",
+          option_4: question?.option_4 || question?.options?.[3] || "",
+          option_5: question?.option_5 || question?.options?.[4] || "-",
+          answer: question?.answer || "",
+          subject: question?.subject || question?.categoria || "General",
+          image: question?.image || null,
+          _id: question?._id || `question_${questionId}`
+        }
+      };
       setUserAnswers(newUserAnswers);
       
       // Devolver las respuestas actualizadas para la UI
@@ -453,11 +474,7 @@ const Contrarreloj = ({ userId }) => {
     // Guardar la selección en localStorage
     saveToLocalStorage({ ...selectedAnswers, [questionId]: selectedOption });
     
-    // Remove auto-save after answering
-    // setTimeout(() => {
-    //   console.log('Guardando respuesta inmediatamente para prevenir pérdida de datos');
-    //   queueProgressSave();
-    // }, 100);
+    setHasPendingChanges(true);
   };
 
   const handlePreviousQuestion = () => {
@@ -476,9 +493,15 @@ const Contrarreloj = ({ userId }) => {
   };
 
   const handleDisputeSubmit = async (questionId) => {
+    if (!disputeReason.trim()) {
+      return;
+    }
+    
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
       reason: disputeReason,
+      userAnswer: selectedAnswers[questionId] || "Sin respuesta",
+      userId: userId || 'test_user_1'
     };
 
     try {
@@ -604,6 +627,86 @@ const Contrarreloj = ({ userId }) => {
   const handlePause = () => {
     alert('El modo contrarreloj no permite pausas. Puedes finalizar el examen si necesitas salir.');
   };
+
+  // Navegación de preguntas
+  const handleNavigate = (index) => {
+    setCurrentQuestion(index);
+    setHasPendingChanges(true);
+  };
+
+  // Guardar manualmente
+  const handleManualSave = async () => {
+    if (isSaving || !hasPendingChanges) return;
+    
+    setIsSaving(true);
+    try {
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: userAnswer?.isCorrect || null,
+          markedAsDoubt: doubtMarkedQuestions[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || q.categoria || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
+          }
+        };
+      });
+
+      const result = await saveExamProgress(
+        userId || 'test_user_1',
+        examId,
+        'contrarreloj',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeLeft,
+        currentQuestion,
+        doubtMarkedQuestions,
+        totalTime - timeLeft,
+        totalTime,
+        false,
+        'in_progress'
+      );
+
+      if (result && result.examId) {
+        setExamId(result.examId);
+      }
+      setHasPendingChanges(false);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced save
+  const debouncedSave = useCallback(
+    debounce(() => {
+      if (hasPendingChanges && !isSaving && hasStarted) {
+        handleManualSave();
+      }
+    }, 3000),
+    [hasPendingChanges, isSaving, hasStarted]
+  );
+
+  useEffect(() => {
+    if (hasPendingChanges && hasStarted) {
+      debouncedSave();
+    }
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [hasPendingChanges, hasStarted, debouncedSave]);
 
   useEffect(() => {
     console.log('Estado actual de questions:', questions);
@@ -731,13 +834,14 @@ const Contrarreloj = ({ userId }) => {
         const newUserAnswers = [...prevUserAnswers];
         if (newUserAnswers[questionIndex] !== null) {
           // Si ya existe un valor, actualizar markedAsDoubt
+          const existingAnswer = newUserAnswers[questionIndex];
           newUserAnswers[questionIndex] = {
             questionId: questions[questionIndex]?._id || `question_${questionIndex}`,
-            selectedAnswer: typeof newUserAnswers[questionIndex] === 'object' ? 
-                           newUserAnswers[questionIndex].selectedAnswer : 
-                           newUserAnswers[questionIndex],
+            selectedAnswer: typeof existingAnswer === 'object' ? 
+                           existingAnswer.selectedAnswer : 
+                           existingAnswer,
             isCorrect: null,
-            markedAsDoubt: !newState[questionIndex] ? false : true,
+            markedAsDoubt: newState[questionIndex] || false,
             questionData: {
               question: questions[questionIndex]?.question || "",
               option_1: questions[questionIndex]?.option_1 || questions[questionIndex]?.options?.[0] || "",
@@ -747,7 +851,8 @@ const Contrarreloj = ({ userId }) => {
               option_5: questions[questionIndex]?.option_5 || questions[questionIndex]?.options?.[4] || "-",
               answer: questions[questionIndex]?.answer || "",
               subject: questions[questionIndex]?.subject || questions[questionIndex]?.categoria || "General",
-              image: questions[questionIndex]?.image || null
+              image: questions[questionIndex]?.image || null,
+              _id: questions[questionIndex]?._id || `question_${questionIndex}`
             }
           };
         }
@@ -759,11 +864,7 @@ const Contrarreloj = ({ userId }) => {
       return newState;
     });
     
-    // Remove auto-save after toggling doubt
-    // setTimeout(() => {
-    //   console.log('Guardando marca de duda inmediatamente para prevenir pérdida de datos');
-    //   queueProgressSave();
-    // }, 100);
+    setHasPendingChanges(true);
   };
 
   // Cargar dudas del localStorage cuando se carga la página
@@ -1016,35 +1117,42 @@ const Contrarreloj = ({ userId }) => {
     );
   }
 
-  return (
-    <div id="exam-root" className="contrarreloj-container">
-      {showStartPopup && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>¡Tic-tac, tic-tac! Que comience el reto contrarreloj!</h2>
-            <p>
-              Este examen consiste en responder <strong>20 preguntas</strong> en un límite de <strong>14 minutos</strong>.  
-              Cada pregunta tiene un tiempo máximo de <strong>40 segundos</strong>.
-            </p>
-            <p>
-              Ten en cuenta que esta modalidad <strong>no contiene imágenes</strong>;  
-              solo encontrarás preguntas de texto.
-            </p>
-            <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
-          </div>
-        </div>
-      )}
+  // Si no hay preguntas aún, no renderizar nada
+  if (!questions || questions.length === 0) {
+    return null;
+  }
 
-      <ExamHeader
-        timeLeft={timeLeft}
-        onPause={() => alert('El modo contrarreloj no permite pausas. Puedes finalizar el examen si necesitas salir.')}
-        onSave={() => queueProgressSave()}
-        onFinish={handleFinalizeClick}
-        isPaused={paused}
-        isSaving={isSaving}
-        hasPendingChanges={false}
-        toggleDarkMode={() => document.body.classList.toggle('dark')}
-        disabledButtons={['pause']} // Deshabilitar pausar en contrarreloj
+  // Renderizar popup de inicio si es necesario
+  if (showStartPopup) {
+    return (
+      <div className="popup-overlay">
+        <div className="popup">
+          <h2>¡Tic-tac, tic-tac! Que comience el reto contrarreloj!</h2>
+          <p>
+            Este examen consiste en responder <strong>20 preguntas</strong> en un límite de <strong>14 minutos</strong>.  
+            Cada pregunta tiene un tiempo máximo de <strong>40 segundos</strong>.
+          </p>
+          <p>
+            Ten en cuenta que esta modalidad <strong>no contiene imágenes</strong>;  
+            solo encontrarás preguntas de texto.
+          </p>
+          <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswers}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={doubtMarkedQuestions}
+        toggleDoubtMark={toggleDoubtMark}
+        onSave={handleManualSave}
+        onFinalize={confirmFinalize}
+        onPause={handlePause}
         onDownload={() => downloadExamPdfFromData({
           questions: questions,
           title: 'SIMULIA',
@@ -1052,90 +1160,28 @@ const Contrarreloj = ({ userId }) => {
           logoUrl: '/Logo_oscuro.png',
           examId: examId || '',
           date: new Date().toISOString().slice(0,10),
-          durationMin: Math.round(840 / 60),
+          durationMin: Math.round(totalTime / 60),
           showAnswerKey: false,
           showBubbleSheet: true,
           fileName: 'examen-contrarreloj.pdf'
         })}
+        onExit={() => navigate('/dashboard')}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={paused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType="contrarreloj"
+        isReviewMode={false}
+        disabledButtons={['pause']}
+        isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onImpugnarSubmit={async (questionId, reason) => {
+          setDisputeReason(reason);
+          await handleDisputeSubmit(questionId);
+        }}
       />
-
-      {/* Solo renderizar QuestionBox cuando el examen haya comenzado */}
-      {!showStartPopup && (
-        <QuestionBox
-          currentQuestion={currentQuestion}
-          questions={questions}
-          userAnswers={userAnswers}
-          handleAnswerClick={handleAnswerClick}
-          markedAsDoubt={doubtMarkedQuestions}
-          toggleDoubtMark={toggleDoubtMark}
-          onNavigate={(index) => {
-            setCurrentQuestion(index);
-          }}
-          onImpugnar={() => setIsDisputing(true)}
-          isDarkMode={isDarkMode}
-          showTimeBar={true}
-          onTimeUp={() => {
-            // Cuando se acaba el tiempo de la pregunta, pasar a la siguiente
-            if (currentQuestion < questions.length - 1) {
-              setCurrentQuestion(prev => prev + 1);
-            } else {
-              // Si es la última pregunta, finalizar el examen
-              setShowFinalizePopup(true);
-            }
-          }}
-          timePerQuestion={40}
-        />
-      )}
-
-      {/* Solo mostrar la paginación si no estamos en la pantalla de inicio */}
-      {!showStartPopup && (
-        <Pagination
-          totalItems={questions.length}
-          itemsPerPage={25} // Usar 25 preguntas por página de forma consistente en toda la aplicación
-          currentPage={0} // Contrarreloj tiene una sola página
-          onPageChange={() => {}} // No necesita cambiar de página
-          onItemSelect={(index) => {
-            setCurrentQuestion(index);
-          }}
-          activeItemIndex={currentQuestion}
-          itemStatus={generateItemStatus()}
-          isDarkMode={isDarkMode}
-        />
-      )}
-
-      {renderFinalizePopup()}
-
-      {isDisputing && (
-        <div className="popup-overlay">
-          <div className="dispute-modal">
-            <button 
-              className="modal-close-button"
-              onClick={() => {
-                setIsDisputing(false);
-                setDisputeReason('');
-              }}
-            >
-              ×
-            </button>
-            <h3>Escribe tu razón para impugnar</h3>
-            <textarea
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-              placeholder="Escribe tu razón para impugnar"
-            ></textarea>
-            <div className="modal-actions">
-              <button
-                onClick={() => {
-                  handleDisputeSubmit(currentQuestion);
-                }}
-                className="submit-dispute-btn"
-              >
-                Enviar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showSuccessNotification && (
         <SuccessNotification
@@ -1144,7 +1190,7 @@ const Contrarreloj = ({ userId }) => {
           autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
         />
       )}
-    </div>
+    </>
   );
 };
 

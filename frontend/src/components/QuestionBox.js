@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle } from 'lucide-react';
 import styles from './QuestionBox.module.css';
 
 const QuestionBox = ({
@@ -21,7 +22,6 @@ const QuestionBox = ({
 }) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isDarkModeActive, setIsDarkModeActive] = useState(false);
   const [questionTimeLeft, setQuestionTimeLeft] = useState(timePerQuestion);
 
   // Reiniciar el tiempo cuando cambia la pregunta actual
@@ -56,27 +56,6 @@ const QuestionBox = ({
       }
     };
   }, [showTimeBar, questionTimeLeft, isReviewMode, onTimeUp]);
-
-  // Detectar el modo oscuro basado en la clase del HTML
-  useEffect(() => {
-    const checkDarkMode = () => {
-      const isDark = document.documentElement.classList.contains('dark-mode');
-      setIsDarkModeActive(isDark);
-    };
-
-    // Comprobar inicialmente
-    checkDarkMode();
-
-    // Configurar un observador para detectar cambios en las clases de HTML
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class'] 
-    });
-
-    // Limpiar el observador al desmontar
-    return () => observer.disconnect();
-  }, []);
 
   // Función para manejar la selección/deselección de respuestas
   const handleOptionClick = (questionIndex, option) => {
@@ -220,18 +199,11 @@ const QuestionBox = ({
     );
   };
 
-  // Determinar la clase de tema
-  const themeClass = isDarkModeActive ? styles.darkTheme : styles.lightTheme;
+  // Determinar la clase de tema usando el prop isDarkMode
+  const themeClass = isDarkMode ? styles.darkTheme : styles.lightTheme;
 
   return (
     <div className={`${styles.questionContainer} ${themeClass}`}>
-      {/* Contador de preguntas y navegación */}
-      <div className={styles.questionHeader}>
-        <div className={styles.questionCounterSection}>
-          <span className={styles.questionCount}>Pregunta {currentQuestion + 1} de {questions.length}</span>
-        </div>
-      </div>
-
       {/* Barra de tiempo por pregunta */}
       {showTimeBar && !isReviewMode && (
         <div className={styles.timeBarContainer}>
@@ -243,7 +215,12 @@ const QuestionBox = ({
       )}
 
       <div className={styles.questionBox}>
-        <h3>
+        {/* Número de pregunta en círculo verde */}
+        <div className={styles.questionNumberBadge}>
+          <span>{currentQuestion + 1}</span>
+        </div>
+
+        <h3 className={styles.questionText}>
           {currentQuestionData.exam_name ? `(${currentQuestionData.exam_name}) ` : ''}
           {currentQuestionData.question || 'Pregunta no disponible'}
         </h3>
@@ -255,10 +232,11 @@ const QuestionBox = ({
             {options.map((option, index) => {
               // Determine button class based on selection and correctness
               let buttonClass = '';
+              const isSelected = userAnswer === option;
               
               // En modo revisión maneja la visualización diferente
               if (isReviewMode) {
-                if (userAnswer === option) {
+                if (isSelected) {
                   buttonClass = styles.selected;
                   
                   // Si la respuesta del usuario es correcta
@@ -274,7 +252,7 @@ const QuestionBox = ({
                 }
               } else {
                 // Comportamiento normal para examen
-                if (userAnswer === option) {
+                if (isSelected) {
                   buttonClass = styles.selected;
                   
                   // If showCorrectness is true and the answer is correct, add correct class
@@ -294,12 +272,41 @@ const QuestionBox = ({
                   className={buttonClass}
                   disabled={isReviewMode} // Deshabilitar clics en modo revisión
                 >
-                  {option}
-                  {(showCorrectness || isReviewMode) && correctAnswerText === option && (
-                    <span className={styles.correctIndicator}> ✓</span>
+                  <span className={styles.radioButton}>
+                  </span>
+                  <span className={styles.optionText}>{option}</span>
+                  {isReviewMode && (
+                    <>
+                      {isSelected && isAnswerCorrect && (
+                        <>
+                          <span className={styles.checkIcon}>
+                            <CheckCircle />
+                          </span>
+                          <span className={styles.userAnswerLabel}>Tu respuesta</span>
+                        </>
+                      )}
+                      {isSelected && !isAnswerCorrect && (
+                        <>
+                          <span className={styles.incorrectIcon}>
+                            <XCircle />
+                          </span>
+                          <span className={styles.userAnswerLabel}>Tu respuesta</span>
+                        </>
+                      )}
+                      {!isSelected && correctAnswerText === option && (
+                        <>
+                          <span className={styles.checkIcon}>
+                            <CheckCircle />
+                          </span>
+                          <span className={styles.correctAnswerLabel}>Respuesta correcta</span>
+                        </>
+                      )}
+                    </>
                   )}
-                  {isReviewMode && userAnswer === option && !isAnswerCorrect && (
-                    <span className={styles.incorrectIndicator}> ✗</span>
+                  {!isReviewMode && showCorrectness && correctAnswerText === option && !isSelected && (
+                    <span className={styles.checkIcon}>
+                      <CheckCircle />
+                    </span>
                   )}
                 </button>
               );
@@ -309,50 +316,32 @@ const QuestionBox = ({
           {/* Suprimido: la justificación se mostrará solo en el contenedor inferior dedicado */}
         </div>
 
-        {/* Botones para navegación lateral y acción */}
-        <div className={styles.actionNavContainer}>
-          <button
-            className={`${styles.sideNavButton} ${styles.prevButton}`}
-            onClick={() => onNavigate(Math.max(0, currentQuestion - 1))}
-            disabled={currentQuestion === 0}
-          >
-            &#9664;
-          </button>
-          
-          <div className={styles.examActionButtons}>
-            {/* Ocultar botones de acción en modo revisión o mostrar versión adaptada */}
-            {!isReviewMode ? (
-              <>
-                <button
-                  id="impugnar-button"
-                  onClick={() => onImpugnar(currentQuestion)}
-                  className={styles.customImpugnarBtn}
-                >
-                  Impugnar
-                </button>
+        {/* Botones de acción */}
+        <div className={styles.examActionButtons}>
+          {/* Ocultar botones de acción en modo revisión o mostrar versión adaptada */}
+          {!isReviewMode ? (
+            <>
+              <button
+                id="impugnar-button"
+                onClick={() => onImpugnar(currentQuestion)}
+                className={styles.customImpugnarBtn}
+              >
+                Impugnar
+              </button>
 
-                <button
-                  id="doubt-button"
-                  className={`${styles.customDoubtBtn} ${markedAsDoubt[currentQuestion] ? styles.doubtMarked : ''}`}
-                  onClick={handleToggleDoubt}
-                >
-                  {markedAsDoubt[currentQuestion] ? 'Dudosa' : 'Marcar duda'}
-                </button>
-              </>
-            ) : (
-              <div className={styles.reviewInfo}>
+              <button
+                id="doubt-button"
+                className={`${styles.customDoubtBtn} ${markedAsDoubt[currentQuestion] ? styles.doubtMarked : ''}`}
+                onClick={handleToggleDoubt}
+              >
+                {markedAsDoubt[currentQuestion] ? 'Dudosa' : 'Marcar duda'}
+              </button>
+            </>
+          ) : (
+            <div className={styles.reviewInfo}>
    
-              </div>
-            )}
-          </div>
-          
-          <button
-            className={`${styles.sideNavButton} ${styles.nextButton}`}
-            onClick={() => onNavigate(Math.min(questions.length - 1, currentQuestion + 1))}
-            disabled={currentQuestion === questions.length - 1}
-          >
-            &#9654;
-          </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,12 +1,16 @@
 // Enhanced version of errores.js with better error handling and UI improvements
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { debounce } from 'lodash';
 import './errores.css';
 import './Exam.css';
 import SuccessNotification from './components/SuccessNotification';
 import { API_URL } from './config';
+import { finalizeExam, saveExamProgress } from './lib/examUtils';
+import { downloadExamPdfFromData } from './lib/pdfUtils';
+import ExamView from './views/exam/exam';
 
 const Errores = ({ userId }) => {
   const navigate = useNavigate();
@@ -27,11 +31,31 @@ const Errores = ({ userId }) => {
   const [showFinalizePopup, setShowFinalizePopup] = useState(false);
   const [totalTime, setTotalTime] = useState(calculateTime(30));
   const [timeLeft, setTimeLeft] = useState(calculateTime(30));
-  const [paused, setPaused] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [paused, setPaused] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [userAnswers, setUserAnswers] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [examId, setExamId] = useState(null);
+  const [markedAsDoubt, setMarkedAsDoubt] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const questionsPerPage = 25;
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Detectar dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.body.classList.contains('dark'));
+    };
+    checkDarkMode();
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
   
   // Calculate time specifically for errores: 1.29 minutes per question
   function calculateTime(questionCount) {
@@ -295,19 +319,202 @@ const Errores = ({ userId }) => {
       }
     };
     
-    // Guardar estado inicial y navegar
+    // Guardar estado inicial y comenzar examen localmente
     saveInitialProgress()
-      .then(() => {
-        // Navegar a la página de examen
-        navigate('/exam?mode=errors');
+      .then((response) => {
+        if (response && response.ok) {
+          return response.json();
+        }
+        return null;
+      })
+      .then((data) => {
+        if (data && data.examId) {
+          setExamId(data.examId);
+        }
+        // Establecer estado local para mostrar el examen
+        setQuestions(processedQuestions);
+        setTimeLeft(tiempoEnSegundos);
+        setTotalTime(tiempoEnSegundos);
+        setUserAnswers(new Array(processedQuestions.length).fill(null));
+        setCurrentQuestion(0);
+        setShowStartPopup(false);
+        setHasStarted(true);
+        setPaused(false);
       })
       .catch(error => {
         console.error('Error al iniciar examen:', error);
-        // Navegar de todos modos, incluso si hay error al guardar
-        navigate('/exam?mode=errors');
+        // Iniciar de todos modos, incluso si hay error al guardar
+        setQuestions(processedQuestions);
+        setTimeLeft(tiempoEnSegundos);
+        setTotalTime(tiempoEnSegundos);
+        setUserAnswers(new Array(processedQuestions.length).fill(null));
+        setCurrentQuestion(0);
+        setShowStartPopup(false);
+        setHasStarted(true);
+        setPaused(false);
       });
   };
   
+  // Timer para el examen
+  useEffect(() => {
+    if (!paused && hasStarted && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [paused, hasStarted, timeLeft]);
+
+  // Manejar clic en respuesta
+  const handleAnswerClick = (questionIndex, selectedOption) => {
+    setSelectedAnswers(prev => {
+      const newAnswers = { ...prev };
+      if (newAnswers[questionIndex] === selectedOption) {
+        delete newAnswers[questionIndex];
+      } else {
+        newAnswers[questionIndex] = selectedOption;
+      }
+      return newAnswers;
+    });
+
+    setUserAnswers(prev => {
+      const newAnswers = [...prev];
+      const questionData = {
+        question: questions[questionIndex]?.question || "",
+        option_1: questions[questionIndex]?.option_1 || questions[questionIndex]?.options?.[0] || "",
+        option_2: questions[questionIndex]?.option_2 || questions[questionIndex]?.options?.[1] || "",
+        option_3: questions[questionIndex]?.option_3 || questions[questionIndex]?.options?.[2] || "",
+        option_4: questions[questionIndex]?.option_4 || questions[questionIndex]?.options?.[3] || "",
+        option_5: questions[questionIndex]?.option_5 || questions[questionIndex]?.options?.[4] || "-",
+        answer: questions[questionIndex]?.answer || "",
+        subject: questions[questionIndex]?.subject || "General",
+        image: questions[questionIndex]?.image || null,
+        _id: questions[questionIndex]?._id || `question_${questionIndex}`
+      };
+      
+      newAnswers[questionIndex] = {
+        questionId: questions[questionIndex]?._id || `question_${questionIndex}`,
+        selectedAnswer: selectedOption,
+        isCorrect: null,
+        markedAsDoubt: markedAsDoubt[questionIndex] || false,
+        questionData: questionData
+      };
+      return newAnswers;
+    });
+
+    setHasPendingChanges(true);
+  };
+
+  // Toggle duda
+  const toggleDoubtMark = (questionIndex) => {
+    setMarkedAsDoubt(prev => {
+      const isDubious = !prev[questionIndex];
+      return { ...prev, [questionIndex]: isDubious };
+    });
+
+    setUserAnswers(prev => {
+      const newAnswers = [...prev];
+      if (newAnswers[questionIndex]) {
+        newAnswers[questionIndex] = {
+          ...newAnswers[questionIndex],
+          markedAsDoubt: !markedAsDoubt[questionIndex]
+        };
+      }
+      return newAnswers;
+    });
+
+    setHasPendingChanges(true);
+  };
+
+  // Guardar progreso
+  const handleManualSave = async () => {
+    if (isSaving || !hasPendingChanges) return;
+    
+    setIsSaving(true);
+    try {
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: null,
+          markedAsDoubt: markedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
+          }
+        };
+      });
+
+      const result = await saveExamProgress(
+        userId,
+        examId,
+        'errores',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeLeft,
+        currentQuestion,
+        markedAsDoubt,
+        totalTime - timeLeft,
+        totalTime,
+        false,
+        paused ? 'paused' : 'in_progress'
+      );
+
+      if (result && result.examId) {
+        setExamId(result.examId);
+      }
+      setHasPendingChanges(false);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced save
+  const debouncedSave = useCallback(
+    debounce(() => {
+      if (hasPendingChanges && !isSaving) {
+        handleManualSave();
+      }
+    }, 3000),
+    [hasPendingChanges, isSaving, userAnswers, selectedAnswers, timeLeft, currentQuestion, markedAsDoubt]
+  );
+
+  useEffect(() => {
+    if (hasPendingChanges && hasStarted) {
+      debouncedSave();
+    }
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [hasPendingChanges, hasStarted, debouncedSave]);
+
+  // Navegación
+  const handleNavigate = (index) => {
+    setCurrentQuestion(index);
+    const newPage = Math.floor(index / questionsPerPage);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
+    }
+    setHasPendingChanges(true);
+  };
+
   const handleDisputeSubmit = async (questionId) => {
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
@@ -335,7 +542,6 @@ const Errores = ({ userId }) => {
       setSuccessMessage('Error al enviar impugnación');
       setShowSuccessNotification(true);
     } finally {
-      // SIEMPRE cerrar el modal, sin importar si fue exitoso o no
       setIsDisputing(false);
       setDisputeReason('');
     }
@@ -349,57 +555,65 @@ const Errores = ({ userId }) => {
       }
       
       setIsFinishing(true);
+      setShowFinalizePopup(false);
 
       // Calcular tiempo usado
       const timeUsed = totalTime - timeLeft;
       
-      // Formatear preguntas para el backend
-      const formattedQuestions = questions.map(q => ({
-        _id: q._id,
-        question: q.question || '',
-        option_1: q.option_1 || q.options?.[0] || '',
-        option_2: q.option_2 || q.options?.[1] || '',
-        option_3: q.option_3 || q.options?.[2] || '',
-        option_4: q.option_4 || q.options?.[3] || '',
-        answer: q.answer || '',
-        subject: q.subject || 'General'
-      }));
-      
-      // Convertir selectedAnswers de objeto a array
-      const userAnswersArray = new Array(questions.length).fill(null);
-      Object.entries(selectedAnswers).forEach(([index, answer]) => {
-        userAnswersArray[parseInt(index)] = answer;
+      // Formatear userAnswers
+      const formattedUserAnswers = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        return {
+          questionId: q._id || `question_${i}`,
+          selectedAnswer: userAnswer?.selectedAnswer || selectedAnswers[i] || null,
+          isCorrect: null,
+          markedAsDoubt: markedAsDoubt[i] || false,
+          questionData: {
+            question: q.question || "",
+            option_1: q.option_1 || q.options?.[0] || "",
+            option_2: q.option_2 || q.options?.[1] || "",
+            option_3: q.option_3 || q.options?.[2] || "",
+            option_4: q.option_4 || q.options?.[3] || "",
+            option_5: q.option_5 || q.options?.[4] || "-",
+            answer: q.answer || "",
+            subject: q.subject || "General",
+            image: q.image || null,
+            _id: q._id || `question_${i}`
+          }
+        };
       });
 
-      // Validar y guardar el examen
-      const response = await fetch(`${API_URL}/validate-and-save-exam`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          examType: 'errores',
-          questions: formattedQuestions,
-          userAnswers: userAnswersArray,
-          selectedAnswers: selectedAnswers,
-          timeUsed,
-          totalTime
-        })
-      });
+      const result = await finalizeExam(
+        userId,
+        'errores',
+        questions,
+        formattedUserAnswers,
+        selectedAnswers,
+        timeUsed,
+        totalTime,
+        markedAsDoubt,
+        examId
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al procesar el examen');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
       // Limpiar localStorage
       localStorage.removeItem('errorQuestions');
       
-      // Limpiar estados
-      setShowFinalizePopup(false);
       setIsFinishing(false);
-      
-      // Navegar al dashboard
-      navigate('/dashboard');
+      setSuccessMessage('¡Examen finalizado con éxito!');
+      setShowSuccessNotification(true);
+
+      // Navegar a review después de 2 segundos
+      setTimeout(() => {
+        if (result.examId) {
+          navigate(`/review/${result.examId}`);
+        } else {
+          navigate('/dashboard');
+        }
+      }, 2000);
     } catch (error) {
       console.error('Error:', error);
       setIsFinishing(false);
@@ -415,59 +629,82 @@ const Errores = ({ userId }) => {
     setShowFinalizePopup(false);
   };
   
-  const handlePause = async () => {
-    try {
-      if (!userId) {
-        alert('No se identificó al usuario');
-        return;
-      }
-
-      // Formatear preguntas para el backend
-      const formattedQuestions = questions.map(q => ({
-        _id: q._id,
-        question: q.question || '',
-        option_1: q.option_1 || q.options?.[0] || '',
-        option_2: q.option_2 || q.options?.[1] || '',
-        option_3: q.option_3 || q.options?.[2] || '',
-        option_4: q.option_4 || q.options?.[3] || '',
-        answer: q.answer || '',
-        subject: q.subject || 'General'
-      }));
-      
-      // Convertir selectedAnswers de objeto a array
-      const userAnswersArray = new Array(questions.length).fill(null);
-      Object.entries(selectedAnswers).forEach(([index, answer]) => {
-        userAnswersArray[parseInt(index)] = answer;
-      });
-
-        const response = await fetch(`${API_URL}/save-exam-progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          type: 'errores',
-          questions: formattedQuestions,
-          userAnswers: userAnswersArray,
-          selectedAnswers: selectedAnswers,
-          timeLeft,
-          currentQuestion,
-          timeUsed: totalTime - timeLeft,
-          totalTime,
-          completed: false,
-          status: 'paused'
-        })
-      });
-
-      if (!response.ok) throw new Error('Error al guardar progreso');
-
-      setPaused(true);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error al pausar el examen');
-    }
+  const handlePause = () => {
+    setPaused(!paused);
+    setHasPendingChanges(true);
   };
   
+  // Si el examen ha comenzado, mostrar ExamView
+  if (hasStarted && questions.length > 0) {
+    return (
+      <>
+        <ExamView
+          questions={questions}
+          userAnswers={userAnswers}
+          handleAnswerClick={handleAnswerClick}
+          markedAsDoubt={markedAsDoubt}
+          toggleDoubtMark={toggleDoubtMark}
+          onSave={handleManualSave}
+          onFinalize={confirmFinalize}
+          onPause={handlePause}
+          onDownload={() => downloadExamPdfFromData({
+            questions: questions,
+            title: 'SIMULIA',
+            subtitle: 'Examen: REPITE ERRORES',
+            logoUrl: '/Logo_oscuro.png',
+            examId: examId || '',
+            date: new Date().toISOString().slice(0,10),
+            durationMin: Math.round(totalTime / 60),
+            showAnswerKey: false,
+            showBubbleSheet: true,
+            fileName: 'examen-errores.pdf'
+          })}
+          onExit={() => navigate('/dashboard')}
+          timeLeft={timeLeft}
+          totalTime={totalTime}
+          isPaused={paused}
+          isSaving={isSaving}
+          hasPendingChanges={hasPendingChanges}
+          examType="errores"
+          isReviewMode={false}
+          disabledButtons={[]}
+          isDarkMode={isDarkMode}
+          currentQuestion={currentQuestion}
+          onNavigate={handleNavigate}
+          onImpugnarSubmit={async (questionId, reason) => {
+            setDisputeReason(reason);
+            await handleDisputeSubmit(questionId);
+          }}
+        />
+
+        {showFinalizePopup && (
+          <div className="popup-overlay">
+            <div className="popup">
+              <h2>¿Finalizar el examen?</h2>
+              <p>Has respondido {Object.keys(selectedAnswers).length} de {questions.length} preguntas.</p>
+              <div className="popup-buttons">
+                <button onClick={handleCancelFinish} className="control-btn">
+                  Continuar revisando
+                </button>
+                <button onClick={confirmFinalize} className="control-btn" disabled={isFinishing}>
+                  {isFinishing ? 'Procesando...' : 'Finalizar examen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showSuccessNotification && (
+          <SuccessNotification
+            message={successMessage}
+            onClose={() => setShowSuccessNotification(false)}
+            autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
+          />
+        )}
+      </>
+    );
+  }
+
   if (failedQuestions.length === 0 && unansweredQuestions.length === 0) {
     return (
       <div className="errores-container">
