@@ -8,7 +8,7 @@ import { FaMoon, FaSun, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import './Dashboard.css';
 import AEleccion from './Aeleccion';
 import Contrarreloj from './Contrarreloj';
-import { PanelLeft, Menu, X, MessageSquare, Bot, Moon, Sun, Flame } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import jwtDecode from "jwt-decode"
@@ -22,7 +22,6 @@ import { toast } from 'react-hot-toast';
 
 // Importar nuevos componentes
 import Sidebar from './components/sidebar';
-import ExamModeSelector from './components/exam-mode-selector';
 import ExamHistoryTable from './components/exam-history-table';
 import TopFailedSubjects from './components/top-failed-subjects';
 import StreakCounter from './components/streak-counter';
@@ -85,6 +84,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   // Racha de acceso a la plataforma
   const [streakDays, setStreakDays] = useState(0);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
 
   // Estado para el filtrado y ordenamiento
   const [sortConfig, setSortConfig] = useState({
@@ -629,10 +629,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   };
   
   // Abrir/cerrar popup de recurrencia (desactivado)
-  const openRecurrencePopup = () => {
-    if (!RECURRENCE_ENABLED) return;
-    setShowRecurrencePopup(true);
-  };
   const closeRecurrencePopup = () => setShowRecurrencePopup(false);
 
   const openExamenEleccionPopup = () => {
@@ -675,7 +671,12 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   useEffect(() => {
     const fetchExamHistory = async () => {
       try {
-        if (!userId) return;
+        if (!userId) {
+          setIsLoadingDashboard(false);
+          return;
+        }
+
+        setIsLoadingDashboard(true);
 
         // Usar directamente el endpoint proporcionado
         const token = localStorage.getItem('token');
@@ -738,12 +739,14 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       } catch (error) {
         // Manejar errores de red/CORS de forma más elegante
         if (error.message?.includes('Failed to fetch') || error.message?.includes('CORS')) {
-          console.warn('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:5000');
+          console.warn('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:5001');
           setExamData([]);
         } else {
           console.error('Error al cargar historial:', error);
           setExamData([]);
         }
+      } finally {
+        setIsLoadingDashboard(false);
       }
     };
   
@@ -823,10 +826,6 @@ const handleErroresClick = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
     }
-  };
-
-  const handleSettingsClick = () => {
-    window.location.href = "https://billing.stripe.com/p/login/28o3fr7yb4GQ5sk288";
   };
 
   const onSuccess = (credentialResponse) => {
@@ -2043,10 +2042,17 @@ const handleErroresClick = () => {
           toggleCollapsed={toggleSidebar}
           isDarkMode={isDarkMode}
           toggleDarkMode={handleToggleDarkMode}
+          onTutorialClick={openTutorialModal}
         />
         
         {/* Main Content */}
-        <div className={cn('flex-1 overflow-y-auto transition-all duration-300', isCollapsed ? 'ml-16' : 'ml-64')}>
+        <div className={cn('flex-1 relative overflow-y-auto transition-all duration-300', isCollapsed ? 'ml-16' : 'ml-64')}>
+          {isLoadingDashboard && (
+            <div className="dashboard-loading-overlay">
+              <div className="loader-spinner" />
+              <p>Cargando tus datos...</p>
+            </div>
+          )}
           <main className="container mx-auto p-6 space-y-6">
             {/* Header con gradient */}
             <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-8 shadow-sm">
@@ -2056,36 +2062,25 @@ const handleErroresClick = () => {
                     {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¿Listo para practicar?'}
                   </h1>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* Racha de acceso */}
-                  <StreakCounter streak={streakDays} label="Días de acceso" textColor="#3b82f6" />
-                  {/* Días hasta examen */}
-                  <StreakCounter streak={timeLeft.days || 0} label="Días hasta EIR" textColor="#ef4444" />
+                <div className="flex flex-col items-end gap-4">
+                  <div className="flex items-center gap-2">
+                    {/* Racha de acceso */}
+                    <StreakCounter streak={streakDays} label="Días de acceso" textColor="#3b82f6" />
+                    {/* Días hasta examen */}
+                    <StreakCounter streak={timeLeft.days || 0} label="Días hasta EIR" textColor="#ef4444" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AIAssistant />
+                    <Button
+                      variant="outline"
+                      onClick={handleToggleDarkMode}
+                      className="flex items-center gap-2"
+                    >
+                      {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                      <span>{isDarkMode ? 'Modo claro' : 'Modo oscuro'}</span>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <ExamModeSelector />
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={openTutorialModal}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Tutorial
-                </Button>
-                <AIAssistant />
-                {RECURRENCE_ENABLED && (
-                  <Button variant="outline" onClick={openRecurrencePopup}>
-                    <Flame className="mr-2 h-4 w-4" />
-                    Configurar Racha
-                  </Button>
-                )}
-                <Button variant="outline" onClick={handleToggleDarkMode}>
-                  {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
-                <Button variant="outline" onClick={handleSettingsClick}>
-                  Configuración
-                </Button>
               </div>
             </div>
 
@@ -2228,6 +2223,7 @@ const handleErroresClick = () => {
             <ExamHistoryTable 
               exams={filteredExams}
               onReviewClick={handleReviewExam}
+              onResumeClick={handleResumeExam}
               getExamTypeName={getExamTypeName}
             />
           </main>

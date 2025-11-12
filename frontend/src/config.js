@@ -12,8 +12,8 @@ if (isProduction) {
   API_URL = 'https://backend-production-cc6b.up.railway.app';
   console.log('🔧 CONFIG DEBUG - PRODUCCIÓN DETECTADA - Usando Railway');
 } else {
-  API_URL = 'http://localhost:5000';
-  console.log('🔧 CONFIG DEBUG - DESARROLLO DETECTADO - Usando localhost:5000');
+  API_URL = 'http://localhost:5001';
+  console.log('🔧 CONFIG DEBUG - DESARROLLO DETECTADO - Usando localhost:5001');
 }
 
 console.log('🔧 CONFIG DEBUG - NODE_ENV:', process.env.NODE_ENV);

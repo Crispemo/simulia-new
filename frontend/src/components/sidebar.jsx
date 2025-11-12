@@ -13,6 +13,7 @@ import {
   Settings,
   Menu,
   X,
+  MessageSquare,
 } from 'lucide-react'
 import { API_URL } from '../config'
 
@@ -26,7 +27,7 @@ const menuItems = [
   { id: 'personalizado', label: 'Personalizado', icon: Flame, path: '/examenEleccion' },
 ]
 
-export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode }) {
+export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -102,6 +103,18 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
 
           {/* Settings */}
           <div className="border-t pt-4">
+            {onTutorialClick && (
+              <button
+                onClick={onTutorialClick}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
+                  isCollapsed && 'justify-center'
+                )}
+              >
+                <MessageSquare className="h-5 w-5" />
+                {!isCollapsed && <span>Tutorial</span>}
+              </button>
+            )}
             <button
               onClick={handleSettingsClick}
               className={cn(
@@ -178,6 +191,15 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
           </nav>
 
           <div className="border-t pt-4">
+            {onTutorialClick && (
+              <button
+                onClick={onTutorialClick}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span>Tutorial</span>
+              </button>
+            )}
             <button
               onClick={handleSettingsClick}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent"

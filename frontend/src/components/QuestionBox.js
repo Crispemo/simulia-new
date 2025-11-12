@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './QuestionBox.module.css';
 
 const QuestionBox = ({
@@ -315,6 +315,30 @@ const QuestionBox = ({
 
           {/* Suprimido: la justificación se mostrará solo en el contenedor inferior dedicado */}
         </div>
+
+        {/* Navegación anterior/siguiente debajo de las respuestas */}
+        {typeof onNavigate === 'function' && (
+          <div className={styles.bottomNav}>
+            <button
+              type="button"
+              className={styles.navBtn}
+              onClick={() => onNavigate(Math.max(0, currentQuestion - 1))}
+              aria-label="Pregunta anterior"
+              disabled={currentQuestion <= 0}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              className={styles.navBtn}
+              onClick={() => onNavigate(Math.min(questions.length - 1, currentQuestion + 1))}
+              aria-label="Pregunta siguiente"
+              disabled={currentQuestion >= (questions.length - 1)}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
 
         {/* Botones de acción */}
         <div className={styles.examActionButtons}>

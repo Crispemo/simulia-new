@@ -92,6 +92,11 @@ const Contrarreloj = ({ userId }) => {
       setQuestions(data);
       // Inicializar userAnswers como un array vacío del tamaño de las preguntas
       setUserAnswers(new Array(data.length).fill(null));
+      
+      // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+      // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+      setMarkedAsDoubt({});
+      
       setIsLoading(false);
 
     } catch (err) {

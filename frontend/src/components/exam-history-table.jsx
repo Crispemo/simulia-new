@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { Eye } from 'lucide-react'
+import { Eye, Play } from 'lucide-react'
 
-export default function ExamHistoryTable({ exams = [], onReviewClick, getExamTypeName }) {
+export default function ExamHistoryTable({ exams = [], onReviewClick, onResumeClick, getExamTypeName }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
   const examsPerPage = 6
@@ -72,9 +72,7 @@ export default function ExamHistoryTable({ exams = [], onReviewClick, getExamTyp
                 <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground">
                   Puntuación
                 </th>
-                <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground">
-                  Acción
-                </th>
+                <th className="px-4 py-2 text-center text-xs font-medium text-muted-foreground">Acción</th>
               </tr>
             </thead>
             <tbody>
@@ -115,13 +113,13 @@ export default function ExamHistoryTable({ exams = [], onReviewClick, getExamTyp
                         {score.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 text-center">
-                        {exam.status === 'completed' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onReviewClick(exam._id)}
-                          >
+                        {exam.status === 'completed' ? (
+                          <Button variant="ghost" size="sm" onClick={() => onReviewClick(exam._id)}>
                             <Eye className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => onResumeClick && onResumeClick(exam._id)}>
+                            <Play className="h-4 w-4" />
                           </Button>
                         )}
                       </td>

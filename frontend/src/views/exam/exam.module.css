@@ -4,6 +4,7 @@
   background-color: #f5f7fa;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 /* Header */

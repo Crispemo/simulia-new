@@ -337,6 +337,11 @@ const Errores = ({ userId }) => {
         setTotalTime(tiempoEnSegundos);
         setUserAnswers(new Array(processedQuestions.length).fill(null));
         setCurrentQuestion(0);
+        
+        // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+        // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+        setMarkedAsDoubt({});
+        
         setShowStartPopup(false);
         setHasStarted(true);
         setPaused(false);
@@ -349,6 +354,11 @@ const Errores = ({ userId }) => {
         setTotalTime(tiempoEnSegundos);
         setUserAnswers(new Array(processedQuestions.length).fill(null));
         setCurrentQuestion(0);
+        
+        // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+        // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+        setMarkedAsDoubt({});
+        
         setShowStartPopup(false);
         setHasStarted(true);
         setPaused(false);

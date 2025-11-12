@@ -1,17 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './Exam.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { debounce } from 'lodash';
-import Pagination from './components/Pagination';
-import QuestionBox from './components/QuestionBox';
-import ExamHeader from './components/ExamHeader';
 import axios from 'axios';
-import { useLogo } from './context/LogoContext';
 import { finalizeExam, saveExamProgress } from './lib/examUtils';
-import styles from './ExamInProgress.module.css';
-import SuccessNotification from './components/SuccessNotification';
-import { downloadCurrentExamPdf, downloadExamPdfFromData } from './lib/pdfUtils';
+import { downloadExamPdfFromData } from './lib/pdfUtils';
 import { API_URL } from './config';
+import ExamView from './views/exam/exam';
 
 
 const ErrorDisplay = ({ onRetry, onReturn }) => {
@@ -47,8 +42,6 @@ const createDebounce = (func, wait) => {
 const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
   const navigate = useNavigate();
   const { examId } = useParams();
-  const { logoSrc } = useLogo();
-  
   // Use test_user_1 for testing if no userId is provided
   const effectiveUserId = userId || 'test_user_1';
   
@@ -59,27 +52,15 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]);
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
-  const [showFinalizePopup, setShowFinalizePopup] = useState(false);
-  const [isDisputing, setIsDisputing] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [showErrorNotification, setShowErrorNotification] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [examType, setExamType] = useState('simulacro');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [examState, setExamState] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [markedAsDoubt, setMarkedAsDoubt] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
-  const questionsPerPage = 25;
-  const [showCorrectness, setShowCorrectness] = useState(false);
   // Flag to prevent handleTimeUp from triggering during initial load
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [showTimeExpiredModal, setShowTimeExpiredModal] = useState(false);
   
   // Variable para rastrear si ya hay un guardado en progreso y evitar llamadas simultáneas
   const [isSaving, setIsSaving] = useState(false);
@@ -94,7 +75,6 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
     currentQuestion: null, // Si ha cambiado la pregunta actual
     doubtMarks: {} // Preguntas marcadas como duda que han cambiado
   });
-  const [lastBatchTime, setLastBatchTime] = useState(Date.now());
 
   // Debounced save function
   const debouncedSave = useCallback(
@@ -216,14 +196,12 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Establecer la pregunta actual
         if (examData.currentQuestion !== undefined) {
           setCurrentQuestion(examData.currentQuestion);
-          // Establecer la página correcta
-          const newPage = Math.floor(examData.currentQuestion / questionsPerPage);
-          setCurrentPage(newPage);
         } else {
           setCurrentQuestion(0);
         }
         
         // Establecer marcas de duda si existen
+        // IMPORTANTE: Solo cargar las marcas de duda de este examen específico
         if (examData.markedAsDoubt) {
           if (typeof examData.markedAsDoubt === 'object') {
             const doubtMarks = {};
@@ -246,6 +224,10 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
             
             setMarkedAsDoubt(doubtMarks);
           }
+        } else {
+          // Si no hay marcas de duda en el examen, inicializar como objeto vacío
+          // Esto asegura que no se carguen marcas de duda de otros exámenes
+          setMarkedAsDoubt({});
         }
         
         setIsLoading(false);
@@ -300,16 +282,7 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
   const handleTimeUp = () => {
     console.log('Ejecutando handleTimeUp - Tiempo agotado');
     setPaused(true);
-    setShowFinalizePopup(true);
-  };
-
-  // Formatear el tiempo para mostrar
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  setShowTimeExpiredModal(true);
   };
 
   // Manejar clic en respuesta
@@ -519,43 +492,16 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
   const handleNavigate = (index) => {
     if (index >= 0 && index < questions.length) {
       setCurrentQuestion(index);
-      
-      // Actualizar la página si es necesario
-      const newPage = Math.floor(index / questionsPerPage);
-      if (newPage !== currentPage) {
-        setCurrentPage(newPage);
-      }
-      
+
       // Actualizar el batch de cambios
       setChangesBatch(prev => ({
         ...prev,
         currentQuestion: index
       }));
-      
-      // Marcar que hay cambios pendientes para guardar
-      setHasPendingChanges(true);
-      
-      // Activar el guardado debounced
-      debouncedSave();
-    }
-  };
 
-  // Manejar cambio de página
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    const newQuestionIndex = newPage * questionsPerPage;
-    if (newQuestionIndex < questions.length) {
-      setCurrentQuestion(newQuestionIndex);
-      
-      // Actualizar el batch de cambios
-      setChangesBatch(prev => ({
-        ...prev,
-        currentQuestion: newQuestionIndex
-      }));
-      
       // Marcar que hay cambios pendientes para guardar
       setHasPendingChanges(true);
-      
+
       // Activar el guardado debounced
       debouncedSave();
     }
@@ -743,16 +689,14 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
     }
     
     setPaused(false);
-    
-    // Si se está mostrando el popup de finalización, ocultarlo
-    if (showFinalizePopup) {
-      setShowFinalizePopup(false);
-    }
+  setShowTimeExpiredModal(false);
   };
 
   // Actualizar handleFinalize para añadir mecanismo de respaldo
   const handleFinalize = async () => {
     try {
+      setShowTimeExpiredModal(false);
+      
       if (!effectiveUserId) {
         alert('No se identificó al usuario');
         return;
@@ -875,26 +819,19 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
     }
   };
 
-  // Manejar impugnación de pregunta
-  const handleImpugnar = () => {
-    setIsDisputing(true);
-  };
-
-  // Manejar envío de impugnación
-  const handleSubmitDispute = async () => {
+  const handleImpugnarSubmit = async (questionIndex, reason) => {
     try {
-      if (!disputeReason.trim()) {
-        setErrorMessage('Por favor, ingresa un motivo para la impugnación');
-        setShowErrorNotification(true);
+      if (!reason || !reason.trim()) {
+        alert('Por favor, ingresa un motivo para la impugnación.');
         return;
       }
       
-      const currentQuestionData = questions[currentQuestion];
+      const currentQuestionData = questions[questionIndex];
       
       // Enviar la impugnación al backend
       const disputeData = {
         question: currentQuestionData?.question || "Pregunta no disponible",
-        reason: disputeReason,
+        reason: reason,
         userId: effectiveUserId,
         userEmail: null
       };
@@ -903,55 +840,102 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
       console.log('🔧 IMPUGNACIÓN DEBUG - API_URL:', API_URL);
       console.log('🔧 IMPUGNACIÓN DEBUG - disputeData:', disputeData);
       
-      const response = await axios.post(`${API_URL}/send-dispute`, disputeData);
+      await axios.post(`${API_URL}/send-dispute`, disputeData);
       
-      console.log('🔧 IMPUGNACIÓN DEBUG - Respuesta del servidor:', response.data);
-      
-      setSuccessMessage('Impugnación enviada');
-      setShowSuccessNotification(true);
+      console.log('🔧 IMPUGNACIÓN DEBUG - Impugnación enviada correctamente');
+      alert('Impugnación enviada correctamente.');
     } catch (error) {
       console.error('🔧 IMPUGNACIÓN DEBUG - Error al enviar impugnación:', error);
       console.error('🔧 IMPUGNACIÓN DEBUG - Error response:', error.response?.data);
       console.error('🔧 IMPUGNACIÓN DEBUG - Error status:', error.response?.status);
-      setErrorMessage('Error al enviar la impugnación. Inténtalo de nuevo.');
-      setShowErrorNotification(true);
-    } finally {
-      // SIEMPRE cerrar el modal, sin importar si fue exitoso o no
-      setIsDisputing(false);
-      setDisputeReason('');
+      alert('Error al enviar la impugnación. Inténtalo de nuevo.');
     }
   };
 
-  // Generar estado de los ítems para Pagination
-  const generateItemStatus = () => {
-    const status = {};
-    
-    if (!questions || questions.length === 0) return status;
-    
-    // Process each question
-    for (let i = 0; i < questions.length; i++) {
-      // Check if marked as doubt (either in markedAsDoubt state or userAnswers object)
-      const isDoubt = markedAsDoubt[i] === true || 
-                     (userAnswers[i] && 
-                      typeof userAnswers[i] === 'object' && 
-                      userAnswers[i].markedAsDoubt === true);
-      
-      // Check if answered (either in selectedAnswers or userAnswers)
-      const isAnswered = selectedAnswers[i] !== undefined || 
-                        (userAnswers[i] && 
-                         typeof userAnswers[i] === 'object' && 
-                         userAnswers[i].selectedAnswer !== null && 
-                         userAnswers[i].selectedAnswer !== undefined);
-      
-      // Set the status based on priority: doubt takes precedence
-      if (isDoubt) {
-        status[i] = 'doubt';
-      } else if (isAnswered) {
-        status[i] = 'answered';
+  const userAnswersForView = useMemo(() => {
+    if (!questions || questions.length === 0) return [];
+
+    return questions.map((question, index) => {
+      if (!question) return null;
+
+      const existingAnswer = userAnswers.find(answer =>
+        answer && answer.questionId && question._id &&
+        answer.questionId.toString() === question._id.toString()
+      );
+
+      if (existingAnswer) {
+        return {
+          ...existingAnswer,
+          markedAsDoubt: existingAnswer.markedAsDoubt || markedAsDoubt[index] || false
+        };
+      }
+
+      const selectedAnswer = selectedAnswers[index];
+
+      if (selectedAnswer !== undefined && selectedAnswer !== null) {
+        return {
+          questionId: question._id,
+          selectedAnswer,
+          isCorrect: null,
+          markedAsDoubt: markedAsDoubt[index] || false,
+          questionData: {
+            question: question.question || '',
+            option_1: question.option_1 || question.options?.[0] || '',
+            option_2: question.option_2 || question.options?.[1] || '',
+            option_3: question.option_3 || question.options?.[2] || '',
+            option_4: question.option_4 || question.options?.[3] || '',
+            option_5: question.option_5 || question.options?.[4] || '',
+            answer: question.answer || question.correctAnswer || '',
+            subject: question.subject || question.categoria || 'General',
+            image: question.image || null
+          }
+        };
+      }
+
+      if (markedAsDoubt[index]) {
+        return {
+          questionId: question._id,
+          selectedAnswer: null,
+          isCorrect: null,
+          markedAsDoubt: true,
+          questionData: {
+            question: question.question || '',
+            option_1: question.option_1 || question.options?.[0] || '',
+            option_2: question.option_2 || question.options?.[1] || '',
+            option_3: question.option_3 || question.options?.[2] || '',
+            option_4: question.option_4 || question.options?.[3] || '',
+            option_5: question.option_5 || question.options?.[4] || '',
+            answer: question.answer || question.correctAnswer || '',
+            subject: question.subject || question.categoria || 'General',
+            image: question.image || null
+          }
+        };
+      }
+
+      return null;
+    });
+  }, [questions, userAnswers, selectedAnswers, markedAsDoubt]);
+
+  const handleTogglePause = () => {
+    if (isPaused) {
+      handleResume();
+    } else {
+      handlePause();
+    }
+  };
+
+  const handleExitExam = () => {
+    if (!isSubmitted && hasPendingChanges) {
+      const shouldExit = window.confirm('Tienes cambios sin guardar. ¿Seguro que quieres salir?');
+      if (!shouldExit) {
+        return;
       }
     }
-    
-    return status;
+    navigate('/dashboard');
+  };
+
+  const handleCloseTimeExpiredModal = () => {
+    setShowTimeExpiredModal(false);
   };
 
   // Renderizar pantalla de carga
@@ -977,17 +961,15 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
   // Renderizar examen
   return (
     <div id="exam-root" className={`exam-container ${isDarkMode ? 'dark' : ''}`}>
-      {/* Cabecera del examen */}
-      <ExamHeader
-        timeLeft={timeLeft}
-        isPaused={isPaused}
-        onPause={isPaused ? handleResume : handlePause}
-        onResume={handleResume}
-        onFinish={() => setShowFinalizePopup(true)}
+      <ExamView
+        questions={questions}
+        userAnswers={userAnswersForView}
+        handleAnswerClick={handleAnswerClick}
+        markedAsDoubt={markedAsDoubt}
+        toggleDoubtMark={toggleDoubtMark}
         onSave={() => queueProgressSave(false)}
-        toggleDarkMode={toggleDarkMode}
-        isSaving={isSaving}
-        hasPendingChanges={hasPendingChanges}
+        onFinalize={handleFinalize}
+        onPause={handleTogglePause}
         onDownload={() => downloadExamPdfFromData({
           questions: questions,
           title: 'SIMULIA',
@@ -1000,46 +982,29 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
           showBubbleSheet: true,
           fileName: `examen-${examId || 'en-curso'}.pdf`
         })}
+        onExit={handleExitExam}
+        timeLeft={timeLeft}
+        totalTime={totalTime}
+        isPaused={isPaused}
+        isSaving={isSaving}
+        hasPendingChanges={hasPendingChanges}
+        examType={examType}
+        isDarkMode={isDarkMode}
+        currentQuestion={currentQuestion}
+        onNavigate={handleNavigate}
+        onTimeUp={handleTimeUp}
+        disabledButtons={[]}
+        onImpugnarSubmit={handleImpugnarSubmit}
       />
 
-      {/* Contenedor principal */}
-      <div className={`main-content ${styles.mainContent}`} >
-        {/* Componente QuestionBox */}
-        <QuestionBox
-          currentQuestion={currentQuestion}
-          questions={questions}
-          userAnswers={selectedAnswers}
-          handleAnswerClick={handleAnswerClick}
-          markedAsDoubt={markedAsDoubt}
-          toggleDoubtMark={toggleDoubtMark}
-          onNavigate={handleNavigate}
-          onImpugnar={handleImpugnar}
-          isDarkMode={isDarkMode}
-          showCorrectness={showCorrectness}
-        />
-
-        {/* Componente Pagination */}
-        <Pagination
-          totalItems={questions.length}
-          itemsPerPage={questionsPerPage}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-          onItemSelect={handleNavigate}
-          activeItemIndex={currentQuestion}
-          itemStatus={generateItemStatus()}
-          isDarkMode={isDarkMode}
-        />
-      </div>
-
-      {/* Modal de finalización */}
-      {showFinalizePopup && (
+      {showTimeExpiredModal && (
         <div className="popup-overlay">
           <div className="popup">
-            <h2>¿Estás seguro de que deseas finalizar el examen?</h2>
-            <p>Una vez finalizado, no podrás volver a editarlo.</p>
+            <h2>Tiempo agotado</h2>
+            <p>El tiempo del examen ha finalizado. Puedes revisarlo rápidamente o finalizar ahora.</p>
             <div className="popup-buttons">
-              <button onClick={() => setShowFinalizePopup(false)} className="control-btn">
-                Cancelar
+              <button onClick={handleCloseTimeExpiredModal} className="control-btn">
+                Revisar antes de finalizar
               </button>
               <button onClick={handleFinalize} className="control-btn">
                 Finalizar examen
@@ -1048,47 +1013,6 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
           </div>
         </div>
       )}
-
-      {/* Modal de impugnación */}
-      {isDisputing && (
-        <div className="popup-overlay">
-          <div className="popup">
-            <h2>Impugnar pregunta</h2>
-            <p>Por favor, explica el motivo de la impugnación:</p>
-            <textarea
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-              placeholder="Escribe aquí el motivo de la impugnación..."
-              rows={4}
-              className="dispute-textarea"
-            />
-            <div className="popup-buttons">
-              <button onClick={() => setIsDisputing(false)} className="control-btn">
-                Cancelar
-              </button>
-              <button onClick={handleSubmitDispute} className="control-btn">
-                Enviar impugnación
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showSuccessNotification && (
-        <SuccessNotification
-          message={successMessage}
-          onClose={() => setShowSuccessNotification(false)}
-          autoCloseTime={1500}
-        />
-      )}
-
-      {showErrorNotification && (
-        <SuccessNotification
-          message={errorMessage}
-          onClose={() => setShowErrorNotification(false)}
-        />
-      )}
-   
     </div>
   );
 };

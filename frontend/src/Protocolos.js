@@ -135,6 +135,11 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Inicializar userAnswers con objetos completos para todas las preguntas
         const initialUserAnswers = Array(Math.min(data.length, 30)).fill(null);
         setUserAnswers(initialUserAnswers);
+        
+        // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+        // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+        setQuestionMarkedAsDoubt({});
+        
         setIsLoading(false);
       } catch (err) {
         console.error('Error al cargar preguntas de protocolos:', err);

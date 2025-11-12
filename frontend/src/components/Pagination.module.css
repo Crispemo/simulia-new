@@ -157,9 +157,9 @@
 }
 
 .pageNumber.unanswered {
-  background-color: #f5f7fa;
-  border-color: #e0e4e8;
-  color: #9ca3af;
+  background-color: #d1d5db;
+  border-color: #9ca3af;
+  color: #6b7280;
 }
 
 /* Indicador de más páginas */
@@ -261,8 +261,8 @@
 }
 
 .paginationComponent.dark .pageNumber.unanswered {
-  background-color: #2a2a2a;
-  border-color: #3a3a3a;
+  background-color: #4a4a4a;
+  border-color: #5a5a5a;
   color: #9ca3af;
 }
 

@@ -66,11 +66,12 @@ function HomePage() {
         return;
       }
 
-      // NO redirigir automáticamente, permitir que el usuario navegue manualmente
-      // if(data.subscriptionActive === true) {
-      //   navigate('/dashboard');
-      //   return;
-      // }
+      // Si el usuario tiene suscripción activa, redirigir al dashboard
+      if(data.subscriptionActive === true) {
+        console.log("Usuario con suscripción activa, redirigiendo al dashboard");
+        navigate('/dashboard');
+        return;
+      }
 
       // Si el usuario existe pero no tiene suscripción activa
       scrollToPayments();
@@ -127,18 +128,29 @@ function HomePage() {
       
       // 2. Verificar suscripción después de login exitoso (solo desktop)
       try {
-        const response = await axios.post(`${API_URL}/users/check-subscription`, { 
-          userId: result.uid,
-          email: result.email
+        const response = await fetch(`${API_URL}/users/check-subscription`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: result.uid,
+            email: result.email,
+          }),
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Verificación de suscripción:", data);
         
-        console.log("Verificación de suscripción:", response.data);
-        const hasSubscription = response.data && response.data.hasSubscription === true;
-        
-        // 3. Permitir que el usuario navegue manualmente, no redirigir automáticamente
-        if (hasSubscription) {
-          console.log("Usuario con suscripción activa");
-          // navigate('/dashboard'); // Comentado para permitir navegación manual
+        // 3. Si el usuario tiene suscripción activa, redirigir al dashboard
+        if (data && data.subscriptionActive === true) {
+          console.log("Usuario con suscripción activa, redirigiendo al dashboard");
+          navigate('/dashboard');
         } else {
           console.log("Usuario sin suscripción, mostrando planes");
           setShowPopup(true);

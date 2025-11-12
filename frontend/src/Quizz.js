@@ -132,6 +132,10 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
           setUserAnswers(new Array(data.length).fill(null));
         }
         
+        // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+        // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+        setMarkedAsDoubt({});
+        
         setIsLoading(false);
       } catch (err) {
         console.error("Error en fetchQuestions:", err);

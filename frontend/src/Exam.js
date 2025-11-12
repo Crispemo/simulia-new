@@ -204,7 +204,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         } catch (fetchError) {
           // Si es error CORS o de red, mostrar mensaje más útil
           if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
-            throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5000 y que CORS esté configurado correctamente.');
+            throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5001 y que CORS esté configurado correctamente.');
           }
           throw fetchError;
         }
@@ -289,6 +289,10 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       
       setUserAnswers(initialUserAnswers);
       setCurrentQuestion(0);
+      
+      // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
+      // Esto asegura que las marcas de duda de exámenes anteriores no se apliquen
+      setMarkedAsDoubt({});
 
     } catch (error) {
       console.error('Error al cargar preguntas:', error);
