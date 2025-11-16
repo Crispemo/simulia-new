@@ -44,12 +44,12 @@ const saveChatHistory = (messages) => {
   }
 }
 
-// Preguntas rápidas sugeridas
+// Preguntas rápidas sugeridas (mejoradas)
 const quickQuestions = [
-  "¿Cómo puedo mejorar en Farmacología?",
-  "¿Qué es un simulacro EIR?",
-  "¿Cómo revisar mis errores?",
-  "¿Qué asignaturas puedo practicar?"
+  "Dime en qué asignatura voy peor",
+  "Qué me recomiendas practicar hoy",
+  "Cómo usar Repite tus errores",
+  "Cómo hacer un simulacro realista"
 ]
 
 export default function AIAssistant() {
@@ -61,6 +61,11 @@ export default function AIAssistant() {
   const [isLoading, setIsLoading] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
   const [userStats, setUserStats] = useState(null)
+  const [conversationContext, setConversationContext] = useState({
+    lastTopic: null,
+    lastOffer: null,
+    waitingForConfirmation: false
+  })
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -117,6 +122,142 @@ export default function AIAssistant() {
     return null
   }
 
+  // Función mejorada para detectar confirmaciones
+  const isConfirmation = (input) => {
+    const confirmations = [
+      'si', 'sí', 'ok', 'vale', 'de acuerdo', 'claro', 
+      'perfecto', 'adelante', 'por supuesto', 'genial', 'perfecto'
+    ]
+    return confirmations.some(word => input.toLowerCase().trim() === word)
+  }
+
+  // Función para extraer ofertas del texto
+  const extractOffer = (text) => {
+    const lowerText = text.toLowerCase()
+    if (lowerText.includes('examen') && lowerText.includes('farmacología')) {
+      return { type: 'create_exam', subject: 'Farmacología' }
+    }
+    if (lowerText.includes('examen') && lowerText.includes('pediatría')) {
+      return { type: 'create_exam', subject: 'Pediatría' }
+    }
+    if (lowerText.includes('examen') && lowerText.includes('quirúrgica')) {
+      return { type: 'create_exam', subject: 'Enfermería Quirúrgica' }
+    }
+    if (lowerText.includes('repite tus errores') || lowerText.includes('revisar tus errores')) {
+      return { type: 'review_errors', subject: null }
+    }
+    if (lowerText.includes('examen personalizado')) {
+      return { type: 'create_exam', subject: 'Personalizado' }
+    }
+    return null
+  }
+
+  // Función auxiliar para crear contexto del usuario
+  const createUserContext = (stats, currentMessage) => {
+    if (!stats) return null
+    
+    const { general, worstSubjects, bySubject } = stats
+    
+    // Detectar si menciona una asignatura específica
+    let relevantSubject = null
+    const messageLower = currentMessage.toLowerCase()
+    
+    for (const subject of bySubject || []) {
+      const subjectLower = subject.subject.toLowerCase()
+      if (messageLower.includes(subjectLower) || 
+          subjectLower.includes(messageLower.split(' ').find(w => w.length > 4))) {
+        relevantSubject = subject
+        break
+      }
+    }
+    
+    let contextText = `\n\n=== DATOS DEL USUARIO ===\n\n📊 RENDIMIENTO GENERAL:\n- Exámenes completados: ${general.totalExams || 0}\n- Preguntas respondidas: ${general.totalQuestions || 0}\n- Tasa de acierto: ${general.successRate || 0}%\n- Puntuación media: ${general.averageScore || 0} puntos\n`
+    
+    if (worstSubjects?.length > 0) {
+      contextText += `\n⚠️ ÁREAS PROBLEMÁTICAS (Top 3):\n${worstSubjects.map((s, i) => 
+        `${i + 1}. ${s.subject}: ${s.errors} errores (${s.errorRate}% tasa de error)`
+      ).join('\n')}\n`
+    }
+    
+    if (relevantSubject) {
+      contextText += `\n📌 ASIGNATURA MENCIONADA (${relevantSubject.subject}):\n- Errores: ${relevantSubject.errors}\n- Tasa de error: ${relevantSubject.errorRate}%\n- Tasa de acierto: ${relevantSubject.successRate}%\n- Total: ${relevantSubject.total} preguntas\n`
+    }
+    
+    contextText += `\n📚 RECURSOS:\n- Preguntas falladas: ${stats.failedQuestions || 0}\n- Preguntas sin contestar: ${stats.unansweredQuestions || 0}\n`
+    
+    return contextText
+  }
+
+  // Sistema de respuestas contextuales mejoradas
+  const getContextualResponse = (userInput, context = {}, stats = null) => {
+    const input = userInput.toLowerCase().trim()
+    
+    // Si es una confirmación y hay una oferta pendiente
+    if (isConfirmation(input) && context?.lastOffer) {
+      const { type, subject } = context.lastOffer
+      
+      if (type === 'create_exam') {
+        return {
+          text: `📝 **Pasos para crear un examen personalizado de ${subject}:**\n\n> 1. En el menú principal, haz clic en "Personalizado"\n\n> 2. Selecciona "${subject}" en el filtro de asignaturas\n\n> 3. Elige 30 preguntas (recomendado para empezar)\n\n> 4. Haz clic en "Comenzar examen"\n\n💡 **Después del examen:**\n- Revisa TODAS las respuestas, especialmente las incorrectas\n- Anota los conceptos que no dominas\n- Repite el examen en 2-3 días\n\n¿Necesitas ayuda con algún otro aspecto de tu preparación?`,
+          clearOffer: true
+        }
+      } else if (type === 'review_errors') {
+        return {
+          text: `📝 **Cómo usar "Repite tus errores":**\n\n> 1. Ve a la sección "Práctica" en el menú\n\n> 2. Selecciona "Repite tus errores"\n\n> 3. Filtra por ${subject || 'la asignatura que quieras'} si quieres enfocarte\n\n> 4. Comienza el examen\n\n💡 **Consejos:**\n- Lee cuidadosamente cada pregunta antes de responder\n- Intenta entender POR QUÉ fallaste originalmente\n- Toma notas de los conceptos difíciles\n\n¿Hay alguna asignatura específica en la que quieras enfocarte?`,
+          clearOffer: true
+        }
+      }
+    }
+    
+    // Si menciona una asignatura específica
+    const subjects = {
+      'farmacología': ['farma', 'farmacología', 'farmacologia', 'medicamento'],
+      'pediatría': ['pediatría', 'pediatria', 'niños', 'niño'],
+      'quirúrgica': ['quirúrgica', 'quirurgica', 'cirugía', 'cirugia'],
+      'geriatría': ['geriatría', 'geriatria', 'anciano', 'mayor'],
+      'salud mental': ['mental', 'psiquiatría', 'psiquiatria'],
+      'comunitaria': ['comunitaria'],
+      'fundamentos': ['fundamentos']
+    }
+    
+    let detectedSubject = null
+    for (const [subject, keywords] of Object.entries(subjects)) {
+      if (keywords.some(kw => input.includes(kw))) {
+        detectedSubject = subject
+        break
+      }
+    }
+    
+    if (detectedSubject && stats) {
+      const subjectStats = stats.bySubject?.find(s => 
+        s.subject.toLowerCase().includes(detectedSubject) ||
+        detectedSubject.includes(s.subject.toLowerCase())
+      )
+      
+      if (subjectStats) {
+        let recommendation = ''
+        if (subjectStats.errorRate > 30) {
+          recommendation = `Esta asignatura necesita ATENCIÓN URGENTE. Te recomiendo:\n\n> 1. Crear exámenes de 20-30 preguntas solo de ${detectedSubject}\n\n> 2. Estudiar la teoría antes de cada sesión de práctica\n\n> 3. Revisar CADA error cuidadosamente\n\n> 4. Repetir el proceso cada 2-3 días`
+        } else if (subjectStats.errorRate > 15) {
+          recommendation = `Vas por buen camino, pero puedes mejorar:\n\n> 1. Practica con exámenes mixtos que incluyan ${detectedSubject}\n\n> 2. Usa "Repite tus errores" para esta asignatura\n\n> 3. Alterna con otras asignaturas`
+        } else {
+          recommendation = `¡Excelente nivel en ${detectedSubject}!\n\n> 1. Mantén la práctica regular\n\n> 2. Usa el modo contrarreloj para optimizar velocidad\n\n> 3. Enfócate en otras asignaturas que necesiten más atención`
+        }
+        
+        return {
+          text: `📊 **Análisis de ${detectedSubject}:**\n\n**Tu rendimiento:**\n- Errores: ${subjectStats.errors}\n- Tasa de error: ${subjectStats.errorRate}%\n- Tasa de acierto: ${subjectStats.successRate}%\n- Total preguntas: ${subjectStats.total}\n\n🎯 **Recomendación personalizada:**\n\n${recommendation}\n\n💡 **¿Quieres que te ayude a crear un examen específico de ${detectedSubject}?**`,
+          setOffer: { type: 'create_exam', subject: detectedSubject }
+        }
+      }
+    }
+    
+    // Respuesta por defecto mejorada
+    return {
+      text: `Puedo ayudarte con:\n\n🎯 **Crear exámenes personalizados** por asignatura\n\n📊 **Analizar tu progreso** y áreas de mejora\n\n🔄 **Repasar tus errores** de forma efectiva\n\n⏱️ **Practicar contrarreloj** para mejorar velocidad\n\n¿Qué te gustaría hacer?`,
+      clearOffer: true
+    }
+  }
+
   // Detectar si la pregunta requiere datos del usuario (expandido para ser más proactivo)
   const needsUserData = (input, conversationHistory = []) => {
     const progressKeywords = [
@@ -150,7 +291,38 @@ export default function AIAssistant() {
            input.includes('cómo') || input.includes('como')
   }
 
-  const getBotResponse = (userInput, conversationHistory = []) => {
+  // Fallback simplificado y honesto
+  const getBotResponse = (userInput) => {
+    const input = userInput.toLowerCase().trim()
+    
+    // Saludos básicos
+    if (["hola", "buenas", "buenos días", "buenas tardes"].some(w => input.includes(w))) {
+      return {
+        text: "¡Hola! Ahora mismo el asistente inteligente está teniendo problemas técnicos. Mientras tanto, puedes practicar desde el menú:\n\n• Simulacro EIR completo\n• Repite tus errores\n• Examen personalizado por asignaturas\n\nEn cuanto el asistente vuelva a estar disponible, te ayudará con recomendaciones más concretas.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+    }
+    
+    // Confirmaciones - dar pasos concretos
+    if (["si", "sí", "ok", "vale", "de acuerdo"].includes(input)) {
+      return {
+        text: "Perfecto. Haz esto ahora mismo:\n\n> 1. Ve al menú izquierdo y entra en 'Personalizado'.\n\n> 2. Selecciona 1–2 asignaturas donde quieras mejorar.\n\n> 3. Elige 30 preguntas y pulsa 'Comenzar examen'.\n\n💡 **Después:** Revisa bien las explicaciones de las preguntas falladas.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+    }
+    
+    // Mensaje genérico
+    return {
+      text: "De momento el asistente de IA está limitado por un problema técnico.\n\nMientras tanto te recomiendo:\n\n> 1. Hacer un simulacro o un examen personalizado por asignaturas\n\n> 2. Revisar tus errores en la sección 'Repite tus errores'\n\nCuando el servicio se restablezca, podré darte recomendaciones personalizadas según tus estadísticas.",
+      sender: "bot",
+      timestamp: new Date(),
+    }
+  }
+  
+  // Función antigua mantenida para compatibilidad (pero ya no se usa mucho)
+  const getBotResponseOld = (userInput, conversationHistory = []) => {
     const input = userInput.toLowerCase().trim()
     let response = ""
 
@@ -205,10 +377,14 @@ export default function AIAssistant() {
       response = saludos[Math.floor(Math.random() * saludos.length)]
     } else if (input.includes("gracias") || input.includes("thank") || input.includes("gracias")) {
       response = agradecimientos[Math.floor(Math.random() * agradecimientos.length)]
+    } else if (isConfirmation(input)) {
+      // Usar el sistema de contexto para dar respuestas contextuales
+      const contextualResponse = getContextualResponse(input, conversationContext, userStats)
+      response = contextualResponse.text
     } else if (input.includes("mejorar") || input.includes("mejor") || input.includes("progresar")) {
       // Respuesta contextual sobre mejora
       if (temaDetectado === 'farmacologia') {
-        response = "Para mejorar en Farmacología, te recomiendo: 1) Practicar con exámenes específicos de esta asignatura filtrando por 'Farmacología' al crear un examen, 2) Revisar tus errores en esta área usando la función 'Repite tus errores', 3) Estudiar los grupos farmacológicos más comunes en el EIR. ¿Te gustaría que te explique cómo crear un examen personalizado de Farmacología?"
+        response = "📊 **Análisis:** Para mejorar en Farmacología necesitas práctica específica y revisión de errores.\n\n🎯 **Recomendación:** Te sugiero crear exámenes personalizados enfocados en esta asignatura.\n\n📝 **Plan de acción:**\n\n> 1. Crea en \"Personalizado\" un examen de 30 preguntas solo de Farmacología\n\n> 2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n> 3. Usa \"Repite tus errores\" para practicar las preguntas que has fallado\n\n> 4. Practica con el modo contrarreloj para mejorar velocidad\n\n💡 **Consejo:** Estudia los grupos farmacológicos más comunes en el EIR (analgésicos, antibióticos, antihipertensivos).\n\n¿Te ayudo a configurar un examen personalizado de Farmacología?"
       } else if (temaDetectado) {
         const nombreTema = temaDetectado === 'farmacologia' ? 'Farmacología' : 
                           temaDetectado === 'quirurgica' ? 'Enfermería Quirúrgica' :
@@ -299,93 +475,18 @@ export default function AIAssistant() {
     setInputText("")
     setIsLoading(true)
 
-    // SIEMPRE obtener datos del usuario si está autenticado y la pregunta puede beneficiarse de datos
-    // Ser más proactivo en el análisis de datos
+    // Obtener estadísticas si es necesario
     let stats = userStats
-    if (userId) {
-      // Obtener estadísticas siempre que sea relevante (no solo cuando se pregunta explícitamente)
-      const shouldFetchStats = needsUserData(input, messages) || 
-                               input.includes('mejorar') || 
-                               input.includes('práctica') || 
-                               input.includes('practica') ||
-                               input.includes('recomend') ||
-                               messages.length > 2 // Si hay conversación previa, tener datos disponibles
-      
-      if (shouldFetchStats) {
-        stats = await fetchUserStats()
-      }
+    if (userId && needsUserData(input, messages)) {
+      stats = await fetchUserStats()
     }
 
     // Llamar a la API de ChatGPT con el historial completo
     try {
       const token = localStorage.getItem('token')
       
-      // Preparar contexto adicional con estadísticas del usuario si están disponibles
-      // SIEMPRE incluir datos si están disponibles, no solo cuando se pregunta explícitamente
-      let systemContext = ''
-      if (stats) {
-        const worstSubjects = stats.worstSubjects || []
-        const general = stats.general || {}
-        const bySubject = stats.bySubject || []
-        
-        // Buscar asignatura específica mencionada en la conversación
-        const conversationText = messages.slice(-4).map(m => m.text).join(' ').toLowerCase()
-        const temasMencionados = {
-          'farmacología': ['farma', 'farmacología', 'farmacologia'],
-          'pediatría': ['pediatría', 'pediatria'],
-          'geriatría': ['geriatría', 'geriatria'],
-          'quirúrgica': ['quirúrgica', 'quirurgica'],
-          'salud mental': ['mental', 'psiquiatría', 'psiquiatria'],
-          'comunitaria': ['comunitaria'],
-          'fundamentos': ['fundamentos']
-        }
-        
-        let asignaturaRelevante = null
-        for (const [asignatura, keywords] of Object.entries(temasMencionados)) {
-          if (keywords.some(kw => conversationText.includes(kw) || input.includes(kw))) {
-            asignaturaRelevante = bySubject.find(s => 
-              s.subject.toLowerCase().includes(asignatura.toLowerCase()) ||
-              asignatura.toLowerCase().includes(s.subject.toLowerCase())
-            )
-            break
-          }
-        }
-        
-        systemContext = `\n\n=== DATOS DEL USUARIO (ANÁLISIS COMPLETO) ===
-
-📊 RENDIMIENTO GENERAL:
-- Exámenes completados: ${general.totalExams || 0}
-- Preguntas respondidas: ${general.totalQuestions || 0}
-- Tasa de acierto: ${general.successRate || 0}%
-- Puntuación media: ${general.averageScore || 0} puntos
-
-⚠️ ÁREAS DE MEJORA (Top 3 asignaturas con más errores):
-${worstSubjects.length > 0 ? worstSubjects.map((s, i) => 
-  `${i + 1}. ${s.subject}: ${s.errors} errores (${s.errorRate}% tasa de error)`
-).join('\n') : 'Aún no hay datos suficientes para identificar áreas problemáticas.'}
-
-${asignaturaRelevante ? `\n📌 ASIGNATURA MENCIONADA (${asignaturaRelevante.subject}):
-- Errores: ${asignaturaRelevante.errors}
-- Tasa de error: ${asignaturaRelevante.errorRate}%
-- Tasa de acierto: ${asignaturaRelevante.successRate}%
-- Total de preguntas: ${asignaturaRelevante.total}` : ''}
-
-📚 RECURSOS DISPONIBLES:
-- Preguntas falladas guardadas: ${stats.failedQuestions || 0}
-- Preguntas sin contestar: ${stats.unansweredQuestions || 0}
-
-=== INSTRUCCIONES PARA EL ASISTENTE ===
-1. SIEMPRE analiza estos datos antes de responder
-2. Sé un GUÍA proactivo: no solo respondas, SUGIERE acciones concretas basadas en los datos
-3. Si el usuario pregunta sobre una asignatura específica, usa los datos de esa asignatura
-4. Si hay áreas problemáticas, propón un plan de acción específico
-5. Estructura tus respuestas de forma clara con:
-   - Análisis de la situación actual
-   - Recomendaciones específicas y accionables
-   - Pasos concretos para mejorar
-6. Sé empático pero directo: si hay problemas, identifícalos claramente
-7. Ofrece soluciones prácticas, no solo información genérica`
-      }
+      // Preparar contexto del usuario usando la función mejorada
+      const userContext = stats ? createUserContext(stats, messageText) : null
       
       // Optimizar historial: enviar solo los últimos mensajes relevantes a ChatGPT
       // Filtrar mensaje de bienvenida y tomar solo los últimos MAX_CHATGPT_HISTORY mensajes
@@ -405,7 +506,7 @@ ${asignaturaRelevante ? `\n📌 ASIGNATURA MENCIONADA (${asignaturaRelevante.sub
         body: JSON.stringify({ 
           message: messageText,
           messages: messagesToSend.slice(0, -1), // Enviar historial sin el último mensaje (ya está en message)
-          ...(systemContext && { userContext: systemContext }) // Enviar contexto del usuario si está disponible
+          ...(userContext && { userContext }) // Enviar contexto del usuario si está disponible
         })
       })
 
@@ -417,6 +518,18 @@ ${asignaturaRelevante ? `\n📌 ASIGNATURA MENCIONADA (${asignaturaRelevante.sub
         }
         
         let responseText = data.response || "Lo siento, no pude procesar tu mensaje."
+        
+        // Actualizar contexto de conversación
+        const newContext = { ...conversationContext }
+        const offer = extractOffer(responseText)
+        if (offer) {
+          newContext.lastOffer = offer
+          newContext.waitingForConfirmation = true
+        } else if (isConfirmation(input)) {
+          newContext.lastOffer = null
+          newContext.waitingForConfirmation = false
+        }
+        setConversationContext(newContext)
         
         // Si tenemos estadísticas y la pregunta es sobre progreso, personalizar la respuesta
         if (stats && needsUserData(input)) {
@@ -480,29 +593,30 @@ ${asignaturaRelevante ? `\n📌 ASIGNATURA MENCIONADA (${asignaturaRelevante.sub
         console.warn('ChatGPT no disponible, usando respuestas inteligentes:', error.message)
       }
       
-      // Usar sistema de respuestas inteligentes como fallback con contexto
-      let botResponse = getBotResponse(messageText, messages)
+      // Usar sistema de respuestas contextuales mejoradas
+      const contextualResponse = getContextualResponse(messageText, conversationContext, stats)
       
-      // Si tenemos estadísticas y la pregunta es sobre progreso, personalizar la respuesta del fallback también
-      if (stats && needsUserData(input)) {
-        const worstSubjects = stats.worstSubjects || []
-        const general = stats.general || {}
-        
-        if (input.includes("qué debería") || input.includes("que deberia") || input.includes("debería practicar") || input.includes("deberia practicar")) {
-          if (worstSubjects.length > 0) {
-            botResponse.text = `📊 **Análisis:** Basándome en tu progreso, estas asignaturas requieren más atención:\n\n${worstSubjects.map((s, i) => `**${i + 1}. ${s.subject}**: ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n')}\n\n🎯 **Recomendación:** Enfócate en practicar estas áreas.\n\n📝 **Plan de acción:**\n\n> 1. Crea en "Personalizado" un examen de 30 preguntas solo de ${worstSubjects[0].subject}\n\n> 2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n> 3. Te recomiendo practicar con el modo contrarreloj para mejorar velocidad\n\n💡 **Consejo:** La práctica constante en estas asignaturas mejorará tu rendimiento.`
-          }
-        } else if (input.includes("progreso") || input.includes("cómo voy") || input.includes("como voy") || input.includes("mis notas") || input.includes("mis netas")) {
-          if (general.totalExams > 0) {
-            botResponse.text = `📊 **Análisis:** Tu progreso actual:\n- Exámenes completados: ${general.totalExams}\n- Tasa de acierto: ${general.successRate}%\n- Puntuación media: ${general.averageScore} puntos\n\n${worstSubjects.length > 0 ? `⚠️ **Áreas a mejorar:** ${worstSubjects.map(s => s.subject).join(', ')}\n\n📝 **Plan de acción:**\n\n> 1. Crea exámenes personalizados de estas asignaturas\n\n> 2. Revisa tus errores usando "Repite tus errores"\n\n> 3. Practica con el modo contrarreloj` : '✅ ¡Buen trabajo! Mantén la práctica constante.'}`
-          }
-        }
+      // Actualizar contexto
+      const newContext = { ...conversationContext }
+      if (contextualResponse.setOffer) {
+        newContext.lastOffer = contextualResponse.setOffer
+        newContext.waitingForConfirmation = true
+      } else if (contextualResponse.clearOffer) {
+        newContext.lastOffer = null
+        newContext.waitingForConfirmation = false
+      }
+      setConversationContext(newContext)
+      
+      const botResponse = {
+        text: contextualResponse.text,
+        sender: "bot",
+        timestamp: new Date(),
       }
       
       setTimeout(() => {
         setMessages((prev) => [...prev, botResponse])
         setIsLoading(false)
-        setRetryCount(0) // Resetear contador de reintentos
+        setRetryCount(0)
       }, 800)
     }
   }

@@ -209,7 +209,7 @@ app.use(practiceRoutes);
 // Ruta para el asistente de IA con ChatGPT
 app.post('/ai-assistant/chat', async (req, res) => {
   try {
-    const { message, messages } = req.body;
+    const { message, messages, userContext } = req.body;
 
     if (!message && (!messages || messages.length === 0)) {
       return res.status(400).json({ error: 'Mensaje requerido' });
@@ -225,38 +225,47 @@ app.post('/ai-assistant/chat', async (req, res) => {
     }
 
     // Preparar el historial de mensajes para ChatGPT
-    let systemPrompt = `Eres un ASISTENTE GUÍA EXPERTO especializado en ayudar a estudiantes de enfermería a prepararse para el Examen de Enfermero Interno Residente (EIR) en la plataforma Simulia.
+    let systemPrompt = `Eres el ASISTENTE DE IA DE SIMULIA, experto en ayudar a estudiantes de enfermería a preparar el EIR usando la plataforma.
 
-Tu rol es ser un GUÍA PROACTIVO que:
-1. ANALIZA los datos del estudiante para entender su situación real
-2. IDENTIFICA áreas de mejora basándose en métricas concretas
-3. PROPORCIONA recomendaciones específicas y accionables
-4. SUGIERE planes de estudio personalizados según el rendimiento
-5. MOTIVA pero también es honesto sobre las áreas que necesitan trabajo
+TU MISIÓN:
+- Interpretar los DATOS DEL USUARIO (estadísticas por asignaturas, errores, simulacros…).
+- Traducir esos datos en RECOMENDACIONES CONCRETAS dentro de Simulia.
+- Guiar al usuario con PASOS muy claros para que sepa qué hacer HOY.
 
-ESTRUCTURA DE TUS RESPUESTAS:
-- 📊 Análisis: Resume brevemente la situación del estudiante
-- 🎯 Recomendación: Propón acciones concretas y específicas
-- 📝 Plan de acción: Indica pasos claros y realizables
-- 💡 Consejo práctico: Añade un tip útil relacionado
+ESTRUCTURA OBLIGATORIA DE CADA RESPUESTA:
 
-FORMATO:
-- Usa emojis para hacer la información más visual (📊 📈 ⚠️ ✅ 💡 🎯)
-- Estructura con párrafos cortos y listas cuando sea apropiado
-- Sé específico: menciona números, porcentajes, asignaturas concretas
-- Mantén un tono profesional pero cercano y motivador
-- Máximo 250 palabras por respuesta
+📊 Análisis:
+- Frase breve explicando qué ves en sus datos o en su pregunta.
 
-IMPORTANTE:
-- SIEMPRE analiza los datos del usuario si están disponibles
-- No des respuestas genéricas cuando tengas datos específicos
-- Si el usuario pregunta sobre una asignatura, usa los datos de esa asignatura
-- Sé proactivo: anticipa necesidades y sugiere mejoras
-- NO inventes información que no tengas certeza`;
+🎯 Recomendación:
+- 1–2 frases diciendo qué debería priorizar (asignaturas, tipos de examen, modos).
+
+📝 Plan de acción:
+> 1. Paso concreto dentro de Simulia (ej.: "Ve a Personalizado y selecciona Farmacología").
+> 2. Segundo paso concreto.
+> 3. Opcional: tercer paso si aporta valor.
+
+💡 Consejo práctico:
+- Un tip corto (gestión del tiempo, revisión de errores, etc.).
+
+REGLAS DE CONVERSACIÓN:
+- Si el usuario responde "sí", "ok", "vale" o similares:
+  - NO repitas lo que ya has dicho.
+  - Da el siguiente paso lógico (más concreto) sin volver a formular la misma pregunta.
+- No hagas más de UNA pregunta al final del mensaje.
+- No repitas frases en diferentes respuestas ("En Farmacología puedes mejorar practicando…" debe aparecer como mucho una vez).
+- Si el usuario menciona una asignatura concreta (Farmacología, Pediatría, etc.), céntrate en esa asignatura y usa sus datos si están en el contexto.
+- Si hay DATOS en el contexto (estadísticas, peores asignaturas, etc.), SIEMPRE menciónalos.
+- No inventes números ni porcentajes que no vengan en los datos.
+
+LÍMITE:
+- Máximo ~220 palabras.
+- Párrafos cortos y listas siempre que puedas.
+- Tono: profesional, cercano y directo, sin relleno.`;
 
     // Si hay contexto adicional del usuario en el mensaje, agregarlo al system prompt
-    if (req.body.userContext) {
-      systemPrompt += `\n\n${req.body.userContext}`;
+    if (userContext) {
+      systemPrompt += `\n\n${userContext}`;
     }
 
     let conversationMessages = [
@@ -299,19 +308,30 @@ IMPORTANTE:
     });
 
   } catch (error) {
-    console.error('❌ Error en ChatGPT:', error.message);
+    console.error('❌ Error en ChatGPT:', error);
+    console.error('Stack:', error.stack);
     
     // Si hay error de rate limit o cuota, devolver un error específico
-    if (error.status === 429 || error.code === 'insufficient_quota') {
+    if (error.status === 429 || error.code === 'insufficient_quota' || error.response?.status === 429) {
       return res.status(503).json({ 
         error: 'Límite de uso alcanzado. Inténtalo más tarde.',
         fallback: true
       });
     }
 
-    res.status(500).json({ 
+    // Si hay error de autenticación o API key inválida
+    if (error.status === 401 || error.code === 'invalid_api_key' || error.response?.status === 401) {
+      console.error('⚠️ API Key de OpenAI inválida o no configurada');
+      return res.status(503).json({ 
+        error: 'Servicio de IA no disponible',
+        fallback: true
+      });
+    }
+
+    // Para otros errores, devolver fallback
+    res.status(503).json({ 
       error: 'Error al procesar la solicitud',
-      message: error.message,
+      message: error.message || 'Error desconocido',
       fallback: true
     });
   }
@@ -2126,13 +2146,92 @@ app.post('/validate-and-save-exam', verifyUser, verifySubscription, async (req, 
       
       // Agregar preguntas incorrectas al perfil del usuario para revisión automática
       if (incorrectQuestions.length > 0) {
-        // Primero eliminamos cualquier pregunta incorrecta existente con el mismo ID para evitar duplicados
-        await User.updateOne(
-          { userId },
-          { $pull: { failedQuestions: { questionId: { $in: incorrectQuestions.map(q => q.questionId) } } } }
-        );
-        // Luego agregamos las nuevas preguntas incorrectas
-        updateQuery.$addToSet = { failedQuestions: { $each: incorrectQuestions } };
+        // Transformar incorrectQuestions al formato esperado por el esquema failedQuestionSchema
+        const formattedFailedQuestions = incorrectQuestions.map(q => {
+          // Obtener el subject desde questionData si está disponible
+          const subject = q.questionData?.subject || q.subject || 'General';
+          
+          return {
+            questionId: q.questionId,
+            subject: subject,
+            lastAttempt: new Date(),
+            attemptCount: 1
+          };
+        });
+        
+        console.log(`Formateando ${formattedFailedQuestions.length} preguntas falladas para guardar`);
+        
+        // Obtener el usuario actual para verificar preguntas existentes
+        const user = await User.findOne({ userId });
+        if (!user) {
+          throw new Error('Usuario no encontrado');
+        }
+        
+        // Crear un mapa de preguntas falladas existentes
+        const existingFailedMap = {};
+        if (user.failedQuestions && Array.isArray(user.failedQuestions)) {
+          user.failedQuestions.forEach(q => {
+            if (q.questionId) {
+              existingFailedMap[q.questionId.toString()] = q;
+            }
+          });
+        }
+        
+        // Procesar las nuevas preguntas falladas
+        const mergedFailedQuestions = [...(user.failedQuestions || [])];
+        let addedCount = 0;
+        let updatedCount = 0;
+        
+        formattedFailedQuestions.forEach(newFailed => {
+          if (!newFailed.questionId) {
+            console.log('Advertencia: Pregunta fallada sin questionId omitida');
+            return;
+          }
+          
+          const questionId = newFailed.questionId.toString();
+          
+          if (existingFailedMap[questionId]) {
+            // Actualizar pregunta existente
+            const existingIndex = mergedFailedQuestions.findIndex(
+              q => q.questionId && q.questionId.toString() === questionId
+            );
+            
+            if (existingIndex !== -1) {
+              const existing = mergedFailedQuestions[existingIndex];
+              mergedFailedQuestions[existingIndex] = {
+                questionId: existing.questionId,
+                subject: newFailed.subject || existing.subject,
+                lastAttempt: new Date(),
+                attemptCount: (existing.attemptCount || 0) + 1
+              };
+              updatedCount++;
+            }
+          } else {
+            // Agregar nueva pregunta fallada
+            mergedFailedQuestions.push(newFailed);
+            addedCount++;
+          }
+        });
+        
+        // Eliminar duplicados por seguridad
+        const questionIds = new Set();
+        const finalFailedQuestions = [];
+        
+        mergedFailedQuestions.forEach(question => {
+          if (question.questionId) {
+            const id = question.questionId.toString();
+            if (!questionIds.has(id)) {
+              questionIds.add(id);
+              finalFailedQuestions.push(question);
+            }
+          }
+        });
+        
+        console.log(`Preguntas falladas actualizadas: ${updatedCount}, añadidas: ${addedCount}, total: ${finalFailedQuestions.length}`);
+        
+        // Actualizar el usuario con la lista final de preguntas falladas
+        updateQuery.$set = updateQuery.$set || {};
+        updateQuery.$set.failedQuestions = finalFailedQuestions;
       }
       
       // También registramos las preguntas sin contestar para revisión automática
