@@ -25,8 +25,9 @@ import Sidebar from './components/sidebar';
 import ExamHistoryTable from './components/exam-history-table';
 import TopFailedSubjects from './components/top-failed-subjects';
 import StreakCounter from './components/streak-counter';
-import AIAssistant from './components/ai-assistant';
+// import AIAssistant from './components/ai-assistant';
 import ResourcesModal from './components/ResourcesModal';
+import AllSubjectsModal from './components/AllSubjectsModal';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
@@ -45,6 +46,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showEleccionPopup, setShowEleccionPopup] = useState(false);
   const [showContrarrelojPopup, setShowContrarrelojPopup] = useState(false);
   const [showResourcesModal, setShowResourcesModal] = useState(false);
+  const [showAllSubjectsModal, setShowAllSubjectsModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const examsPerPage = 6;
@@ -85,7 +87,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   // Tutorial modal (primera visita)
   const [showTutorialModal, setShowTutorialModal] = useState(false);
   // Racha de acceso a la plataforma
-  const [streakDays, setStreakDays] = useState(0);
+  // const [streakDays, setStreakDays] = useState(0);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
 
   // Estado para el filtrado y ordenamiento
@@ -156,43 +158,43 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   }, [userId]);
 
   // Calcular racha de acceso a la plataforma
-  useEffect(() => {
-    if (!userId) return;
-    
-    try {
-      const today = new Date().toDateString();
-      const lastAccessKey = `lastAccess_${userId}`;
-      const lastAccess = localStorage.getItem(lastAccessKey);
-      const streakKey = `streak_${userId}`;
-      const streakCount = parseInt(localStorage.getItem(streakKey) || '0');
-      
-      if (lastAccess !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toDateString();
-        
-        if (lastAccess === yesterdayStr) {
-          // Continúa la racha
-          const newStreak = streakCount + 1;
-          localStorage.setItem(streakKey, newStreak.toString());
-          localStorage.setItem(lastAccessKey, today);
-          setStreakDays(newStreak);
-        } else if (!lastAccess || lastAccess !== today) {
-          // Nueva racha (primer acceso o se rompió la racha)
-          const newStreak = streakCount > 0 ? 1 : 1;
-          localStorage.setItem(streakKey, newStreak.toString());
-          localStorage.setItem(lastAccessKey, today);
-          setStreakDays(newStreak);
-        }
-      } else {
-        // Ya accedió hoy
-        setStreakDays(streakCount || 1);
-      }
-    } catch (e) {
-      console.warn('Error al calcular racha:', e);
-      setStreakDays(0);
-    }
-  }, [userId]);
+  // useEffect(() => {
+  //   if (!userId) return;
+  //   
+  //   try {
+  //     const today = new Date().toDateString();
+  //     const lastAccessKey = `lastAccess_${userId}`;
+  //     const lastAccess = localStorage.getItem(lastAccessKey);
+  //     const streakKey = `streak_${userId}`;
+  //     const streakCount = parseInt(localStorage.getItem(streakKey) || '0');
+  //     
+  //     if (lastAccess !== today) {
+  //       const yesterday = new Date();
+  //       yesterday.setDate(yesterday.getDate() - 1);
+  //       const yesterdayStr = yesterday.toDateString();
+  //       
+  //       if (lastAccess === yesterdayStr) {
+  //         // Continúa la racha
+  //         const newStreak = streakCount + 1;
+  //         localStorage.setItem(streakKey, newStreak.toString());
+  //         localStorage.setItem(lastAccessKey, today);
+  //         setStreakDays(newStreak);
+  //       } else if (!lastAccess || lastAccess !== today) {
+  //         // Nueva racha (primer acceso o se rompió la racha)
+  //         const newStreak = streakCount > 0 ? 1 : 1;
+  //         localStorage.setItem(streakKey, newStreak.toString());
+  //         localStorage.setItem(lastAccessKey, today);
+  //         setStreakDays(newStreak);
+  //       }
+  //     } else {
+  //       // Ya accedió hoy
+  //       setStreakDays(streakCount || 1);
+  //     }
+  //   } catch (e) {
+  //     console.warn('Error al calcular racha:', e);
+  //     setStreakDays(0);
+  //   }
+  // }, [userId]);
 
   const closeTutorialModal = () => {
     try {
@@ -2068,18 +2070,18 @@ const handleErroresClick = () => {
                     style={{ maxHeight: '48px' }}
                   />
                   <h1 className="text-3xl font-bold tracking-tight">
-                    {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¿Listo para practicar?'}
+                    {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, list@ para practicar?` : '¿Listo para practicar?'}
                   </h1>
                 </div>
                 <div className="flex flex-col items-end gap-4">
                   <div className="flex items-center gap-2">
-                    {/* Racha de acceso */}
-                    <StreakCounter streak={streakDays} label="Días de acceso" textColor="#3b82f6" />
+                    {/* Racha de acceso - comentado */}
+                    {/* <StreakCounter streak={streakDays} label="Días de acceso" textColor="#3b82f6" /> */}
                     {/* Días hasta examen */}
                     <StreakCounter streak={timeLeft.days || 0} label="Días hasta EIR" textColor="#ef4444" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <AIAssistant />
+                    {/* <AIAssistant /> */}
                     <Button
                       variant="outline"
                       onClick={handleToggleDarkMode}
@@ -2213,7 +2215,7 @@ const handleErroresClick = () => {
                           <Button 
                             variant="outline" 
                             className="w-full mt-4" 
-                            onClick={handleErroresClick}
+                            onClick={() => setShowAllSubjectsModal(true)}
                           >
                             Ver todas las asignaturas →
                           </Button>
@@ -2244,6 +2246,12 @@ const handleErroresClick = () => {
         <ResourcesModal 
           isOpen={showResourcesModal} 
           onClose={() => setShowResourcesModal(false)}
+          isDarkMode={isDarkMode}
+        />
+        <AllSubjectsModal
+          isOpen={showAllSubjectsModal}
+          onClose={() => setShowAllSubjectsModal(false)}
+          userId={userId}
           isDarkMode={isDarkMode}
         />
         {renderErrorPopup()}
