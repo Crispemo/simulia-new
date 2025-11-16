@@ -14,8 +14,12 @@ import {
   Menu,
   X,
   MessageSquare,
+  FolderOpen,
+  Users,
+  AlertCircle,
 } from 'lucide-react'
-import { API_URL } from '../config'
+import { useAuth } from '../context/AuthContext'
+import TicketModal from './TicketModal'
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: PanelLeft, path: '/dashboard' },
@@ -27,10 +31,13 @@ const menuItems = [
   { id: 'personalizado', label: 'Personalizado', icon: Flame, path: '/examenEleccion' },
 ]
 
-export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick }) {
+export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick, onResourcesClick }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [showTicketModal, setShowTicketModal] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { currentUser } = useAuth()
+  const userId = currentUser?.uid || null
 
   const handleNavigate = (path) => {
     localStorage.removeItem('userAnswers')
@@ -39,8 +46,27 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
     setIsMobileOpen(false)
   }
 
+  const handleResourcesClick = () => {
+    if (onResourcesClick) {
+      onResourcesClick()
+    } else {
+      console.warn('onResourcesClick no está definido en el Sidebar')
+    }
+    setIsMobileOpen(false)
+  }
+
   const handleSettingsClick = () => {
     window.location.href = "https://billing.stripe.com/p/login/28o3fr7yb4GQ5sk288"
+  }
+
+  const handleCommunityClick = () => {
+    window.open('https://t.me/+GqghWP8AchIzOGNk', '_blank', 'noopener,noreferrer')
+    setIsMobileOpen(false)
+  }
+
+  const handleTicketClick = () => {
+    setShowTicketModal(true)
+    setIsMobileOpen(false)
   }
 
   return (
@@ -115,6 +141,36 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
                 {!isCollapsed && <span>Tutorial</span>}
               </button>
             )}
+            <button
+              onClick={handleResourcesClick}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              <FolderOpen className="h-5 w-5" />
+              {!isCollapsed && <span>Recursos</span>}
+            </button>
+            <button
+              onClick={handleCommunityClick}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              <Users className="h-5 w-5" />
+              {!isCollapsed && <span>Comunidad</span>}
+            </button>
+            <button
+              onClick={handleTicketClick}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
+                isCollapsed && 'justify-center'
+              )}
+            >
+              <AlertCircle className="h-5 w-5" />
+              {!isCollapsed && <span>Incidencias</span>}
+            </button>
             <button
               onClick={handleSettingsClick}
               className={cn(
@@ -201,6 +257,27 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
               </button>
             )}
             <button
+              onClick={handleResourcesClick}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
+            >
+              <FolderOpen className="h-5 w-5" />
+              <span>Recursos</span>
+            </button>
+            <button
+              onClick={handleCommunityClick}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
+            >
+              <Users className="h-5 w-5" />
+              <span>Comunidad</span>
+            </button>
+            <button
+              onClick={handleTicketClick}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
+            >
+              <AlertCircle className="h-5 w-5" />
+              <span>Incidencias</span>
+            </button>
+            <button
               onClick={handleSettingsClick}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent"
             >
@@ -210,6 +287,13 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
           </div>
         </div>
       </div>
+
+      {/* Modal de Tickets/Incidencias */}
+      <TicketModal
+        isOpen={showTicketModal}
+        onClose={() => setShowTicketModal(false)}
+        userId={userId}
+      />
     </>
   )
 }

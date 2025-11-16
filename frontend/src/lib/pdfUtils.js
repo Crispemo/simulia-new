@@ -107,7 +107,7 @@ export async function generateExamPdf({
     }
 
     // Dibujar encabezado
-    drawHeader(pdf, { marginX, headerHeight, title, subtitle, logoPath });
+    await drawHeader(pdf, { marginX, headerHeight, title, subtitle, logoPath });
 
     // Dibujar contenido de la página
     const contentWidthPt = A4_WIDTH_PT - marginX * 2;
@@ -617,23 +617,61 @@ function formatDateToSpanish(dateString) {
   }
 }
 
-function drawHeader(pdf, { marginX, headerHeight, title, subtitle, logoPath }) {
+async function drawHeader(pdf, { marginX, headerHeight, title, subtitle, logoPath }) {
   // fondo encabezado
   pdf.setFillColor(248, 249, 251);
   pdf.rect(0, 0, pdf.internal.pageSize.getWidth(), headerHeight, 'F');
-  // logo
-  try {
-    // jsPDF no puede cargar rutas remotas sin convertir; probamos como imageData si está pre-cargado
-    // Para seguridad, simplemente mostramos el título grande si el logo no carga
-  } catch (e) {}
+  
+  // logo en la parte superior izquierda
+  if (logoPath) {
+    try {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      
+      // Asegurar que la URL sea absoluta si es relativa
+      let logoImageUrl = logoPath;
+      if (logoImageUrl.startsWith('/')) {
+        logoImageUrl = window.location.origin + logoImageUrl;
+      } else if (!logoImageUrl.startsWith('http')) {
+        // Si no es una URL absoluta ni relativa, asumir que es relativa
+        logoImageUrl = window.location.origin + '/' + logoImageUrl;
+      }
+      
+      img.src = logoImageUrl;
+      
+      await new Promise((res, rej) => {
+        const timeout = setTimeout(() => {
+          rej(new Error('Timeout cargando logo'));
+        }, 5000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          res();
+        };
+        img.onerror = (err) => {
+          clearTimeout(timeout);
+          rej(err);
+        };
+      });
+      
+      // Añadir logo en la parte superior izquierda (marginX, 20)
+      pdf.addImage(img, "PNG", marginX, 20, 60, 30);
+    } catch (error) {
+      console.warn('Error al cargar logo en encabezado:', error);
+      // Si falla el logo, continuar sin él
+    }
+  }
+  
   pdf.setTextColor(20, 20, 20);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(14);
-  pdf.text(title, marginX, 26);
+  // Ajustar posición del título si hay logo
+  const titleX = logoPath ? marginX + 70 : marginX;
+  pdf.text(title, titleX, 26);
   if (subtitle) {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(11);
-    pdf.text(subtitle, marginX, 44);
+    pdf.text(subtitle, titleX, 44);
   }
 }
 
@@ -737,12 +775,58 @@ export async function generateExamPdfNative({
     const marginX = 20;
     const marginY = 20;
     let y = marginY;
-    // Título
+    
+    // Función helper para dibujar encabezado con logo
+    async function drawHeaderWithLogo() {
+      if (logoUrl) {
+        try {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          
+          // Asegurar que la URL sea absoluta si es relativa
+          let logoImageUrl = logoUrl;
+          if (logoImageUrl.startsWith('/')) {
+            logoImageUrl = window.location.origin + logoImageUrl;
+          } else if (!logoImageUrl.startsWith('http')) {
+            logoImageUrl = window.location.origin + '/' + logoImageUrl;
+          }
+          
+          img.src = logoImageUrl;
+          
+          await new Promise((res, rej) => {
+            const timeout = setTimeout(() => {
+              rej(new Error('Timeout cargando logo'));
+            }, 5000);
+            
+            img.onload = () => {
+              clearTimeout(timeout);
+              res();
+            };
+            img.onerror = (err) => {
+              clearTimeout(timeout);
+              rej(err);
+            };
+          });
+          
+          // Añadir logo en la parte superior izquierda
+          doc.addImage(img, "PNG", marginX, 10, 60, 30);
+          console.log('Logo añadido en página');
+        } catch (error) {
+          console.warn('Error al cargar logo:', error);
+        }
+      }
+    }
+    
+    // Dibujar encabezado en la primera página
+    await drawHeaderWithLogo();
+    
+    // Título (ajustar posición si hay logo)
+    const titleX = logoUrl ? marginX + 70 : marginX;
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(title, marginX, y);
-    console.log('Título añadido en:', marginX, y);
-    y += 10;
+    doc.text(title, titleX, 25);
+    console.log('Título añadido en:', titleX, 25);
+    y = 35;
 
     // Subtítulo
     doc.setFontSize(12);
@@ -759,12 +843,14 @@ export async function generateExamPdfNative({
 
     // Preguntas
     console.log('Iniciando preguntas');
-    questions.forEach((q, i) => {
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
       // Verificar si necesitamos nueva página
       if (y > pageH - 40) {
         console.log('Nueva página en pregunta:', i + 1);
         doc.addPage();
-        y = marginY;
+        await drawHeaderWithLogo();
+        y = marginY + 20;
       }
 
       // Número de pregunta
@@ -798,23 +884,26 @@ export async function generateExamPdfNative({
       });
 
       y += 10; // Espacio entre preguntas
-    });
+    }
 
     // Plantilla de respuestas
     if (showAnswerKey && questions.length > 0) {
       console.log('Añadiendo plantilla de respuestas');
       doc.addPage();
-      y = marginY;
+      await drawHeaderWithLogo();
+      y = marginY + 20;
       
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.text('PLANTILLA DE SOLUCIONES', marginX, y);
+      const titleX = logoUrl ? marginX + 70 : marginX;
+      doc.text('PLANTILLA DE SOLUCIONES', titleX, y);
       y += 20;
       
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       
-      questions.forEach((q, i) => {
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
         const answer = q.answer || q.correct || q.correct_answer;
         const answerText = answer ? String(answer).toUpperCase() : '—';
         doc.text(`${i + 1}. ${answerText}`, marginX, y);
@@ -823,9 +912,10 @@ export async function generateExamPdfNative({
         
         if (y > pageH - 20) {
           doc.addPage();
-          y = marginY;
+          await drawHeaderWithLogo();
+          y = marginY + 20;
         }
-      });
+      }
     }
 
     // Numeración de páginas

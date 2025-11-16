@@ -26,6 +26,7 @@ import ExamHistoryTable from './components/exam-history-table';
 import TopFailedSubjects from './components/top-failed-subjects';
 import StreakCounter from './components/streak-counter';
 import AIAssistant from './components/ai-assistant';
+import ResourcesModal from './components/ResourcesModal';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
@@ -43,6 +44,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showLogout, setShowLogout] = useState(false);
   const [showEleccionPopup, setShowEleccionPopup] = useState(false);
   const [showContrarrelojPopup, setShowContrarrelojPopup] = useState(false);
+  const [showResourcesModal, setShowResourcesModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const examsPerPage = 6;
@@ -2043,6 +2045,7 @@ const handleErroresClick = () => {
           isDarkMode={isDarkMode}
           toggleDarkMode={handleToggleDarkMode}
           onTutorialClick={openTutorialModal}
+          onResourcesClick={() => setShowResourcesModal(true)}
         />
         
         {/* Main Content */}
@@ -2057,7 +2060,13 @@ const handleErroresClick = () => {
             {/* Header con gradient */}
             <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-8 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/Logo_oscuro.png" 
+                    alt="SIMULIA Logo" 
+                    className="h-12 w-auto"
+                    style={{ maxHeight: '48px' }}
+                  />
                   <h1 className="text-3xl font-bold tracking-tight">
                     {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, listo para practicar?` : '¿Listo para practicar?'}
                   </h1>
@@ -2232,6 +2241,11 @@ const handleErroresClick = () => {
         {/* Popups, Overlays, ChatBot, Community */} 
         {showEleccionPopup && <AEleccion onClose={closePopup} />}
         {showContrarrelojPopup && <Contrarreloj onClose={closePopup} />}
+        <ResourcesModal 
+          isOpen={showResourcesModal} 
+          onClose={() => setShowResourcesModal(false)}
+          isDarkMode={isDarkMode}
+        />
         {renderErrorPopup()}
         {renderAvatarPopup()}
         {renderRecurrencePopup()}

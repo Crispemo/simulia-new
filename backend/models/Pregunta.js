@@ -49,3 +49,4 @@ const ExamenProtocolos = mongoose.model('ExamenProtocolos', protocoloSchema, 'ex
 
 module.exports = { ExamenCompleto, ExamenFotos, ExamenProtocolos };
 
+

@@ -57,12 +57,25 @@ const DemoModal = ({ isOpen, onClose }) => {
         });
 
         if (!response.ok) {
-          throw new Error(`Error del servidor: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || errorData.error || `Error del servidor: ${response.status}`;
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
         console.log('Datos recibidos de contrarreloj:', data);
-        console.log('Número de preguntas recibidas:', data.length);
+        console.log('Tipo de datos:', Array.isArray(data) ? 'Array' : typeof data);
+        console.log('Número de preguntas recibidas:', Array.isArray(data) ? data.length : 0);
+        
+        // Validar que la respuesta sea un array
+        if (!Array.isArray(data)) {
+          throw new Error(`La API devolvió un formato inesperado. Se esperaba un array, se recibió: ${typeof data}`);
+        }
+        
+        if (data.length === 0) {
+          throw new Error('No se encontraron preguntas en la base de datos para el modo contrarreloj');
+        }
+        
         questions = data.slice(0, 10); // Tomar solo 10 preguntas
         console.log('Preguntas seleccionadas:', questions.length);
       } else if (mode === 'protocolos') {
@@ -81,12 +94,25 @@ const DemoModal = ({ isOpen, onClose }) => {
         });
 
         if (!response.ok) {
-          throw new Error(`Error del servidor: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.message || errorData.error || `Error del servidor: ${response.status}`;
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
         console.log('Datos recibidos de protocolos:', data);
-        console.log('Número de preguntas recibidas:', data.length);
+        console.log('Tipo de datos:', Array.isArray(data) ? 'Array' : typeof data);
+        console.log('Número de preguntas recibidas:', Array.isArray(data) ? data.length : 0);
+        
+        // Validar que la respuesta sea un array
+        if (!Array.isArray(data)) {
+          throw new Error(`La API devolvió un formato inesperado. Se esperaba un array, se recibió: ${typeof data}`);
+        }
+        
+        if (data.length === 0) {
+          throw new Error('No se encontraron preguntas en la base de datos para el modo protocolos');
+        }
+        
         questions = data.slice(0, 10); // Tomar solo 10 preguntas
         console.log('Preguntas seleccionadas:', questions.length);
       }
@@ -96,6 +122,12 @@ const DemoModal = ({ isOpen, onClose }) => {
         // Validar que la pregunta tenga el formato correcto
         if (!q || typeof q !== 'object') {
           console.warn(`Pregunta inválida en índice ${index}:`, q);
+          return null;
+        }
+
+        // Validar que tenga al menos el campo question
+        if (!q.question || (typeof q.question === 'string' && q.question.trim() === '')) {
+          console.warn(`Pregunta en índice ${index} no tiene texto válido:`, q);
           return null;
         }
 
@@ -111,27 +143,45 @@ const DemoModal = ({ isOpen, onClose }) => {
         // Filtrar opciones válidas
         const validOptions = originalOptions.filter(isValidOption).map(o => String(o).trim());
         
+        // Validar que tenga al menos 2 opciones válidas (mínimo para una pregunta de opción múltiple)
+        if (validOptions.length < 2) {
+          console.warn(`Pregunta en índice ${index} no tiene suficientes opciones válidas (${validOptions.length}):`, {
+            question: q.question,
+            originalOptions: originalOptions,
+            validOptions: validOptions
+          });
+          return null;
+        }
+        
         const correctAnswerIndex = getCorrectAnswerIndex(q.answer || q.correct_answer, originalOptions);
         
-        // Debug: Verificar que la respuesta correcta sea válida
+        // Ajustar el índice de la respuesta correcta si es necesario
+        let adjustedCorrectAnswer = correctAnswerIndex;
         if (correctAnswerIndex >= validOptions.length) {
-          console.warn(`Pregunta ${index + 1}: Respuesta correcta fuera de rango. Original: ${q.answer || q.correct_answer}, Calculado: ${correctAnswerIndex}, Opciones válidas: ${validOptions.length}`);
+          console.warn(`Pregunta ${index + 1}: Respuesta correcta fuera de rango. Original: ${q.answer || q.correct_answer}, Calculado: ${correctAnswerIndex}, Opciones válidas: ${validOptions.length}. Ajustando a 0.`);
+          adjustedCorrectAnswer = 0;
         }
         
         return {
           id: q._id || index + 1,
           question: q.question || '',
           options: validOptions,
-          correctAnswer: correctAnswerIndex,
+          correctAnswer: adjustedCorrectAnswer,
           explanation: q.long_answer || 'Explicación no disponible',
           subject: q.subject || 'General',
           image: q.image || null
         };
-      }).filter(q => q !== null); // Filtrar preguntas nulas
+      }).filter(q => q !== null && q.options && q.options.length >= 2); // Filtrar preguntas nulas o con menos de 2 opciones
 
       // Validar que tenemos suficientes preguntas
       if (processedQuestions.length < 5) {
-        throw new Error(`Solo se obtuvieron ${processedQuestions.length} preguntas válidas. Se necesitan al menos 5.`);
+        const totalReceived = questions.length;
+        const totalValid = processedQuestions.length;
+        throw new Error(
+          `Solo se obtuvieron ${totalValid} preguntas válidas de ${totalReceived} recibidas. ` +
+          `Se necesitan al menos 5 preguntas válidas. ` +
+          `Esto puede deberse a que las preguntas no tienen el formato correcto o todas sus opciones son inválidas.`
+        );
       }
 
       setQuestions(processedQuestions);

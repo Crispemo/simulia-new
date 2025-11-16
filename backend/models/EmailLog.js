@@ -36,3 +36,4 @@ emailLogSchema.index({ createdAt: 1 });
 
 module.exports = mongoose.model('EmailLog', emailLogSchema);
 
+

@@ -25,6 +25,7 @@ const EventLog = require('./models/EventLog');
 const EmailLog = require('./models/EmailLog');
 const path = require('path');
 const disputeRoutes = require('./routes/disputeRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
 const axios = require('axios');
 const OpenAI = require('openai');
@@ -39,7 +40,7 @@ const openai = process.env.OPENAI_API_KEY ? new OpenAI({
 const FRONTEND_URL = process.env.NODE_ENV === 'production' 
   ? 'https://www.simulia.es' 
   : (process.env.FRONTEND_URL || 'http://localhost:3000');
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5001';
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Función para enviar webhook a n8n con verificación de duplicados
@@ -200,6 +201,8 @@ app.options('*', cors());
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
+// Registrar las rutas de tickets/incidencias
+app.use(ticketRoutes);
 // Rutas de práctica y preferencias
 app.use(practiceRoutes);
 
@@ -222,23 +225,39 @@ app.post('/ai-assistant/chat', async (req, res) => {
     }
 
     // Preparar el historial de mensajes para ChatGPT
-    const systemPrompt = `Eres un asistente virtual experto en ayudar a estudiantes de enfermería a prepararse para el Examen de Enfermero Interno Residente (EIR) en la plataforma Simulia.
+    let systemPrompt = `Eres un ASISTENTE GUÍA EXPERTO especializado en ayudar a estudiantes de enfermería a prepararse para el Examen de Enfermero Interno Residente (EIR) en la plataforma Simulia.
 
-Tu función es:
-- Responder preguntas sobre el examen EIR, asignaturas, técnicas de estudio y preparación
-- Ayudar a los estudiantes a entender cómo usar la plataforma Simulia
-- Proporcionar consejos de estudio efectivos y motivación
-- Explicar conceptos de enfermería de manera clara y concisa
-- Ayudar con estrategias para mejorar el rendimiento en los exámenes
+Tu rol es ser un GUÍA PROACTIVO que:
+1. ANALIZA los datos del estudiante para entender su situación real
+2. IDENTIFICA áreas de mejora basándose en métricas concretas
+3. PROPORCIONA recomendaciones específicas y accionables
+4. SUGIERE planes de estudio personalizados según el rendimiento
+5. MOTIVA pero también es honesto sobre las áreas que necesitan trabajo
 
-Mantén tus respuestas:
-- Concisas pero completas (máximo 200 palabras por respuesta)
-- Empatéticas y motivadoras
-- En español
-- Específicas y prácticas
-- Orientadas a ayudar al estudiante a alcanzar sus objetivos
+ESTRUCTURA DE TUS RESPUESTAS:
+- 📊 Análisis: Resume brevemente la situación del estudiante
+- 🎯 Recomendación: Propón acciones concretas y específicas
+- 📝 Plan de acción: Indica pasos claros y realizables
+- 💡 Consejo práctico: Añade un tip útil relacionado
 
-NO inventes información que no tengas certeza. Si no sabes algo, admítelo y sugiere consultar fuentes oficiales.`;
+FORMATO:
+- Usa emojis para hacer la información más visual (📊 📈 ⚠️ ✅ 💡 🎯)
+- Estructura con párrafos cortos y listas cuando sea apropiado
+- Sé específico: menciona números, porcentajes, asignaturas concretas
+- Mantén un tono profesional pero cercano y motivador
+- Máximo 250 palabras por respuesta
+
+IMPORTANTE:
+- SIEMPRE analiza los datos del usuario si están disponibles
+- No des respuestas genéricas cuando tengas datos específicos
+- Si el usuario pregunta sobre una asignatura, usa los datos de esa asignatura
+- Sé proactivo: anticipa necesidades y sugiere mejoras
+- NO inventes información que no tengas certeza`;
+
+    // Si hay contexto adicional del usuario en el mensaje, agregarlo al system prompt
+    if (req.body.userContext) {
+      systemPrompt += `\n\n${req.body.userContext}`;
+    }
 
     let conversationMessages = [
       { role: 'system', content: systemPrompt }
@@ -670,13 +689,30 @@ app.get('/webhook/test', async (req, res) => {
   }
 });
 
+// Ruta de prueba para verificar que el servidor está funcionando
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Servidor funcionando correctamente',
+    timestamp: new Date().toISOString(),
+    port: process.env.PORT || 5001,
+    mongoConnected: mongoose.connection.readyState === 1
+  });
+});
+
 // Question Routes
 app.post('/random-questions', async (req, res) => {
+  console.log('🔵 RUTA /random-questions LLAMADA');
+  console.log('🔵 Método:', req.method);
+  console.log('🔵 URL:', req.url);
+  console.log('🔵 Body recibido:', JSON.stringify(req.body, null, 2));
+  
   try {
-    const { numPreguntas, asignaturas, examType } = req.body;
+    const { numPreguntas, asignaturas, examType, count } = req.body;
     console.log(`=== SOLICITUD EXAMEN ===`);
     console.log(`Tipo de examen: ${examType}`);
-    console.log(`Número de preguntas solicitadas: ${numPreguntas}`);
+    console.log(`Número de preguntas solicitadas (numPreguntas): ${numPreguntas}`);
+    console.log(`Número de preguntas solicitadas (count): ${count}`);
     console.log(`Asignaturas seleccionadas: ${asignaturas?.join(', ')}`);
 
     // Si el tipo de examen es protocolos, obtener preguntas de la colección examen_protocolos
@@ -684,12 +720,66 @@ app.post('/random-questions', async (req, res) => {
       console.log("Obteniendo preguntas de protocolos...");
       
       try {
+        // Verificar conexión a MongoDB
+        if (!mongoose.connection.readyState) {
+          console.error('❌ MongoDB no está conectado');
+          return res.status(500).json({ 
+            error: 'Error de conexión a la base de datos',
+            message: 'MongoDB no está conectado. Estado: ' + mongoose.connection.readyState
+          });
+        }
+        
+        console.log('✅ MongoDB conectado. Estado:', mongoose.connection.readyState);
+        console.log('✅ Base de datos:', mongoose.connection.db?.databaseName);
+        
+        // Verificar que la colección existe
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        const collectionNames = collections.map(c => c.name);
+        console.log('📋 Colecciones disponibles:', collectionNames);
+        
+        if (!collectionNames.includes('examen_protocolos')) {
+          console.warn('⚠️ La colección examen_protocolos no existe');
+          return res.status(404).json({ 
+            error: 'Colección no encontrada',
+            message: 'La colección examen_protocolos no existe en la base de datos',
+            availableCollections: collectionNames
+          });
+        }
+        
+        // Aceptar tanto 'count' como 'numPreguntas' para compatibilidad
+        const requestedCount = parseInt(req.body.count || numPreguntas || 30);
+        console.log(`Solicitando ${requestedCount} preguntas de protocolos`);
+        
+        // Contar documentos en la colección
+        const totalCount = await mongoose.connection.db
+          .collection('examen_protocolos')
+          .countDocuments();
+        console.log(`📊 Total de documentos en examen_protocolos: ${totalCount}`);
+        
+        if (totalCount === 0) {
+          console.warn('⚠️ La colección examen_protocolos está vacía');
+          return res.status(404).json({ 
+            error: 'Colección vacía',
+            message: 'La colección examen_protocolos existe pero está vacía',
+            totalDocuments: 0
+          });
+        }
+        
         const preguntasProtocolos = await mongoose.connection.db
           .collection('examen_protocolos')
-          .aggregate([{ $sample: { size: parseInt(numPreguntas) || 30 } }])
+          .aggregate([{ $sample: { size: Math.min(requestedCount, totalCount) } }])
           .toArray();
         
         console.log(`Encontradas ${preguntasProtocolos.length} preguntas de protocolo`);
+        
+        if (preguntasProtocolos.length === 0) {
+          console.warn('⚠️ No se pudieron obtener preguntas de la colección examen_protocolos');
+          return res.status(404).json({ 
+            error: 'No se encontraron preguntas de protocolos en la base de datos',
+            message: 'La colección examen_protocolos está vacía o no existe',
+            totalDocuments: totalCount
+          });
+        }
         
         const processedQuestions = preguntasProtocolos.map(q => ({
           _id: q._id,
@@ -698,15 +788,21 @@ app.post('/random-questions', async (req, res) => {
           option_2: q.option_2 || '',
           option_3: q.option_3 || '',
           option_4: q.option_4 || '',
-          options: [q.option_1, q.option_2, q.option_3, q.option_4].filter(Boolean),
+          option_5: q.option_5 || '', // Incluir option_5 si existe
           answer: q.answer || '',
-          long_answer: q.long_answer || '' // Incluir long_answer si existe
+          subject: q.subject || 'General',
+          long_answer: q.long_answer || '', // Incluir long_answer si existe
+          image: q.image || null
         }));
         
+        console.log(`Enviando ${processedQuestions.length} preguntas de protocolos procesadas`);
         return res.json(processedQuestions);
       } catch (error) {
         console.error('Error al obtener preguntas de protocolos:', error);
-        return res.status(500).json({ error: 'Error al obtener preguntas de protocolos' });
+        return res.status(500).json({ 
+          error: 'Error al obtener preguntas de protocolos',
+          message: error.message 
+        });
       }
     }
 
@@ -3759,6 +3855,111 @@ app.post('/update-unanswered-questions', async (req, res) => {
   }
 });
 
+// Ruta para obtener estadísticas completas del usuario (para el chatbot)
+app.get('/user-stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Verificar que el usuario existe
+    const user = await User.findOne({ userId });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    console.log(`Obteniendo estadísticas completas para usuario: ${userId}`);
+    
+    // Obtener todos los exámenes completados
+    const completedExams = await ExamenResultado.find({ 
+      userId, 
+      status: 'completed' 
+    }).sort({ date: -1 });
+    
+    // Calcular estadísticas generales
+    const totalExams = completedExams.length;
+    const totalQuestions = completedExams.reduce((sum, exam) => sum + (exam.totalQuestions || 0), 0);
+    const totalCorrect = completedExams.reduce((sum, exam) => sum + (exam.correct || 0), 0);
+    const totalIncorrect = completedExams.reduce((sum, exam) => sum + (exam.incorrect || 0), 0);
+    const averageScore = totalExams > 0 
+      ? completedExams.reduce((sum, exam) => sum + (exam.score || 0), 0) / totalExams 
+      : 0;
+    
+    // Calcular errores por asignatura
+    const errorsBySubject = {};
+    completedExams.forEach(exam => {
+      if (exam.userAnswers && Array.isArray(exam.userAnswers)) {
+        exam.userAnswers.forEach((userAnswer) => {
+          const subject = userAnswer.questionData?.subject || 'General';
+          if (subject && subject !== 'undefined' && subject !== 'test' && subject !== 'Test' && subject !== 'ERROR' && subject !== 'Error' && subject !== 'null') {
+            const isCorrect = userAnswer.isCorrect === true;
+            const hasAnswered = userAnswer.selectedAnswer !== undefined && userAnswer.selectedAnswer !== null && userAnswer.selectedAnswer !== '';
+            
+            if (hasAnswered && !isCorrect) {
+              if (!errorsBySubject[subject]) {
+                errorsBySubject[subject] = { errors: 0, total: 0 };
+              }
+              errorsBySubject[subject].errors++;
+            }
+            
+            // Contar total de preguntas por asignatura
+            if (!errorsBySubject[subject]) {
+              errorsBySubject[subject] = { errors: 0, total: 0 };
+            }
+            errorsBySubject[subject].total++;
+          }
+        });
+      }
+    });
+    
+    // Convertir a array y calcular porcentajes
+    const subjectStats = Object.entries(errorsBySubject)
+      .map(([subject, data]) => ({
+        subject,
+        errors: data.errors,
+        total: data.total,
+        errorRate: data.total > 0 ? ((data.errors / data.total) * 100).toFixed(1) : 0,
+        successRate: data.total > 0 ? (((data.total - data.errors) / data.total) * 100).toFixed(1) : 0
+      }))
+      .sort((a, b) => b.errors - a.errors); // Ordenar por cantidad de errores
+    
+    // Obtener las asignaturas con más errores (top 3)
+    const worstSubjects = subjectStats.slice(0, 3);
+    
+    // Obtener estadísticas de preguntas falladas
+    const failedQuestionsCount = user.failedQuestions?.length || 0;
+    
+    // Obtener estadísticas de preguntas sin contestar
+    const unansweredCount = await UnansweredQuestion.countDocuments({ userId });
+    
+    // Estructurar respuesta
+    const stats = {
+      general: {
+        totalExams,
+        totalQuestions,
+        totalCorrect,
+        totalIncorrect,
+        averageScore: averageScore.toFixed(2),
+        successRate: totalQuestions > 0 ? (((totalCorrect / totalQuestions) * 100).toFixed(1)) : 0
+      },
+      bySubject: subjectStats,
+      worstSubjects: worstSubjects.map(s => ({
+        subject: s.subject,
+        errors: s.errors,
+        errorRate: s.errorRate
+      })),
+      failedQuestions: failedQuestionsCount,
+      unansweredQuestions: unansweredCount,
+      lastExamDate: completedExams.length > 0 ? completedExams[0].date : null
+    };
+    
+    res.json(stats);
+    
+  } catch (error) {
+    console.error('Error al obtener estadísticas del usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
 // Ruta para obtener estadísticas de preguntas sin contestar
 app.get('/unanswered-stats/:userId', async (req, res) => {
   try {
@@ -3987,7 +4188,7 @@ app.post('/admin/migrate-unanswered-questions', async (req, res) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Función para encontrar un puerto disponible
 const findAvailablePort = async (startPort) => {

@@ -281,7 +281,7 @@ function HomePage() {
           className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center gap-2"
             aria-label="Comenzar simulacro"
           >
-          Haz tu simulacro EIR
+          Entrar en Simulia
           <span>→</span>
           </button>
       );
@@ -452,15 +452,11 @@ function HomePage() {
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-secondary">
             <div className="flex items-center gap-2">
               <span className="text-lg">✓</span>
-              <span>+5,000 estudiantes preparándose</span>
+              <span>Creado por y para enfermeras que preparan el EIR</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg">✓</span>
-              <span>5,000+ preguntas actualizadas</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">✓</span>
-              <span>7 días gratis</span>
+              <span>Basado en exámenes oficiales del EIR y fuentes fiables</span>
             </div>
           </div>
         </div>
@@ -499,25 +495,32 @@ function HomePage() {
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button
-                className="flex-1 sm:flex-initial bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle max-w-md w-full"
-                onClick={() => {
-                  const pricingSection = document.querySelector('#planes');
-                  pricingSection?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                aria-label="Comenzar prueba gratuita"
-              >
-                Haz tu primer simulacro gratis
-                <span className="text-xl">→</span>
-              </button>
-              <button
-                onClick={() => setShowDemoModal(true)}
-                className="flex-1 sm:flex-initial border-2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all text-base max-w-md w-full"
-                aria-label="Ver demo"
-              >
-                Ver cómo funciona
-              </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
+              <div className="flex-1 sm:flex-initial max-w-md w-full">
+                <button
+                  className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle"
+                  onClick={() => {
+                    const pricingSection = document.querySelector('#planes');
+                    pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  aria-label="Comenzar prueba gratuita"
+                >
+                  Haz tu primer simulacro gratis
+                  <span className="text-xl">→</span>
+                </button>
+              </div>
+              <div className="flex-1 sm:flex-initial max-w-md w-full flex flex-col items-center gap-2">
+                <button
+                  onClick={() => setShowDemoModal(true)}
+                  className="w-full border-2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all text-base"
+                  aria-label="Ver Simulia en acción"
+                >
+                  Ver Simulia en acción
+                </button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Haz un mini simulacro de prueba antes de registrarte
+                </p>
+              </div>
             </div>
         </div>
       </section>
@@ -525,19 +528,19 @@ function HomePage() {
         <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">5,000+</div>
-              <div className="text-base text-foreground font-medium">Estudiantes activos</div>
-              <div className="text-sm text-muted-foreground">Preparándose ahora mismo</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">+7.000</div>
+              <div className="text-base text-foreground font-medium">preguntas EIR</div>
+              <div className="text-sm text-muted-foreground">Clasificadas por asignaturas y años de examen.</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">5,000+</div>
-              <div className="text-base text-foreground font-medium">Preguntas actualizadas</div>
-              <div className="text-sm text-muted-foreground">Nuevas cada semana</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">6</div>
+              <div className="text-base text-foreground font-medium">modos de práctica</div>
+              <div className="text-sm text-muted-foreground">Oficial, errores, contrarreloj, quiz, personalizado y protocolos.</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">95%</div>
-              <div className="text-base text-foreground font-medium">Tasa de satisfacción</div>
-              <div className="text-sm text-muted-foreground">Según nuestros usuarios</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">∞</div>
+              <div className="text-base text-foreground font-medium">repeticiones de tus fallos</div>
+              <div className="text-sm text-muted-foreground">Practica tus errores sin límite gracias al banco de errores.</div>
             </div>
           </div>
         </div>

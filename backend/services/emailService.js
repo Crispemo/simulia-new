@@ -316,4 +316,180 @@ const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId)
   }
 };
 
-module.exports = { sendSubscriptionEmail, sendDisputeEmail };
+// Función para enviar tickets/incidencias
+const sendTicketEmail = async (subject, description, userEmail, userId) => {
+  if (!description) {
+    console.error('❌ ERROR: Faltan datos para enviar el ticket (descripción).');
+    console.log('═══════════════════════════════════════════════════════');
+    return false;
+  }
+
+  const emailSubject = `Ticket/Incidencia: ${subject || 'Sin asunto'}`;
+  const message = `
+    Se ha recibido un nuevo ticket/incidencia:
+    
+    Usuario: ${userId || 'No disponible'}
+    Email: ${userEmail || 'No disponible'}
+    
+    Asunto: ${subject || 'Sin asunto'}
+    
+    Descripción: ${description}
+    
+    Fecha: ${new Date().toLocaleString()}
+  `;
+
+  console.log('🔧 TICKET EMAIL DEBUG - Iniciando envío de ticket');
+  console.log('🔧 TICKET EMAIL DEBUG - Subject:', emailSubject);
+  console.log('🔧 TICKET EMAIL DEBUG - UserId:', userId);
+  console.log('🔧 TICKET EMAIL DEBUG - UserEmail:', userEmail);
+  console.log('🔧 TICKET EMAIL DEBUG - Transporter disponible:', !!transporter);
+  console.log('🔧 TICKET EMAIL DEBUG - EMAIL configurado:', !!process.env.EMAIL);
+  console.log('🔧 TICKET EMAIL DEBUG - EMAIL_PASSWORD configurado:', !!process.env.EMAIL_PASSWORD);
+
+  // Si no hay transporter configurado, solo loguear el ticket
+  if (!transporter) {
+    console.log('=== TICKET SIMULADO (Sin configuración de email) ===');
+    console.log(`Para: simuliaproject@simulia.es`);
+    console.log(`Asunto: ${emailSubject}`);
+    console.log(`Mensaje: ${message}`);
+    console.log('================================================');
+    return true; // Simular éxito para que el frontend no muestre error
+  }
+
+  // Función para reintentar el envío de email de ticket
+  const sendTicketWithRetry = async (mailOptions, maxRetries = 2) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      console.log('─────────────────────────────────────────────────────');
+      console.log(`🔄 INTENTO ${attempt}/${maxRetries} - Enviando email de ticket`);
+      console.log('─────────────────────────────────────────────────────');
+      
+      try {
+        console.log('🔧 Creando nuevo transporter...');
+        console.log('📋 Configuración SMTP:');
+        console.log('  - Host: smtp.gmail.com');
+        console.log('  - Port: 587');
+        console.log('  - Secure: false');
+        console.log('  - Auth User:', process.env.EMAIL ? `${process.env.EMAIL.substring(0, 3)}***` : 'NO CONFIGURADO');
+        console.log('  - Connection Timeout: 10000ms');
+        console.log('  - Greeting Timeout: 5000ms');
+        console.log('  - Socket Timeout: 10000ms');
+        console.log('  - TLS Min Version: TLSv1.2');
+        
+        // Crear un nuevo transporter para cada intento para evitar problemas de conexión
+        const freshTransporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD,
+          },
+          connectionTimeout: 10000, // 10 segundos (aumentado)
+          greetingTimeout: 5000,    // 5 segundos (aumentado)
+          socketTimeout: 10000,     // 10 segundos (aumentado)
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          },
+          debug: true, // Habilitar debug de nodemailer
+          logger: true, // Habilitar logger de nodemailer
+          pool: false,
+          direct: false
+        });
+        
+        console.log('✅ Transporter creado exitosamente');
+        console.log('📤 Opciones del email:');
+        console.log('  - From:', mailOptions.from);
+        console.log('  - To:', mailOptions.to);
+        console.log('  - Subject:', mailOptions.subject);
+        console.log('  - Text length:', mailOptions.text ? mailOptions.text.length : 0);
+        
+        console.log('📡 Iniciando envío de email...');
+        const startTime = Date.now();
+        
+        const info = await freshTransporter.sendMail(mailOptions);
+        
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
+        console.log('✅✅✅ ÉXITO: Correo de ticket enviado');
+        console.log('📊 Información del envío:');
+        console.log('  - MessageId:', info.messageId);
+        console.log('  - Response:', info.response);
+        console.log('  - Accepted:', info.accepted);
+        console.log('  - Rejected:', info.rejected);
+        console.log('  - Duración:', duration, 'ms');
+        console.log(`  - Intento: ${attempt}/${maxRetries}`);
+        console.log('═══════════════════════════════════════════════════════');
+        return true;
+      } catch (error) {
+        const errorTime = Date.now();
+        console.error('❌❌❌ ERROR al enviar correo de ticket');
+        console.error('🔍 DETALLES COMPLETOS DEL ERROR:');
+        console.error('  - Intento:', `${attempt}/${maxRetries}`);
+        console.error('  - Error Name:', error.name);
+        console.error('  - Error Message:', error.message);
+        console.error('  - Error Code:', error.code);
+        console.error('  - Error Command:', error.command);
+        console.error('  - Response Code:', error.responseCode);
+        console.error('  - Response:', error.response);
+        console.error('  - Timestamp:', new Date(errorTime).toISOString());
+        
+        // Log del stack trace completo
+        if (error.stack) {
+          console.error('📚 Stack Trace:');
+          console.error(error.stack);
+        }
+        
+        // Log de propiedades adicionales del error
+        console.error('🔍 Propiedades del error:');
+        console.error('  - All Properties:', Object.keys(error));
+        for (const key in error) {
+          if (error.hasOwnProperty(key) && !['stack', 'name', 'message'].includes(key)) {
+            console.error(`  - ${key}:`, error[key]);
+          }
+        }
+        
+        // Si es el último intento, devolver false
+        if (attempt === maxRetries) {
+          console.error('💥💥💥 FALLO FINAL: Agotados todos los intentos');
+          console.error(`  - Total de intentos: ${maxRetries}`);
+          console.error('  - Último error:', error.message);
+          console.log('═══════════════════════════════════════════════════════');
+          return false;
+        }
+        
+        // Esperar antes del siguiente intento
+        const delay = 1000; // 1 segundo
+        console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    return false;
+  };
+
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: 'simuliaproject@simulia.es', // Se envía al correo de soporte
+      subject: emailSubject,
+      text: message,
+    };
+    
+    console.log('🚀 Iniciando proceso de envío de ticket con reintentos...');
+    const result = await sendTicketWithRetry(mailOptions);
+    console.log('🏁 Proceso finalizado. Resultado:', result ? 'ÉXITO' : 'FALLO');
+    console.log('═══════════════════════════════════════════════════════');
+    return result;
+  } catch (error) {
+    console.error('💥 ERROR CRÍTICO al enviar correo de ticket');
+    console.error('🔍 Detalles del error crítico:');
+    console.error('  - Name:', error.name);
+    console.error('  - Message:', error.message);
+    console.error('  - Stack:', error.stack);
+    console.log('═══════════════════════════════════════════════════════');
+    return false;
+  }
+};
+
+module.exports = { sendSubscriptionEmail, sendDisputeEmail, sendTicketEmail };
