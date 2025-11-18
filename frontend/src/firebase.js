@@ -74,12 +74,42 @@ const waitForUser = (timeoutMs = 20000) =>
   });
 
 export const getRedirectResultAuth = async () => {
-  const res = await getRedirectResult(auth);
-  if (res?.user) {
-    return { uid: res.user.uid, email: res.user.email, displayName: res.user.displayName };
+  try {
+    console.log("🔍 getRedirectResultAuth: Iniciando recuperación de resultado de redirección...");
+    
+    // Primero intentar obtener el resultado directo de la redirección
+    const res = await getRedirectResult(auth);
+    if (res?.user) {
+      console.log("✅ getRedirectResultAuth: Usuario obtenido directamente del resultado de redirección:", res.user.uid);
+      return { uid: res.user.uid, email: res.user.email, displayName: res.user.displayName };
+    }
+    
+    console.log("ℹ️ getRedirectResultAuth: No hay resultado directo, esperando hidratación de Firebase...");
+    
+    // Si no hay resultado directo, esperar a que Firebase se hidrate
+    const u = await waitForUser(20000);
+    if (u) {
+      console.log("✅ getRedirectResultAuth: Usuario obtenido después de esperar hidratación:", u.uid);
+      return { uid: u.uid, email: u.email, displayName: u.displayName };
+    }
+    
+    console.log("⚠️ getRedirectResultAuth: No se pudo obtener usuario después de 20 segundos");
+    return null;
+  } catch (error) {
+    console.error("❌ getRedirectResultAuth: Error al obtener resultado de redirección:", error);
+    
+    // Como último recurso, verificar si hay un usuario actual
+    if (auth.currentUser) {
+      console.log("🔄 getRedirectResultAuth: Usando usuario actual como respaldo:", auth.currentUser.uid);
+      return { 
+        uid: auth.currentUser.uid, 
+        email: auth.currentUser.email, 
+        displayName: auth.currentUser.displayName 
+      };
+    }
+    
+    return null;
   }
-  const u = await waitForUser(20000);
-  return u ? { uid: u.uid, email: u.email, displayName: u.displayName } : null;
 };
 
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

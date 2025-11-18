@@ -19,39 +19,103 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
+  const [debugInfo, setDebugInfo] = useState({
+    redirectAttempted: false,
+    redirectSuccess: false,
+    onAuthStateChangedCalled: false,
+    lastError: null
+  });
 
   useEffect(() => {
     let unsub = () => {};
+    let redirectHandled = false;
+    
     (async () => {
       // Si venimos de un redirect reciente, intenta recuperar el usuario
       const redirectStart = localStorage.getItem('firebase_redirect_start');
-      if (redirectStart && Date.now() - parseInt(redirectStart) < 120000) {
+      if (redirectStart && Date.now() - parseInt(redirectStart) < 300000) { // Extendido a 5 minutos
         console.log("🔄 AuthContext: Redirección reciente detectada, recuperando usuario...");
-        const res = await getRedirectResultAuth(); // espera hasta 20 s
-        if (res) {
-          console.log("✅ AuthContext: Usuario recuperado por redirección:", res.uid);
-          setCurrentUser(res);
-          localStorage.removeItem('firebase_redirect_start');
-        } else {
-          console.log("⚠️ AuthContext: No se pudo recuperar usuario por redirección");
+        setDebugInfo(prev => ({ ...prev, redirectAttempted: true }));
+        
+        try {
+          const res = await getRedirectResultAuth(); // espera hasta 20 s
+          if (res) {
+            console.log("✅ AuthContext: Usuario recuperado por redirección:", res.uid);
+            setCurrentUser(res);
+            localStorage.removeItem('firebase_redirect_start');
+            redirectHandled = true;
+            setDebugInfo(prev => ({ ...prev, redirectSuccess: true }));
+            
+            // Procesar el usuario autenticado
+            await processAuthenticatedUser(res);
+            setLoading(false);
+            return; // Salir temprano si se recuperó por redirección
+          } else {
+            console.log("⚠️ AuthContext: No se pudo recuperar usuario por redirección, esperando onAuthStateChanged...");
+            setDebugInfo(prev => ({ ...prev, redirectSuccess: false }));
+          }
+        } catch (error) {
+          console.error("❌ AuthContext: Error al recuperar usuario por redirección:", error);
+          setDebugInfo(prev => ({ ...prev, redirectSuccess: false, lastError: error.message }));
         }
       }
+      
       // Suscripción única a cambios de estado
       unsub = auth.onAuthStateChanged(async (user) => {
+        setDebugInfo(prev => ({ ...prev, onAuthStateChangedCalled: true }));
+        
+        // Si ya manejamos la redirección exitosamente, ignorar este callback inicial
+        if (redirectHandled && !user) {
+          console.log("ℹ️ AuthContext: Ignorando onAuthStateChanged null después de redirección exitosa");
+          return;
+        }
+        
         if (user) {
           console.log("✅ AuthContext: onAuthStateChanged detectó usuario:", user.uid);
           setCurrentUser({ uid: user.uid, email: user.email, displayName: user.displayName });
           localStorage.removeItem('firebase_redirect_start');
           
-          // Procesar el usuario autenticado
-          await processAuthenticatedUser({ uid: user.uid, email: user.email, displayName: user.displayName });
+          // Procesar el usuario autenticado solo si no se procesó ya por redirección
+          if (!redirectHandled) {
+            await processAuthenticatedUser({ uid: user.uid, email: user.email, displayName: user.displayName });
+          }
         } else {
           console.log("ℹ️ AuthContext: onAuthStateChanged devolvió null");
+          
+          // En móviles, dar una segunda oportunidad si hay indicios de redirección reciente
+          const redirectStart = localStorage.getItem('firebase_redirect_start');
+          if (redirectStart && Date.now() - parseInt(redirectStart) < 300000) {
+            console.log("🔄 AuthContext: Segunda oportunidad para redirección móvil...");
+            
+            // Esperar un poco más para que Firebase se hidrate
+            setTimeout(async () => {
+              if (auth.currentUser && !currentUser) {
+                console.log("✅ AuthContext: Usuario encontrado en segunda oportunidad:", auth.currentUser.uid);
+                const userData = {
+                  uid: auth.currentUser.uid,
+                  email: auth.currentUser.email,
+                  displayName: auth.currentUser.displayName
+                };
+                setCurrentUser(userData);
+                localStorage.removeItem('firebase_redirect_start');
+                await processAuthenticatedUser(userData);
+              }
+            }, 2000); // Esperar 2 segundos adicionales
+          }
+          
           setCurrentUser(null);
         }
-        setLoading(false);
+        
+        // Solo establecer loading como false si no estamos esperando una segunda oportunidad
+        if (!redirectStart || Date.now() - parseInt(redirectStart) >= 300000) {
+          setLoading(false);
+        } else {
+          // Si estamos esperando, dar tiempo adicional antes de quitar el loading
+          setTimeout(() => setLoading(false), 3000);
+        }
       });
     })();
+    
     return () => { try { unsub(); } catch {} };
   }, []);
 
@@ -146,13 +210,63 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Función de recuperación manual para casos extremos
+  const forceAuthRecovery = async () => {
+    try {
+      console.log("🔄 AuthContext: Iniciando recuperación manual de autenticación...");
+      setDebugInfo(prev => ({ ...prev, lastError: null }));
+      
+      // Verificar si Firebase tiene un usuario actual
+      if (auth.currentUser) {
+        console.log("✅ AuthContext: Usuario encontrado en Firebase durante recuperación manual:", auth.currentUser.uid);
+        const userData = {
+          uid: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          displayName: auth.currentUser.displayName
+        };
+        setCurrentUser(userData);
+        localStorage.removeItem('firebase_redirect_start');
+        await processAuthenticatedUser(userData);
+        setLoading(false);
+        return true;
+      }
+      
+      // Si hay indicios de redirección reciente, intentar recuperar
+      const redirectStart = localStorage.getItem('firebase_redirect_start');
+      if (redirectStart) {
+        console.log("🔄 AuthContext: Intentando recuperación por redirección durante recuperación manual...");
+        const res = await getRedirectResultAuth();
+        if (res) {
+          console.log("✅ AuthContext: Usuario recuperado durante recuperación manual:", res.uid);
+          setCurrentUser(res);
+          localStorage.removeItem('firebase_redirect_start');
+          await processAuthenticatedUser(res);
+          setLoading(false);
+          return true;
+        }
+      }
+      
+      console.log("⚠️ AuthContext: No se pudo recuperar usuario durante recuperación manual");
+      setLoading(false);
+      return false;
+    } catch (error) {
+      console.error("❌ AuthContext: Error durante recuperación manual:", error);
+      setDebugInfo(prev => ({ ...prev, lastError: error.message }));
+      setLoading(false);
+      return false;
+    }
+  };
+
   const value = {
     currentUser,
     login,
     logout,
     checkSubscription,
     isCheckingSubscription,
-    authError
+    authError,
+    forceAuthRecovery,
+    debugInfo,
+    loading
   };
 
   return (
