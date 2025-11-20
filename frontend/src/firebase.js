@@ -44,23 +44,35 @@ if (process.env.NODE_ENV !== "production") {
   }
 }
 
+// Inicializar Firebase
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Persistencia VÁLIDA para redirect (iOS primero)
+// Persistencia para redirect (iOS primero)
 (async () => {
   try { 
-    await setPersistence(auth, indexedDBLocalPersistence); 
-    console.log("✅ Firebase: Persistencia configurada a indexedDB");
+    await setPersistence(auth, indexedDBLocalPersistence);
   }
   catch { 
-    await setPersistence(auth, browserLocalPersistence); 
-    console.log("✅ Firebase: Persistencia configurada a localStorage");
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+    } catch (error) {
+      console.error("Error configurando persistencia:", error);
+    }
   }
 })();
 
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
+// Configuración optimizada para mobile
+provider.setCustomParameters({ 
+  prompt: "select_account",
+  // Forzar uso de redirect en mobile para evitar problemas de popup
+  display: "popup"
+});
+
+// Configuración adicional para mobile
+provider.addScope('email');
+provider.addScope('profile');
 
 // Espera robusta de hidratación (hasta 20 s)
 const waitForUser = (timeoutMs = 20000) =>
@@ -75,59 +87,108 @@ const waitForUser = (timeoutMs = 20000) =>
 
 export const getRedirectResultAuth = async () => {
   try {
-    console.log("🔍 getRedirectResultAuth: Iniciando recuperación de resultado de redirección...");
-    
-    // Primero intentar obtener el resultado directo de la redirección
     const res = await getRedirectResult(auth);
     if (res?.user) {
-      console.log("✅ getRedirectResultAuth: Usuario obtenido directamente del resultado de redirección:", res.user.uid);
       return { uid: res.user.uid, email: res.user.email, displayName: res.user.displayName };
     }
     
-    console.log("ℹ️ getRedirectResultAuth: No hay resultado directo, esperando hidratación de Firebase...");
-    
-    // Si no hay resultado directo, esperar a que Firebase se hidrate
-    const u = await waitForUser(20000);
+    const u = await waitForUser(10000);
     if (u) {
-      console.log("✅ getRedirectResultAuth: Usuario obtenido después de esperar hidratación:", u.uid);
       return { uid: u.uid, email: u.email, displayName: u.displayName };
     }
     
-    console.log("⚠️ getRedirectResultAuth: No se pudo obtener usuario después de 20 segundos");
     return null;
   } catch (error) {
-    console.error("❌ getRedirectResultAuth: Error al obtener resultado de redirección:", error);
-    
-    // Como último recurso, verificar si hay un usuario actual
-    if (auth.currentUser) {
-      console.log("🔄 getRedirectResultAuth: Usando usuario actual como respaldo:", auth.currentUser.uid);
-      return { 
-        uid: auth.currentUser.uid, 
-        email: auth.currentUser.email, 
-        displayName: auth.currentUser.displayName 
-      };
-    }
-    
+    console.error('Error en getRedirectResult:', error);
     return null;
   }
 };
 
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+// Ya no necesitamos detección mobile específica - usamos popup para todos
 
 export const signInWithGoogle = async () => {
-  if (isMobile) {
-    localStorage.setItem("firebase_redirect_start", String(Date.now()));
-    await signInWithRedirect(auth, provider);
-    return null;
-  } else {
+  try {
     const r = await signInWithPopup(auth, provider);
+    
+    localStorage.removeItem("firebase_redirect_start");
+    localStorage.removeItem("redirect_info");
+    localStorage.setItem('redirect_attempts', '0');
+    
     return { uid: r.user.uid, email: r.user.email, displayName: r.user.displayName };
+  } catch (popupError) {
+    const popupBlockedErrors = [
+      'auth/popup-blocked',
+      'auth/popup-closed-by-user',
+      'auth/cancelled-popup-request'
+    ];
+    
+    if (popupBlockedErrors.includes(popupError.code)) {
+      const redirectInfo = {
+        timestamp: Date.now(),
+        attempt: (parseInt(localStorage.getItem('redirect_attempts') || '0')) + 1
+      };
+      
+      localStorage.setItem("firebase_redirect_start", String(redirectInfo.timestamp));
+      localStorage.setItem("redirect_info", JSON.stringify(redirectInfo));
+      
+      try {
+        await signInWithRedirect(auth, provider);
+        return null;
+      } catch (redirectError) {
+        localStorage.removeItem("firebase_redirect_start");
+        localStorage.removeItem("redirect_info");
+        throw redirectError;
+      }
+    } else {
+      throw popupError;
+    }
   }
 };
 
 export const signOutUser = async () => {
   await auth.signOut();
   localStorage.removeItem("firebase_redirect_start");
+  localStorage.removeItem("redirect_info");
+  localStorage.removeItem("redirect_attempts");
+};
+
+// Función para limpiar estado de redirección fallida
+export const cleanupFailedRedirect = () => {
+  localStorage.removeItem("firebase_redirect_start");
+  localStorage.removeItem("redirect_info");
+  
+  const attempts = parseInt(localStorage.getItem('redirect_attempts') || '0') + 1;
+  localStorage.setItem('redirect_attempts', String(attempts));
+  
+  return attempts;
+};
+
+// Función para forzar verificación de estado
+export const forceAuthStateCheck = async () => {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(user);
+    });
+    
+    setTimeout(() => {
+      unsubscribe();
+      resolve(null);
+    }, 5000);
+  });
+};
+
+// Función para recargar el usuario actual
+export const reloadCurrentUser = async () => {
+  if (auth.currentUser) {
+    try {
+      await auth.currentUser.reload();
+      return auth.currentUser;
+    } catch (error) {
+      return null;
+    }
+  }
+  return null;
 };
 
 // Exportar provider para uso en otros componentes

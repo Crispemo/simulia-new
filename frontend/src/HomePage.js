@@ -34,18 +34,15 @@ function HomePage() {
   // useEffect para manejar la navegación post-login (móvil y desktop)
   useEffect(() => {
     if (!checkedAfterLogin && currentUser) {
-      console.log("🔄 Usuario autenticado detectado, verificando suscripción...");
       setCheckedAfterLogin(true);
-      // En móvil, tras volver del redirect, esto decide adónde ir
-      verifyUser();
+      setTimeout(() => {
+        verifyUser();
+      }, 1000);
     }
   }, [currentUser, checkedAfterLogin]);
 
   const verifyUser = async () => {
     try {
-      console.log('Usuario actual:', currentUser?.uid);
-      console.log('API_URL configurada:', API_URL);
-
       const response = await fetch(`${API_URL}/users/check-subscription`, {
         method: 'POST',
         headers: {
@@ -58,7 +55,6 @@ function HomePage() {
       });
 
       const data = await response.json();
-      console.log('Datos recibidos:', data);
 
       if(data.error === 'Usuario no encontrado.') {
         scrollToPayments();
@@ -66,20 +62,16 @@ function HomePage() {
         return;
       }
 
-      // Si el usuario tiene suscripción activa, redirigir al dashboard
       if(data.subscriptionActive === true) {
-        console.log("Usuario con suscripción activa, redirigiendo al dashboard");
         navigate('/dashboard');
         return;
       }
 
-      // Si el usuario existe pero no tiene suscripción activa
       scrollToPayments();
       setShowPopup(true);
 
     } catch (error) {
       console.error('Error al verificar el usuario:', error.message);
-      // En caso de error, mostrar opciones de pago
       scrollToPayments();
       setShowPopup(true);
     }
@@ -87,46 +79,21 @@ function HomePage() {
   
   const handleLoginClick = async () => {
     try {
-      console.log('🚀 INICIANDO PROCESO DE LOGIN...');
-      console.log('📱 Dispositivo actual:', window.innerWidth, 'x', window.innerHeight);
-      console.log('🔍 User Agent:', navigator.userAgent);
-      console.log('🔍 Touch support:', 'ontouchstart' in window);
-      console.log('🔍 Max touch points:', navigator.maxTouchPoints);
-      console.log('🔍 Platform:', navigator.platform);
-      
       setIsSigningIn(true);
       
-      // NO forzar signOut antes de login (especialmente en móvil)
-      // Esto puede interferir con la hidratación de Firebase
-      console.log('🔐 Iniciando autenticación...');
-      
-      console.log('🔐 Llamando a signInWithGoogle...');
-      
-      // 1. Iniciar autenticación con Google (popup en desktop, redirección en móvil)
       const result = await signInWithGoogle();
-      
-      console.log('📊 Resultado de signInWithGoogle:', result);
       
       // En móviles, result puede ser null (redirección iniciada)
       if (!result) {
-        console.log("✅ Autenticación iniciada por redirección (móvil)");
-        console.log("ℹ️ El usuario será redirigido a Google y volverá automáticamente");
-        
-        // Nota: La redirección se manejará automáticamente en AuthContext
-        
-        // En móviles, no hacer nada más aquí, el resultado se manejará en el AuthContext
         return;
       }
       
       if (!result.uid) {
-        console.error("Error en la autenticación con Google: no se obtuvo información del usuario");
         toast.error('Error al iniciar sesión con Google');
         return;
       }
       
-      console.log("Firebase login exitoso:", result.uid);
-      
-      // 2. Verificar suscripción después de login exitoso (solo desktop)
+      // Verificar suscripción después de login exitoso
       try {
         const response = await fetch(`${API_URL}/users/check-subscription`, {
           method: 'POST',
@@ -145,20 +112,14 @@ function HomePage() {
         }
 
         const data = await response.json();
-        console.log("Verificación de suscripción:", data);
         
-        // 3. Si el usuario tiene suscripción activa, redirigir al dashboard
         if (data && data.subscriptionActive === true) {
-          console.log("Usuario con suscripción activa, redirigiendo al dashboard");
           navigate('/dashboard');
         } else {
-          console.log("Usuario sin suscripción, mostrando planes");
           setShowPopup(true);
           scrollToPayments();
         }
       } catch (error) {
-        console.error("Error en verificación de suscripción:", error);
-        // Sin fallbacks automáticos: si no existe o 404, no se crea nada
         setShowPopup(true);
         scrollToPayments();
       }
