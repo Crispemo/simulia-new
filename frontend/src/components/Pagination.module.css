@@ -162,6 +162,71 @@
   color: #6b7280;
 }
 
+/* Estados combinados: doubt + answered/correct/incorrect con división diagonal */
+.pageNumber.doubtAnswered,
+.pageNumber.doubtCorrect,
+.pageNumber.doubtIncorrect {
+  position: relative;
+  overflow: hidden;
+  border: 2px dashed #FF9800;
+}
+
+/* División diagonal: mitad superior izquierda (doubt) */
+.pageNumber.doubtAnswered::before,
+.pageNumber.doubtCorrect::before,
+.pageNumber.doubtIncorrect::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff3e0; /* Color de doubt */
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  z-index: 0;
+}
+
+/* División diagonal: mitad inferior derecha (answered/correct/incorrect) */
+.pageNumber.doubtAnswered {
+  background-color: #e8f4f8; /* Color de answered */
+}
+
+.pageNumber.doubtCorrect {
+  background-color: #4CAF50; /* Color de correct */
+}
+
+.pageNumber.doubtIncorrect {
+  background-color: #e74c3c; /* Color de incorrect */
+}
+
+/* Asegurar que el texto esté por encima de la división */
+.pageNumber.doubtAnswered,
+.pageNumber.doubtCorrect,
+.pageNumber.doubtIncorrect {
+  z-index: 1;
+  position: relative;
+}
+
+.pageNumber.doubtAnswered {
+  color: #3e5055;
+}
+
+.pageNumber.doubtCorrect {
+  color: #ffffff;
+}
+
+.pageNumber.doubtIncorrect {
+  color: #ffffff;
+}
+
+/* Asegurar que el contenido del botón (número) esté por encima */
+.pageNumber.doubtAnswered > *,
+.pageNumber.doubtCorrect > *,
+.pageNumber.doubtIncorrect > * {
+  position: relative;
+  z-index: 2;
+}
+
 /* Indicador de más páginas */
 .moreIndicator {
   color: #6b7280;
@@ -264,6 +329,34 @@
   background-color: #4a4a4a;
   border-color: #5a5a5a;
   color: #9ca3af;
+}
+
+/* Dark mode: Estados combinados con división diagonal */
+.paginationComponent.dark .pageNumber.doubtAnswered,
+.paginationComponent.dark .pageNumber.doubtCorrect,
+.paginationComponent.dark .pageNumber.doubtIncorrect {
+  border: 2px dashed #FF9800;
+}
+
+.paginationComponent.dark .pageNumber.doubtAnswered::before,
+.paginationComponent.dark .pageNumber.doubtCorrect::before,
+.paginationComponent.dark .pageNumber.doubtIncorrect::before {
+  background-color: #614107; /* Color de doubt en dark mode */
+}
+
+.paginationComponent.dark .pageNumber.doubtAnswered {
+  background-color: #2a3a3f; /* Color de answered en dark mode */
+  color: #e5e7eb;
+}
+
+.paginationComponent.dark .pageNumber.doubtCorrect {
+  background-color: #388E3C; /* Color de correct en dark mode */
+  color: #ffffff;
+}
+
+.paginationComponent.dark .pageNumber.doubtIncorrect {
+  background-color: #e74c3c; /* Color de incorrect en dark mode */
+  color: #ffffff;
 }
 
 .paginationComponent.dark .moreIndicator {

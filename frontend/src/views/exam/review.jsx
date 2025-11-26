@@ -204,16 +204,18 @@ const ReviewView = ({
                        (typeof exam.questions[i].userAnswer === 'object' ? 
                         exam.questions[i].userAnswer.selectedAnswer : exam.questions[i].userAnswer);
       
-      const isMarkedAsDoubt = !hasAnswer && (
-                            markedAsDoubt[i] || 
-                           (exam.questions[i].userAnswer && 
-                            typeof exam.questions[i].userAnswer === 'object' && 
-                            exam.questions[i].userAnswer.markedAsDoubt === true));
+      const isMarkedAsDoubt = markedAsDoubt[i] || 
+                            (exam.questions[i].userAnswer && 
+                             typeof exam.questions[i].userAnswer === 'object' && 
+                             exam.questions[i].userAnswer.markedAsDoubt === true);
       
-      if (isMarkedAsDoubt) {
-        status[i] = 'doubt';
-      } else if (hasAnswer) {
+      // Si tiene respuesta, marcar como correct/incorrect (incluso si también tiene duda)
+      // La duda se manejará con el prop doubtMarkedQuestions
+      if (hasAnswer) {
         status[i] = exam.questions[i].isCorrect === true ? 'correct' : 'incorrect';
+      } else if (isMarkedAsDoubt) {
+        // Solo marcar como doubt si no tiene respuesta
+        status[i] = 'doubt';
       } else {
         status[i] = 'unanswered';
       }
@@ -470,6 +472,7 @@ const ReviewView = ({
           onItemSelect={handleNavigate}
           activeItemIndex={currentQuestion}
           itemStatus={generateItemStatus()}
+          doubtMarkedQuestions={markedAsDoubt}
           isDarkMode={isDarkMode}
         />
       )}

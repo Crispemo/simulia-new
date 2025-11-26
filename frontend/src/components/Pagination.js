@@ -13,6 +13,7 @@ const Pagination = ({
   onItemSelect,
   activeItemIndex, // Index of the currently selected item
   itemStatus = {}, // Object like { index: 'answered' | 'doubt' | 'incorrect' | 'unanswered', ... }
+  doubtMarkedQuestions = {}, // Object or array indicating which questions are marked as doubt
   isDarkMode, // For applying dark mode styles
 }) => {
   const gridRef = useRef(null);
@@ -136,17 +137,48 @@ const Pagination = ({
         <div ref={gridRef} className={styles.pagesContainer}>
           {visibleIndices.map(index => {
             const status = itemStatus[index] || '';
+            // Detectar si está marcada como duda (puede venir de itemStatus o de doubtMarkedQuestions)
+            const isDoubtFromStatus = status === 'doubt' || (typeof status === 'object' && status.doubt);
+            const isDoubtFromProp = Array.isArray(doubtMarkedQuestions) 
+              ? doubtMarkedQuestions.includes(index)
+              : doubtMarkedQuestions[index] === true;
+            const isDoubt = isDoubtFromStatus || isDoubtFromProp;
+            
+            // Detectar si está contestada/correcta/incorrecta
+            const isAnswered = status === 'answered' || (typeof status === 'object' && status.answered);
+            const isCorrect = status === 'correct' || (typeof status === 'object' && status.isCorrect === true);
+            const isIncorrect = status === 'incorrect' || (typeof status === 'object' && status.isCorrect === false);
+            
+            // Determinar si tiene múltiples estados (doubt + answered/correct/incorrect)
+            // Solo mostrar división diagonal si tiene doubt Y (answered/correct/incorrect)
+            const hasMultipleStates = isDoubt && (isAnswered || isCorrect || isIncorrect);
+            
+            // Determinar el estado de respuesta para la división diagonal
+            let answerStatus = '';
+            if (isCorrect) {
+              answerStatus = 'correct';
+            } else if (isIncorrect) {
+              answerStatus = 'incorrect';
+            } else if (isAnswered) {
+              answerStatus = 'answered';
+            }
+            
             return (
               <button
                 key={index}
                 className={cn(
                   styles.pageNumber,
                   activeItemIndex === index && styles.active,
-                  status === 'answered' && styles.answered,
-                  status === 'correct' && styles.correct,
-                  status === 'doubt' && styles.doubt,
-                  status === 'incorrect' && styles.incorrect,
-                  status === 'unanswered' && styles.unanswered
+                  // Aplicar estilos individuales solo si no hay múltiples estados
+                  !hasMultipleStates && status === 'answered' && styles.answered,
+                  !hasMultipleStates && status === 'correct' && styles.correct,
+                  !hasMultipleStates && (status === 'doubt' || (isDoubt && !isAnswered && !isCorrect && !isIncorrect)) && styles.doubt,
+                  !hasMultipleStates && status === 'incorrect' && styles.incorrect,
+                  !hasMultipleStates && status === 'unanswered' && styles.unanswered,
+                  // Clases para estados combinados (división diagonal)
+                  hasMultipleStates && isCorrect && styles.doubtCorrect,
+                  hasMultipleStates && isIncorrect && styles.doubtIncorrect,
+                  hasMultipleStates && isAnswered && !isCorrect && !isIncorrect && styles.doubtAnswered
                 )}
                 onClick={() => handleItemClick(index)}
                 aria-label={`Ir a pregunta ${index + 1}`}

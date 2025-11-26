@@ -646,15 +646,23 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
   // Renderizar el índice de preguntas
   const renderQuestionIndex = () => {
     const totalPages = Math.ceil(preguntas.length / 30);
-    const itemStatusObj = doubtfulQuestions.reduce((map, idx) => ({ ...map, [idx]: 'doubt' }), {});
+    const itemStatusObj = {};
+    const doubtMarkedObj = doubtfulQuestions.reduce((map, idx) => ({ ...map, [idx]: true }), {});
     
     // Marcar preguntas respondidas usando selectedAnswers
     Object.keys(selectedAnswers).forEach(index => {
       const idx = parseInt(index);
       if (!isNaN(idx)) {
-        // Conservar estado de duda si existe, sino marcar como contestada
-        itemStatusObj[idx] = itemStatusObj[idx] === 'doubt' ? 'doubt' : 'answered';
+        // Si tiene respuesta, marcar como answered (incluso si también tiene duda)
+        itemStatusObj[idx] = 'answered';
         console.log(`Pregunta ${idx+1} marcada como respondida: ${selectedAnswers[idx]}`);
+      }
+    });
+    
+    // Marcar preguntas con duda que no tienen respuesta
+    doubtfulQuestions.forEach(idx => {
+      if (!itemStatusObj[idx]) {
+        itemStatusObj[idx] = 'doubt';
       }
     });
     
@@ -669,6 +677,7 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
         }}
         activeItemIndex={currentQuestion}
         itemStatus={itemStatusObj}
+        doubtMarkedQuestions={doubtMarkedObj}
         isDarkMode={isDarkMode}
       />
     );

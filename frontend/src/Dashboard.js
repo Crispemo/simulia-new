@@ -2051,7 +2051,7 @@ const handleErroresClick = () => {
         />
         
         {/* Main Content */}
-        <div className={cn('flex-1 relative overflow-y-auto transition-all duration-300', isCollapsed ? 'ml-16' : 'ml-64')}>
+        <div className={cn('flex-1 relative overflow-y-auto transition-all duration-300', isCollapsed ? 'md:ml-16' : 'md:ml-64')}>
           {isLoadingDashboard && (
             <div className="dashboard-loading-overlay">
               <div className="loader-spinner" />

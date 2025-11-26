@@ -1055,10 +1055,13 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
     if (!questions || questions.length === 0) return status;
 
     for (let i = 0; i < questions.length; i++) {
-      if (markedAsDoubt[i]) {
-        status[i] = 'doubt';
-      } else if (selectedAnswers[i]) {
+      // Si tiene respuesta, marcar como answered (incluso si también tiene duda)
+      // La duda se manejará con el prop doubtMarkedQuestions
+      if (selectedAnswers[i]) {
         status[i] = 'answered';
+      } else if (markedAsDoubt[i]) {
+        // Solo marcar como doubt si no tiene respuesta
+        status[i] = 'doubt';
       }
     }
     return status;
