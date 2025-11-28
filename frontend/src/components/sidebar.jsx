@@ -17,6 +17,7 @@ import {
   FolderOpen,
   Users,
   AlertCircle,
+  Heart,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import TicketModal from './TicketModal'
@@ -31,7 +32,7 @@ const menuItems = [
   { id: 'personalizado', label: 'Personalizado', icon: Flame, path: '/examenEleccion' },
 ]
 
-export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick, onResourcesClick }) {
+export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick, onResourcesClick, onSurveyClick }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
   const navigate = useNavigate()
@@ -129,6 +130,18 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
 
           {/* Settings */}
           <div className="border-t pt-4">
+            {onSurveyClick && (
+              <button
+                onClick={onSurveyClick}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
+                  isCollapsed && 'justify-center'
+                )}
+              >
+                <Heart className="h-5 w-5 text-pink-500" />
+                {!isCollapsed && <span className="text-pink-500">¡Cuéntame qué tal!</span>}
+              </button>
+            )}
             {onTutorialClick && (
               <button
                 onClick={onTutorialClick}
@@ -247,6 +260,15 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
           </nav>
 
           <div className="border-t pt-4">
+            {onSurveyClick && (
+              <button
+                onClick={onSurveyClick}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
+              >
+                <Heart className="h-5 w-5 text-pink-500" />
+                <span className="text-pink-500">¡Cuéntame qué tal!</span>
+              </button>
+            )}
             {onTutorialClick && (
               <button
                 onClick={onTutorialClick}

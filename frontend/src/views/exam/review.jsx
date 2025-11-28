@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, CreditCard } from 'lucide-react';
 import styles from './review.module.css';
 import QuestionBox from '../../components/QuestionBox';
 import Pagination from '../../components/Pagination';
 import { API_URL } from '../../config';
 import { downloadExamPdfFromData } from '../../lib/pdfUtils';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Vista reutilizable para revisión de exámenes
@@ -22,12 +23,16 @@ const ReviewView = ({
   isDarkMode = false,
 }) => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const userId = currentUser?.uid;
   const [exam, setExam] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [markedAsDoubt, setMarkedAsDoubt] = useState({});
+  const [convertingFlashcards, setConvertingFlashcards] = useState(false);
+  const [flashcardMessage, setFlashcardMessage] = useState(null);
   const questionsPerPage = 25;
 
   // Utilidad: extraer long_answer desde múltiples ubicaciones posibles
@@ -286,6 +291,53 @@ const ReviewView = ({
     }
   };
 
+  // Convertir errores en flashcards
+  const handleConvertToFlashcards = async () => {
+    if (!userId) {
+      setFlashcardMessage({ type: 'error', text: 'Debes iniciar sesión para convertir errores en flashcards' });
+      return;
+    }
+
+    try {
+      setConvertingFlashcards(true);
+      setFlashcardMessage(null);
+
+      const response = await fetch(`${API_URL}/flashcards/convert-errors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al convertir errores en flashcards');
+      }
+
+      const data = await response.json();
+      
+      setFlashcardMessage({
+        type: 'success',
+        text: `¡Excelente! Se crearon ${data.converted} flashcards${data.skipped > 0 ? ` (${data.skipped} ya existían)` : ''}. Ahora aparecerán en tu flashcard diaria.`
+      });
+
+      // Ocultar el mensaje después de 5 segundos
+      setTimeout(() => {
+        setFlashcardMessage(null);
+      }, 5000);
+
+    } catch (err) {
+      console.error('Error al convertir errores en flashcards:', err);
+      setFlashcardMessage({
+        type: 'error',
+        text: 'Error al convertir errores en flashcards. Inténtalo de nuevo más tarde.'
+      });
+    } finally {
+      setConvertingFlashcards(false);
+    }
+  };
+
   // Estados de carga y error
   if (loading) {
     return (
@@ -343,6 +395,20 @@ const ReviewView = ({
 
         <div className={styles.headerRight}>
           <div className={styles.actionButtons}>
+            {/* Botón Convertir en Flashcards */}
+            {userId && (
+              <button
+                className={styles.actionButton}
+                onClick={handleConvertToFlashcards}
+                disabled={convertingFlashcards}
+                aria-label="Convertir mis errores en tarjetas"
+                title="Convertir mis errores en tarjetas"
+              >
+                <CreditCard size={18} />
+                <span>{convertingFlashcards ? 'Convirtiendo...' : 'Convertir en tarjetas'}</span>
+              </button>
+            )}
+
             {/* Botón Descargar PDF */}
             <button
               className={styles.actionButton}
@@ -400,6 +466,20 @@ const ReviewView = ({
           </div>
         </div>
       </header>
+
+      {/* Mensaje de flashcard */}
+      {flashcardMessage && (
+        <div className={`${styles.flashcardMessage} ${styles[flashcardMessage.type]}`}>
+          <p>{flashcardMessage.text}</p>
+          <button 
+            className={styles.flashcardMessageClose}
+            onClick={() => setFlashcardMessage(null)}
+            aria-label="Cerrar mensaje"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Barra de progreso */}
       <div className={styles.progressSection}>

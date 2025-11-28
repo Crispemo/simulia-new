@@ -79,6 +79,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   const questionsPerPage = 25;
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [simulacroSourceType, setSimulacroSourceType] = useState(null); // 'anteriores' o 'protocolos'
+  const [showSourceTypePopup, setShowSourceTypePopup] = useState(false);
   
   // Variable para rastrear si ya hay un guardado en progreso y evitar llamadas simultáneas
   const [isSaving, setIsSaving] = useState(false);
@@ -133,7 +135,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
 
   // Modificar loadQuestions para inicializar userAnswers con el formato completo
-  const loadQuestions = async () => {
+  const loadQuestions = async (sourceTypeOverride = null) => {
     try {
       setIsLoading(true);
       setIsError(false);
@@ -172,6 +174,123 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         } else {
           throw new Error('No se encontraron preguntas de errores en localStorage');
         }
+      } else if (currentExamType === 'simulacro') {
+        // Para simulacro, usar la fuente seleccionada (anteriores o protocolos)
+        // Usar sourceTypeOverride si se proporciona, de lo contrario usar el estado
+        const effectiveSourceType = sourceTypeOverride || simulacroSourceType;
+        if (!effectiveSourceType) {
+          // Si no se ha seleccionado la fuente, mostrar popup de selección
+          setShowSourceTypePopup(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        let completosData = [];
+        
+        let fotosData = [];
+        
+        if (effectiveSourceType === 'anteriores') {
+          // Exámenes de años anteriores: 200 preguntas normales + 10 con imágenes = 210 total
+          try {
+            const completosURL = `${effectiveAPI_URL}/random-question-completos`;
+            const completosResponse = await fetch(completosURL, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ 
+                count: 200,
+                examType: 'simulacro'
+              })
+            });
+
+            if (completosResponse.ok) {
+              completosData = await completosResponse.json();
+              console.log(`Recibidas ${completosData.length} preguntas completas de años anteriores`);
+            } else {
+              if (completosResponse.status === 0 || completosResponse.statusText === '') {
+                throw new Error('Error de conexión con el servidor. Verifica que el backend esté corriendo.');
+              }
+              throw new Error(`Error al cargar preguntas completas: ${completosResponse.status}`);
+            }
+          } catch (fetchError) {
+            if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
+              throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5001 y que CORS esté configurado correctamente.');
+            }
+            throw fetchError;
+          }
+          
+          // Obtener 10 preguntas con fotos para años anteriores
+          try {
+            const fotosURL = `${effectiveAPI_URL}/random-fotos`;
+            const fotosResponse = await fetch(fotosURL, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ count: 10 })
+            });
+
+            if (fotosResponse.ok) {
+              fotosData = await fotosResponse.json();
+              console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
+            } else {
+              // No crítico - continuar sin fotos
+              console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
+            }
+          } catch (fotosError) {
+            // No crítico - continuar sin fotos
+            if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
+              console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
+            }
+          }
+        } else if (effectiveSourceType === 'protocolos') {
+          // Exámenes de protocolos: 200 preguntas, sin imágenes
+          try {
+            const protocolosURL = `${effectiveAPI_URL}/random-questions`;
+            const protocolosResponse = await fetch(protocolosURL, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                numPreguntas: 200,
+                examType: 'protocolos'
+              })
+            });
+
+            if (protocolosResponse.ok) {
+              completosData = await protocolosResponse.json();
+              console.log(`Recibidas ${completosData.length} preguntas de protocolos (sin imágenes)`);
+            } else {
+              throw new Error(`Error al obtener preguntas de protocolos: ${protocolosResponse.status}`);
+            }
+          } catch (fetchError) {
+            if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('CORS')) {
+              throw new Error('No se pudo conectar con el servidor. Verifica que el backend esté corriendo en http://localhost:5001 y que CORS esté configurado correctamente.');
+            }
+            throw fetchError;
+          }
+          // Para protocolos NO se obtienen preguntas con fotos
+          fotosData = [];
+        }
+
+        // Validar que tengamos preguntas antes de continuar
+        if (completosData.length === 0 && fotosData.length === 0) {
+          throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
+        }
+        
+        // Combinar las preguntas
+        allQuestions = [...completosData, ...fotosData];
+        console.log(`Total de preguntas cargadas: ${allQuestions.length} (${completosData.length} normales + ${fotosData.length} con imágenes)`);
+        
+        // Para simulacro: 4h 30min (16200 segundos)
+        setTimeLeft(16200);
+        setTotalTime(16200);
       } else {
         // Para otros tipos de examen, mantener el comportamiento original
         // Obtener preguntas completas
@@ -543,12 +662,26 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         }
       }
       
+      // Restaurar el tipo de fuente del simulacro si existe
+      if (progress.simulacroSourceType && (progress.type === 'simulacro' || getExamTypeFromMode(examMode) === 'simulacro')) {
+        setSimulacroSourceType(progress.simulacroSourceType);
+        console.log(`Tipo de fuente del simulacro restaurado: ${progress.simulacroSourceType}`);
+      }
+      
       console.log('Progreso del examen restaurado correctamente');
       return true;
     } catch (error) {
       console.error('Error al recuperar progreso:', error);
       return false;
     }
+  };
+
+  // Handler para seleccionar el tipo de fuente del simulacro
+  const handleSourceTypeSelect = (sourceType) => {
+    setSimulacroSourceType(sourceType);
+    setShowSourceTypePopup(false);
+    // Cargar las preguntas después de seleccionar el tipo, pasando el tipo directamente
+    loadQuestions(sourceType);
   };
 
   // Usar loadQuestions en el useEffect
@@ -559,7 +692,13 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         .then(progressRestored => {
           // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
           if (!progressRestored || !questions || questions.length === 0) {
-            loadQuestions();
+            // Para simulacro, verificar si necesitamos mostrar el popup de selección
+            const currentExamType = getExamTypeFromMode(examMode);
+            if (currentExamType === 'simulacro' && !simulacroSourceType) {
+              setShowSourceTypePopup(true);
+            } else {
+              loadQuestions();
+            }
           } else {
             // Si se restauró, no mostrar popup de inicio
             setShowStartPopup(false);
@@ -568,11 +707,22 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         })
         .catch(error => {
           console.error('Error al intentar restaurar el examen:', error);
-          loadQuestions();
+          // Para simulacro, verificar si necesitamos mostrar el popup de selección
+          const currentExamType = getExamTypeFromMode(examMode);
+          if (currentExamType === 'simulacro' && !simulacroSourceType) {
+            setShowSourceTypePopup(true);
+          } else {
+            loadQuestions();
+          }
         });
     } else {
-      // Si no hay userId, simplemente cargar nuevas preguntas
-      loadQuestions();
+      // Si no hay userId, verificar si necesitamos mostrar el popup de selección
+      const currentExamType = getExamTypeFromMode(examMode);
+      if (currentExamType === 'simulacro' && !simulacroSourceType) {
+        setShowSourceTypePopup(true);
+      } else {
+        loadQuestions();
+      }
     }
   }, [examMode]);
   
@@ -687,7 +837,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         timeUsedValue,
         totalTime,
         isCompleted,
-        examStatus
+        examStatus,
+        simulacroSourceType // Pasar el tipo de fuente del simulacro
       );
       
       // Verificar si recibimos un nuevo ID de examen
@@ -1313,6 +1464,130 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
+  // Renderizar popup de selección de fuente para simulacro (ANTES de verificar preguntas)
+  if (showSourceTypePopup) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: isDarkMode ? '#2d3748' : '#ffffff',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '600px',
+          width: '100%',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+        }}>
+          <h2 style={{ color: isDarkMode ? '#ffffff' : '#000000', marginBottom: '24px' }}>
+            <strong>Selecciona el tipo de preguntas</strong>
+          </h2>
+          <p style={{ color: isDarkMode ? '#cccccc' : '#666666', marginBottom: '24px' }}>
+            Elige de dónde quieres que se obtengan las preguntas para tu simulacro:
+          </p>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            <button
+              onClick={() => handleSourceTypeSelect('anteriores')}
+              style={{
+                padding: '20px',
+                borderRadius: '10px',
+                backgroundColor: isDarkMode ? '#3E5055' : '#f5f9fa',
+                border: '2px solid #7ea0a7',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left',
+                color: isDarkMode ? '#ffffff' : '#000000'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#5A6B72' : '#e6f2f5';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#3E5055' : '#f5f9fa';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <h3 style={{ 
+                color: isDarkMode ? '#7ea0a7' : '#3E5055', 
+                marginTop: 0, 
+                marginBottom: '10px' 
+              }}>
+                Exámenes de Años Anteriores
+              </h3>
+              <p style={{ 
+                color: isDarkMode ? '#cccccc' : '#666', 
+                margin: 0 
+              }}>
+                210 preguntas (200 normales + 10 con imágenes) de exámenes EIR de años anteriores
+              </p>
+            </button>
+            
+            <button
+              onClick={() => handleSourceTypeSelect('protocolos')}
+              style={{
+                padding: '20px',
+                borderRadius: '10px',
+                backgroundColor: isDarkMode ? '#3E5055' : '#f5f9fa',
+                border: '2px solid #7ea0a7',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textAlign: 'left',
+                color: isDarkMode ? '#ffffff' : '#000000'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#5A6B72' : '#e6f2f5';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = isDarkMode ? '#3E5055' : '#f5f9fa';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <h3 style={{ 
+                color: isDarkMode ? '#7ea0a7' : '#3E5055', 
+                marginTop: 0, 
+                marginBottom: '10px' 
+              }}>
+                Exámenes de Protocolos
+              </h3>
+              <p style={{ 
+                color: isDarkMode ? '#cccccc' : '#666', 
+                margin: 0 
+              }}>
+                200 preguntas basadas en protocolos de enfermería (sin imágenes)
+              </p>
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: 'transparent',
+              color: isDarkMode ? '#cccccc' : '#666',
+              border: `1px solid ${isDarkMode ? '#5A6B72' : '#ccc'}`,
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500'
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Si está cargando, mostrar indicador
   if (isLoading) {
     return (
@@ -1327,8 +1602,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
-  // Si no hay preguntas aún, no renderizar nada
-  if (!questions || questions.length === 0) {
+  // Si no hay preguntas aún, no renderizar nada (solo si no estamos mostrando popups)
+  if ((!questions || questions.length === 0) && !showStartPopup) {
     return null;
   }
 
@@ -1348,7 +1623,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         zIndex: 1000
       }}>
         <div style={{
-          backgroundColor: '#ffffff',
+          backgroundColor: isDarkMode ? '#2d3748' : '#ffffff',
           borderRadius: '12px',
           padding: '32px',
           maxWidth: '500px',
@@ -1357,8 +1632,10 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         }}>
           {examMode === 'errors' ? (
             <>
-              <h2><strong>¡Comienza tu repaso de errores!</strong></h2>
-              <p>
+              <h2 style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                <strong>¡Comienza tu repaso de errores!</strong>
+              </h2>
+              <p style={{ color: isDarkMode ? '#cccccc' : '#666666' }}>
                 Este examen consta de <strong>{questions.length} preguntas</strong> seleccionadas 
                 de tus errores anteriores. Dispones de <strong>{formatTime(timeLeft)}</strong> para 
                 completarlo. Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
@@ -1367,12 +1644,24 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             </>
           ) : (
             <>
-              <h2><strong>¡Comienza tu simulacro!</strong></h2>
-              <p>
-                Este examen consta de <strong>210 preguntas</strong> y dispones de 
-                <strong> 4 horas y 30 minutos</strong> para completarlo. De estas preguntas, 
-                <strong> 10 incluyen imágenes</strong>. Administra bien tu tiempo y recuerda 
-                que puedes revisar y ajustar tus respuestas antes de finalizar.
+              <h2 style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                <strong>¡Comienza tu simulacro!</strong>
+              </h2>
+              <p style={{ color: isDarkMode ? '#cccccc' : '#666666' }}>
+                {simulacroSourceType === 'protocolos' ? (
+                  <>
+                    Este examen consta de <strong>200 preguntas</strong> de protocolos y dispones de 
+                    <strong> 4 horas y 30 minutos</strong> para completarlo. Administra bien tu tiempo y recuerda 
+                    que puedes revisar y ajustar tus respuestas antes de finalizar.
+                  </>
+                ) : (
+                  <>
+                    Este examen consta de <strong>210 preguntas</strong> de años anteriores y dispones de 
+                    <strong> 4 horas y 30 minutos</strong> para completarlo. De estas preguntas, 
+                    <strong> 10 incluyen imágenes</strong>. Administra bien tu tiempo y recuerda 
+                    que puedes revisar y ajustar tus respuestas antes de finalizar.
+                  </>
+                )}
               </p>
             </>
           )}

@@ -19,14 +19,16 @@ const stripe = Stripe(process.env.STRIPE_SECRET);
 const User = require('./models/User');
 const Exam = require('./models/Exam');
 const ExamenResultado = require('./models/ExamenResultado');
-const { ExamenCompleto, ExamenFotos } = require('./models/Pregunta');
+const { ExamenCompleto, ExamenFotos, ExamenProtocolos } = require('./models/Pregunta');
 const UnansweredQuestion = require('./models/UnansweredQuestion');
+const Flashcard = require('./models/Flashcard');
 const EventLog = require('./models/EventLog');
 const EmailLog = require('./models/EmailLog');
 const path = require('path');
 const disputeRoutes = require('./routes/disputeRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
+const surveyRoutes = require('./routes/surveyRoutes');
 const axios = require('axios');
 const OpenAI = require('openai');
 const app = express();
@@ -203,6 +205,8 @@ app.options('*', cors());
 app.use(disputeRoutes);
 // Registrar las rutas de tickets/incidencias
 app.use(ticketRoutes);
+// Registrar las rutas de encuestas
+app.use(surveyRoutes);
 // Rutas de práctica y preferencias
 app.use(practiceRoutes);
 
@@ -3780,15 +3784,34 @@ app.post('/update-unanswered-questions', async (req, res) => {
           questionId: { $in: objectIds }
         });
         
+        // Eliminar flashcards correspondientes
+        await Flashcard.updateMany(
+          { userId, questionId: { $in: objectIds } },
+          { $set: { status: 'removed', updatedAt: new Date() } }
+        );
+        
         result.removed = deleteResult.deletedCount || 0;
-        console.log(`Se eliminaron ${result.removed} preguntas sin contestar`);
+        console.log(`Se eliminaron ${result.removed} preguntas sin contestar y sus flashcards correspondientes`);
         break;
         
       case 'clear':
         // Limpiar todas las preguntas sin contestar del usuario
         const clearResult = await UnansweredQuestion.deleteMany({ userId });
+        
+        // Obtener todos los questionIds de las preguntas sin contestar antes de eliminarlas
+        const unansweredBeforeClear = await UnansweredQuestion.find({ userId }).select('questionId');
+        const questionIdsToRemove = unansweredBeforeClear.map(q => q.questionId);
+        
+        // Eliminar flashcards correspondientes
+        if (questionIdsToRemove.length > 0) {
+          await Flashcard.updateMany(
+            { userId, questionId: { $in: questionIdsToRemove } },
+            { $set: { status: 'removed', updatedAt: new Date() } }
+          );
+        }
+        
         result.removed = clearResult.deletedCount || 0;
-        console.log(`Se eliminaron todas las preguntas sin contestar (${result.removed})`);
+        console.log(`Se eliminaron todas las preguntas sin contestar (${result.removed}) y sus flashcards correspondientes`);
         break;
         
       case 'mark-as-answered':
@@ -4135,6 +4158,493 @@ app.get('/unanswered-stats/:userId', async (req, res) => {
     
   } catch (error) {
     console.error('Error al obtener estadísticas de preguntas sin contestar:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+// ==================== ENDPOINTS DE FLASHCARDS ====================
+
+// Función auxiliar para crear el contenido de una flashcard desde una pregunta
+const createFlashcardContent = (question) => {
+  // Extraer el concepto nuclear de la justificación
+  const longAnswer = question.long_answer || question.questionData?.long_answer || '';
+  
+  // Cara A: Enunciado resumido o pregunta clave
+  // Si la pregunta es muy larga, resumirla; si no, usar el concepto principal
+  let front = question.question || question.questionData?.question || '';
+  if (front.length > 150) {
+    // Extraer las primeras palabras clave
+    const words = front.split(' ').slice(0, 20).join(' ');
+    front = words + '...';
+  }
+  
+  // Si hay long_answer, extraer el concepto nuclear
+  if (longAnswer) {
+    // Intentar extraer el concepto principal (primeras 2-3 oraciones)
+    const sentences = longAnswer.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length > 0) {
+      const keyConcept = sentences.slice(0, 2).join('. ').trim();
+      if (keyConcept.length > 0 && keyConcept.length < 200) {
+        front = keyConcept;
+      }
+    }
+  }
+  
+  // Cara B: Explicación comprimida + mini-esquema
+  let back = '';
+  
+  if (longAnswer) {
+    // Comprimir la justificación (máximo 300 caracteres)
+    if (longAnswer.length > 300) {
+      back = longAnswer.substring(0, 297) + '...';
+    } else {
+      back = longAnswer;
+    }
+  } else {
+    // Si no hay justificación, crear una explicación básica
+    const answer = question.answer || question.questionData?.answer || '';
+    const subject = question.subject || question.questionData?.subject || 'General';
+    back = `Respuesta correcta: ${answer}\nTema: ${subject}`;
+  }
+  
+  // Agregar mini-esquema si hay opciones
+  const options = [
+    question.option_1 || question.questionData?.option_1,
+    question.option_2 || question.questionData?.option_2,
+    question.option_3 || question.questionData?.option_3,
+    question.option_4 || question.questionData?.option_4,
+    question.option_5 || question.questionData?.option_5
+  ].filter(opt => opt && opt !== '-');
+  
+  if (options.length > 0) {
+    const correctAnswer = question.answer || question.questionData?.answer || '';
+    back += `\n\nOpciones:\n${options.map((opt, idx) => {
+      const optionLetter = String.fromCharCode(65 + idx); // A, B, C, D, E
+      const isCorrect = optionLetter === correctAnswer || (idx + 1).toString() === correctAnswer;
+      return `${optionLetter}. ${opt}${isCorrect ? ' ✓' : ''}`;
+    }).join('\n')}`;
+  }
+  
+  return { front, back };
+};
+
+// POST /flashcards/convert-errors - Convertir errores del usuario en flashcards
+app.post('/flashcards/convert-errors', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId es requerido' });
+    }
+    
+    // Verificar que el usuario existe
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    console.log(`Convirtiendo errores en flashcards para usuario: ${userId}`);
+    
+    // Obtener preguntas falladas (igual que /failed-questions/:userId)
+    const failedQuestionIds = user.failedQuestions
+      .sort((a, b) => new Date(b.lastAttempt) - new Date(a.lastAttempt))
+      .map(q => q.questionId)
+      .filter(id => id)
+      .map(id => new mongoose.Types.ObjectId(id));
+    
+    // Para preguntas falladas, necesitamos buscar en las colecciones porque solo tienen questionId
+    // Solo buscar en ExamenCompleto y ExamenFotos (NO ExamenProtocolos)
+    const [textQuestions, imageQuestions] = await Promise.all([
+      ExamenCompleto.find({ '_id': { $in: failedQuestionIds } }),
+      ExamenFotos.find({ '_id': { $in: failedQuestionIds } })
+    ]);
+    
+    // Crear mapa de preguntas falladas
+    const failedQuestionsMap = {};
+    [...textQuestions, ...imageQuestions].forEach(q => {
+      failedQuestionsMap[q._id.toString()] = q;
+    });
+    
+    // Obtener TODAS las preguntas sin contestar (igual que errores.js)
+    // Usar directamente questionData sin buscar en colecciones
+    const totalUnanswered = await UnansweredQuestion.countDocuments({ userId });
+    
+    let allUnansweredDocs = [];
+    if (totalUnanswered > 0) {
+      // Obtener todas las páginas (sin límite)
+      const limit = 100;
+      const totalPages = Math.ceil(totalUnanswered / limit);
+      
+      for (let page = 0; page < totalPages; page++) {
+        const skip = page * limit;
+        const unansweredPage = await UnansweredQuestion.find({ userId })
+          .sort({ lastSeen: -1 })
+          .skip(skip)
+          .limit(limit);
+        allUnansweredDocs = [...allUnansweredDocs, ...unansweredPage];
+      }
+    }
+    
+    // Combinar todas las preguntas
+    const allQuestions = [];
+    
+    // Agregar preguntas falladas desde las colecciones
+    for (const id of failedQuestionIds) {
+      const question = failedQuestionsMap[id.toString()];
+      if (question) {
+        allQuestions.push(question);
+      }
+    }
+    
+    // Agregar preguntas sin contestar usando questionData directamente (sin buscar en colecciones)
+    for (const unansweredDoc of allUnansweredDocs) {
+      if (unansweredDoc.questionData && Object.keys(unansweredDoc.questionData).length > 0) {
+        // Crear objeto pregunta desde questionData
+        const question = {
+          _id: unansweredDoc.questionId,
+          question: unansweredDoc.questionData.question || '',
+          option_1: unansweredDoc.questionData.option_1 || '',
+          option_2: unansweredDoc.questionData.option_2 || '',
+          option_3: unansweredDoc.questionData.option_3 || '',
+          option_4: unansweredDoc.questionData.option_4 || '',
+          option_5: unansweredDoc.questionData.option_5 || '',
+          answer: unansweredDoc.questionData.answer || '',
+          subject: unansweredDoc.questionData.subject || unansweredDoc.subject || 'General',
+          image: unansweredDoc.questionData.image || null,
+          long_answer: unansweredDoc.questionData.long_answer || ''
+        };
+        
+        // Solo agregar si no está duplicada (evitar duplicados con preguntas falladas)
+        if (!allQuestions.find(q => q._id.toString() === unansweredDoc.questionId.toString())) {
+          allQuestions.push(question);
+        }
+      }
+    }
+    
+    if (allQuestions.length === 0) {
+      return res.json({ 
+        message: 'No hay errores para convertir en flashcards',
+        converted: 0,
+        skipped: 0,
+        totalFailed: failedQuestionIds.length,
+        totalUnanswered: allUnansweredDocs.length
+      });
+    }
+    
+    console.log(`Total preguntas encontradas para convertir: ${allQuestions.length} (${textQuestions.length + imageQuestions.length} falladas desde colecciones, ${allUnansweredDocs.length} sin contestar desde questionData)`);
+    
+    let converted = 0;
+    let skipped = 0;
+    
+    // Crear flashcards para cada pregunta
+    for (const question of allQuestions) {
+      const questionId = question._id || question.questionId;
+      
+      if (!questionId) {
+        console.warn('Pregunta sin ID, omitiendo:', question);
+        continue;
+      }
+      
+      // Verificar si ya existe una flashcard para esta pregunta
+      const existingFlashcard = await Flashcard.findOne({ 
+        userId, 
+        questionId: new mongoose.Types.ObjectId(questionId),
+        status: { $ne: 'removed' }
+      });
+      
+      if (existingFlashcard) {
+        skipped++;
+        continue;
+      }
+      
+      // Normalizar datos de la pregunta (manejar diferentes estructuras)
+      const questionText = question.question || '';
+      const option1 = question.option_1 || '';
+      const option2 = question.option_2 || '';
+      const option3 = question.option_3 || '';
+      const option4 = question.option_4 || '';
+      const option5 = question.option_5 || '';
+      const answer = question.answer || '';
+      const subject = question.subject || 'General';
+      const image = question.image || question.imagen || null;
+      const longAnswer = question.long_answer || '';
+      
+      // Crear contenido de la flashcard
+      const { front, back } = createFlashcardContent({
+        question: questionText,
+        option_1: option1,
+        option_2: option2,
+        option_3: option3,
+        option_4: option4,
+        option_5: option5,
+        answer: answer,
+        subject: subject,
+        image: image,
+        long_answer: longAnswer,
+        questionData: {
+          question: questionText,
+          option_1: option1,
+          option_2: option2,
+          option_3: option3,
+          option_4: option4,
+          option_5: option5,
+          answer: answer,
+          subject: subject,
+          image: image,
+          long_answer: longAnswer
+        }
+      });
+      
+      // Crear la flashcard
+      const flashcard = new Flashcard({
+        userId,
+        questionId: new mongoose.Types.ObjectId(questionId),
+        front,
+        back,
+        questionData: {
+          question: questionText,
+          option_1: option1,
+          option_2: option2,
+          option_3: option3,
+          option_4: option4,
+          option_5: option5,
+          answer: answer,
+          subject: subject,
+          image: image,
+          long_answer: longAnswer
+        },
+        status: 'active'
+      });
+      
+      await flashcard.save();
+      converted++;
+    }
+    
+    console.log(`Flashcards creadas: ${converted}, omitidas (ya existían): ${skipped}`);
+    
+    res.json({
+      message: 'Errores convertidos en flashcards exitosamente',
+      converted,
+      skipped,
+      total: allErrorIds.length
+    });
+    
+  } catch (error) {
+    console.error('Error al convertir errores en flashcards:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+// GET /flashcards/daily/:userId - Obtener una pregunta aleatoria de errores o unanswered
+app.get('/flashcards/daily/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Verificar que el usuario existe
+    const user = await User.findOne({ userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    const allQuestions = [];
+    
+    // 1. Obtener preguntas de errores (failedQuestions)
+    if (user.failedQuestions && user.failedQuestions.length > 0) {
+      const failedQuestionIds = user.failedQuestions
+        .map(q => q.questionId)
+        .filter(id => id)
+        .map(id => new mongoose.Types.ObjectId(id));
+      
+      const [textQuestions, imageQuestions] = await Promise.all([
+        ExamenCompleto.find({ '_id': { $in: failedQuestionIds } }),
+        ExamenFotos.find({ '_id': { $in: failedQuestionIds } })
+      ]);
+      
+      [...textQuestions, ...imageQuestions].forEach(q => {
+        const questionObj = q.toObject ? q.toObject() : q;
+        // Añadir URL de imagen si existe
+        if (questionObj.image) {
+          questionObj.image = `${BACKEND_URL}/preguntas/${questionObj.image}`;
+        }
+        allQuestions.push({
+          ...questionObj,
+          source: 'errors'
+        });
+      });
+    }
+    
+    // 2. Obtener preguntas sin contestar (unanswered)
+    const unansweredDocs = await UnansweredQuestion.find({ userId });
+    unansweredDocs.forEach(unansweredDoc => {
+      if (unansweredDoc.questionData && Object.keys(unansweredDoc.questionData).length > 0) {
+        // Crear objeto pregunta desde questionData
+        const question = {
+          _id: unansweredDoc.questionId,
+          question: unansweredDoc.questionData.question || '',
+          option_1: unansweredDoc.questionData.option_1 || '',
+          option_2: unansweredDoc.questionData.option_2 || '',
+          option_3: unansweredDoc.questionData.option_3 || '',
+          option_4: unansweredDoc.questionData.option_4 || '',
+          option_5: unansweredDoc.questionData.option_5 || '',
+          answer: unansweredDoc.questionData.answer || '',
+          subject: unansweredDoc.questionData.subject || unansweredDoc.subject || 'General',
+          image: unansweredDoc.questionData.image || null,
+          long_answer: unansweredDoc.questionData.long_answer || '',
+          source: 'unanswered'
+        };
+        
+        // Añadir URL de imagen si existe
+        if (question.image) {
+          question.image = `${BACKEND_URL}/preguntas/${question.image}`;
+        }
+        
+        // Evitar duplicados (si ya está en errores)
+        if (!allQuestions.find(q => q._id && q._id.toString() === question._id.toString())) {
+          allQuestions.push(question);
+        }
+      }
+    });
+    
+    // Si no hay preguntas disponibles
+    if (allQuestions.length === 0) {
+      return res.json({ 
+        question: null,
+        message: 'No hay preguntas de errores o sin contestar disponibles.'
+      });
+    }
+    
+    // Seleccionar una pregunta aleatoria
+    const randomIndex = Math.floor(Math.random() * allQuestions.length);
+    const randomQuestion = allQuestions[randomIndex];
+    
+    // Formatear opciones
+    const options = [
+      randomQuestion.option_1,
+      randomQuestion.option_2,
+      randomQuestion.option_3,
+      randomQuestion.option_4,
+      randomQuestion.option_5
+    ].filter(opt => opt && opt !== '-');
+    
+    return res.json({
+      question: {
+        _id: randomQuestion._id,
+        question: randomQuestion.question,
+        options: options,
+        answer: randomQuestion.answer,
+        subject: randomQuestion.subject || 'General',
+        image: randomQuestion.image || null,
+        long_answer: randomQuestion.long_answer || '',
+        source: randomQuestion.source
+      },
+      total: allQuestions.length
+    });
+    
+  } catch (error) {
+    console.error('Error al obtener pregunta aleatoria:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+// POST /flashcards/mark/:flashcardId - Marcar una flashcard como conocida/desconocida
+app.post('/flashcards/mark/:flashcardId', async (req, res) => {
+  try {
+    const { flashcardId } = req.params;
+    const { known } = req.body; // true = "me sé la respuesta", false = "no me sé la respuesta"
+    
+    if (typeof known !== 'boolean') {
+      return res.status(400).json({ error: 'El campo "known" debe ser un booleano' });
+    }
+    
+    const flashcard = await Flashcard.findById(flashcardId);
+    
+    if (!flashcard) {
+      return res.status(404).json({ error: 'Flashcard no encontrada' });
+    }
+    
+    // Si el usuario dice que se sabe la respuesta, marcar como "mastered"
+    // Si dice que no se la sabe, mantenerla activa para que vuelva a aparecer
+    if (known) {
+      flashcard.status = 'mastered';
+      flashcard.updatedAt = new Date();
+      await flashcard.save();
+      
+      res.json({
+        message: 'Flashcard marcada como dominada',
+        flashcard: {
+          _id: flashcard._id,
+          status: flashcard.status
+        }
+      });
+    } else {
+      // Si no se la sabe, solo actualizar la última vista
+      flashcard.lastViewed = new Date();
+      await flashcard.save();
+      
+      res.json({
+        message: 'Flashcard mantenida activa para repaso',
+        flashcard: {
+          _id: flashcard._id,
+          status: flashcard.status
+        }
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error al marcar flashcard:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+// DELETE /flashcards/:flashcardId - Eliminar una flashcard (cuando se borre de errores)
+app.delete('/flashcards/:flashcardId', async (req, res) => {
+  try {
+    const { flashcardId } = req.params;
+    
+    const flashcard = await Flashcard.findById(flashcardId);
+    
+    if (!flashcard) {
+      return res.status(404).json({ error: 'Flashcard no encontrada' });
+    }
+    
+    // Marcar como removida en lugar de eliminar físicamente
+    flashcard.status = 'removed';
+    flashcard.updatedAt = new Date();
+    await flashcard.save();
+    
+    res.json({
+      message: 'Flashcard eliminada',
+      flashcard: {
+        _id: flashcard._id,
+        status: flashcard.status
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error al eliminar flashcard:', error);
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+  }
+});
+
+// GET /flashcards/stats/:userId - Obtener estadísticas de flashcards
+app.get('/flashcards/stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const [active, mastered, total] = await Promise.all([
+      Flashcard.countDocuments({ userId, status: 'active' }),
+      Flashcard.countDocuments({ userId, status: 'mastered' }),
+      Flashcard.countDocuments({ userId })
+    ]);
+    
+    res.json({
+      active,
+      mastered,
+      total
+    });
+    
+  } catch (error) {
+    console.error('Error al obtener estadísticas de flashcards:', error);
     res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 });

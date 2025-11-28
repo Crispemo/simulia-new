@@ -83,3 +83,10 @@ const examenResultadoSchema = new mongoose.Schema({
 const ExamenResultado = mongoose.model('ExamenResultado', examenResultadoSchema, 'examen-resultados');
 
 module.exports = ExamenResultado; 
+
+
+
+
+
+
+

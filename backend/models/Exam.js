@@ -102,3 +102,10 @@ examSchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model('Exam', examSchema); 
+
+
+
+
+
+
+

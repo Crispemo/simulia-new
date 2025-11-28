@@ -18,19 +18,51 @@ const RESOURCES = [
     category: 'Guías'
   },
   {
-    id: 2,
-    name: 'Plantilla de Correción de Errores',
-    type: 'xlsx',
-    description: 'Excel para llevar el control de tus errores',
-    driveId: 'TU_FILE_ID_AQUI', // Reemplazar con el ID real del archivo
-    category: 'Herramientas'
-  },
-  {
     id: 3,
     name: 'Mpox (Monkeypox) - Información y actuaciones',
     type: 'pdf',
     description: 'Mpox (Monkeypox) - Información y actuaciones',
     driveId: 'TU_FILE_ID_AQUI', // Reemplazar con el ID real del archivo
+    category: 'Protocolos'
+  },
+  {
+    id: 4,
+    name: 'Plantilla de Estudio',
+    type: 'pdf',
+    description: 'Plantilla para organizar y planificar tu estudio del EIR',
+    driveId: '1BkBEqJav0Qvb8Ksad91Cl98cLz3YBAdk',
+    category: 'Herramientas'
+  },
+  {
+    id: 5,
+    name: 'Sarampión - Profesionales Sanitarios',
+    type: 'pdf',
+    description: 'Infografía sobre sarampión para profesionales sanitarios',
+    driveId: '1szETPHuEkgm2KVlkiCa-xOpSJjgFusxr',
+    category: 'Guías'
+  },
+  {
+    id: 6,
+    name: 'Plan Nacional Exceso Temperaturas',
+    type: 'pdf',
+    description: 'Plan Nacional de actuaciones preventivas de los efectos del exceso de temperaturas sobre la salud',
+    driveId: '1hIVGrYScGKQNC1FXHV2feLLyNff-y-NU',
+    category: 'Protocolos'
+  },
+  {
+    id: 7,
+    name: 'Recomendaciones de Vacunación frente a la Gripe',
+    type: 'pdf',
+    description: 'Recomendaciones de vacunación frente a la gripe',
+    driveId: '1l8cQjEGmHGUNwsfsIQmpe8GR27zNef7x',
+    category: 'Guías'
+  },
+  {
+    id: 8,
+    name: 'Tabaco - Verificación 2025',
+    type: 'pdf',
+    description: 'Documento sobre verificación de tabaco 2025',
+    driveId: '1tPUbrnwWDxP3ZE_iClCUdE3E9_NuFACp',
     category: 'Protocolos'
   },
   // Añade más recursos aquí según necesites

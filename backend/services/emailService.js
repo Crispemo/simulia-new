@@ -492,4 +492,154 @@ const sendTicketEmail = async (subject, description, userEmail, userId) => {
   }
 };
 
-module.exports = { sendSubscriptionEmail, sendDisputeEmail, sendTicketEmail };
+// Función para enviar respuestas de encuesta
+const sendSurveyEmail = async (responses, userEmail, userName, userId, timestamp) => {
+  if (!responses || Object.keys(responses).length === 0) {
+    console.error('❌ ERROR: Faltan datos para enviar la encuesta (respuestas).');
+    return false;
+  }
+
+  const emailSubject = '📋 Nueva respuesta de encuesta - Simulia';
+  
+  // Formatear las respuestas de manera legible
+  const formatResponse = (response) => {
+    if (typeof response === 'object' && response !== null) {
+      // Si es un objeto (checkbox con múltiples opciones)
+      const selected = Object.entries(response)
+        .filter(([key, value]) => value === true && key !== 'other')
+        .map(([key]) => key);
+      const other = response.other;
+      let formatted = selected.join(', ');
+      if (other) {
+        formatted += formatted ? `, Otro: ${other}` : `Otro: ${other}`;
+      }
+      return formatted || 'No especificado';
+    }
+    return String(response || 'No especificado');
+  };
+
+  // Mapeo de IDs de preguntas a títulos legibles
+  const questionTitles = {
+    exam_years: '¿Desde qué año te gustaría que estén disponibles los exámenes EIR?',
+    practice_types: '¿Qué tipo de prácticas valoras más?',
+    comparison: '¿Te gustaría poder compararte con otros usuarios?',
+    test_techniques: '¿Te interesa que Simulia incluya consejos para tipo test?',
+    technique_format: '¿En qué formato preferirías aprender técnica tipo test?',
+    new_features: '¿Hay alguna funcionalidad o mejora que te gustaría ver?',
+    best_worst: '¿Qué parte de Simulia valoras más pero podría mejorar?',
+    bugs: '¿Has tenido algún fallo en la plataforma?',
+    comments: '¿Algún comentario, sugerencia o idea?',
+    recommendation: '¿Recomendarías Simulia a otros opositores?'
+  };
+
+  const ratingLabels = {
+    1: 'Definitivamente NO',
+    2: 'Probablemente no',
+    3: 'Tal vez',
+    4: 'Probablemente sí',
+    5: '¡Claro que sí!'
+  };
+
+  let message = `
+═══════════════════════════════════════════════════════
+📋 NUEVA RESPUESTA DE ENCUESTA - SIMULIA
+═══════════════════════════════════════════════════════
+
+👤 Usuario: ${userName || userId || 'Anónimo'}
+📧 Email: ${userEmail || 'No disponible'}
+🆔 User ID: ${userId || 'No disponible'}
+📅 Fecha: ${timestamp ? new Date(timestamp).toLocaleString('es-ES') : new Date().toLocaleString('es-ES')}
+
+───────────────────────────────────────────────────────
+📝 RESPUESTAS:
+───────────────────────────────────────────────────────
+`;
+
+  // Agregar cada respuesta formateada
+  Object.entries(responses).forEach(([questionId, response]) => {
+    const questionTitle = questionTitles[questionId] || questionId;
+    let formattedResponse = formatResponse(response);
+    
+    // Si es la pregunta de recomendación, agregar el label
+    if (questionId === 'recommendation' && ratingLabels[response]) {
+      formattedResponse = `${response}/5 - ${ratingLabels[response]}`;
+    }
+    
+    message += `\n${questionTitle}\n→ ${formattedResponse}\n`;
+  });
+
+  message += `\n═══════════════════════════════════════════════════════\n`;
+
+  console.log('🔧 SURVEY EMAIL DEBUG - Iniciando envío de encuesta');
+  console.log('🔧 SURVEY EMAIL DEBUG - UserId:', userId);
+  console.log('🔧 SURVEY EMAIL DEBUG - UserEmail:', userEmail);
+  console.log('🔧 SURVEY EMAIL DEBUG - Transporter disponible:', !!transporter);
+  console.log('🔧 SURVEY EMAIL DEBUG - Número de respuestas:', Object.keys(responses).length);
+
+  // Si no hay transporter configurado, solo loguear la encuesta
+  if (!transporter) {
+    console.log('=== ENCUESTA SIMULADA (Sin configuración de email) ===');
+    console.log(`Para: simuliaproject@simulia.es`);
+    console.log(`Asunto: ${emailSubject}`);
+    console.log(`Mensaje:\n${message}`);
+    console.log('================================================');
+    return true; // Simular éxito
+  }
+
+  // Función para reintentar el envío de email de encuesta
+  const sendSurveyWithRetry = async (mailOptions, maxRetries = 2) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const freshTransporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD,
+          },
+          connectionTimeout: 10000,
+          greetingTimeout: 5000,
+          socketTimeout: 10000,
+          tls: {
+            rejectUnauthorized: false,
+            minVersion: 'TLSv1.2'
+          },
+          pool: false,
+          direct: false
+        });
+        
+        const info = await freshTransporter.sendMail(mailOptions);
+        console.log(`✅ Correo de encuesta enviado (intento ${attempt})`);
+        return true;
+      } catch (error) {
+        console.error(`❌ Error al enviar correo de encuesta (intento ${attempt}/${maxRetries}):`, error.message);
+        
+        if (attempt === maxRetries) {
+          return false;
+        }
+        
+        const delay = 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    return false;
+  };
+
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL,
+      to: 'simuliaproject@simulia.es',
+      subject: emailSubject,
+      text: message,
+    };
+    
+    const result = await sendSurveyWithRetry(mailOptions);
+    return result;
+  } catch (error) {
+    console.error('💥 ERROR CRÍTICO al enviar correo de encuesta:', error);
+    return false;
+  }
+};
+
+module.exports = { sendSubscriptionEmail, sendDisputeEmail, sendTicketEmail, sendSurveyEmail };

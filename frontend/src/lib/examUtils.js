@@ -322,7 +322,8 @@ export const saveExamProgress = async (
   timeUsed, 
   totalTime, 
   isCompleted,
-  examStatus
+  examStatus,
+  simulacroSourceType = null
 ) => {
   try {
     console.log(`Guardando progreso de examen tipo: ${examType}`);
@@ -409,6 +410,11 @@ export const saveExamProgress = async (
       status: examStatus || 'in_progress',
       totalQuestions: questions.length
     };
+    
+    // Agregar simulacroSourceType si está disponible (solo para simulacros)
+    if (simulacroSourceType && examType === 'simulacro') {
+      examData.simulacroSourceType = simulacroSourceType;
+    }
 
     // Solo añadir examId si está definido y no es null
     if (examId) {

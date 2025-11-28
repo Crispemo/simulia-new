@@ -1,0 +1,388 @@
+/* Flashcard Modal Styles */
+.flashcard-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.flashcard-modal-overlay.dark {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.flashcard-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.dark .flashcard-modal-content {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.flashcard-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .flashcard-modal-header {
+  border-bottom-color: #374151;
+}
+
+.flashcard-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.flashcard-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.flashcard-close-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.dark .flashcard-close-btn:hover {
+  background-color: #374151;
+  color: #f9fafb;
+}
+
+.flashcard-modal-body {
+  padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Question Styles */
+.flashcard-question-container {
+  width: 100%;
+  max-width: 700px;
+}
+
+.flashcard-source-badge {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+}
+
+.flashcard-subject-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #e0e7ff;
+  color: #3730a3;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.dark .flashcard-subject-badge {
+  background-color: #312e81;
+  color: #c7d2fe;
+}
+
+.flashcard-question-text {
+  font-size: 1.125rem;
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+.dark .flashcard-question-text {
+  color: #f9fafb;
+}
+
+.flashcard-image-container {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.flashcard-question-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.flashcard-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.flashcard-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.dark .flashcard-option {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.flashcard-option:hover:not(:disabled) {
+  border-color: #667eea;
+  background-color: #f3f4f6;
+  transform: translateX(4px);
+}
+
+.dark .flashcard-option:hover:not(:disabled) {
+  background-color: #4b5563;
+}
+
+.flashcard-option.selected {
+  border-color: #667eea;
+  background-color: #eef2ff;
+}
+
+.dark .flashcard-option.selected {
+  background-color: #312e81;
+  border-color: #6366f1;
+}
+
+.flashcard-option.correct {
+  border-color: #10b981;
+  background-color: #d1fae5;
+}
+
+.dark .flashcard-option.correct {
+  background-color: #065f46;
+  border-color: #10b981;
+}
+
+.flashcard-option.incorrect {
+  border-color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.dark .flashcard-option.incorrect {
+  background-color: #7f1d1d;
+  border-color: #ef4444;
+}
+
+.flashcard-option:disabled {
+  cursor: not-allowed;
+}
+
+.flashcard-option-letter {
+  font-weight: 600;
+  color: #667eea;
+  min-width: 24px;
+}
+
+.flashcard-option.correct .flashcard-option-letter {
+  color: #10b981;
+}
+
+.flashcard-option.incorrect .flashcard-option-letter {
+  color: #ef4444;
+}
+
+.flashcard-option-text {
+  flex: 1;
+}
+
+.flashcard-option-check {
+  color: #10b981;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.flashcard-option-cross {
+  color: #ef4444;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.flashcard-explanation {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.dark .flashcard-explanation {
+  background-color: #374151;
+  border-left-color: #6366f1;
+}
+
+.flashcard-explanation h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  text-transform: uppercase;
+}
+
+.dark .flashcard-explanation h4 {
+  color: #818cf8;
+}
+
+.flashcard-explanation p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #374151;
+}
+
+.dark .flashcard-explanation p {
+  color: #d1d5db;
+}
+
+/* Loading and Error States */
+.flashcard-loading,
+.flashcard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.flashcard-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.flashcard-error p {
+  color: #ef4444;
+  margin: 0;
+}
+
+.dark .flashcard-error p {
+  color: #f87171;
+}
+
+/* Action Buttons */
+.flashcard-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 700px;
+  justify-content: center;
+}
+
+.flashcard-action-btn {
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.flashcard-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flashcard-btn-show {
+  background-color: #667eea;
+  color: white;
+}
+
+.flashcard-btn-show:hover:not(:disabled) {
+  background-color: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+}
+
+.flashcard-btn-next {
+  background-color: #10b981;
+  color: white;
+}
+
+.flashcard-btn-next:hover {
+  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .flashcard-modal-content {
+    max-width: 100%;
+    margin: 1rem;
+  }
+
+  .flashcard-question-text {
+    font-size: 1rem;
+  }
+
+  .flashcard-option {
+    padding: 0.875rem;
+    font-size: 0.9375rem;
+  }
+
+  .flashcard-actions {
+    flex-direction: column;
+  }
+
+  .flashcard-action-btn {
+    width: 100%;
+  }
+}
+
+

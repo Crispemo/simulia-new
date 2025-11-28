@@ -8,7 +8,7 @@ import { FaMoon, FaSun, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import './Dashboard.css';
 import AEleccion from './Aeleccion';
 import Contrarreloj from './Contrarreloj';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, CreditCard } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import jwtDecode from "jwt-decode"
@@ -16,6 +16,7 @@ import ChatBot from "./components/ChatBot"
 import Community from "./components/Community"
 import TimelineProgress from "./components/TimelineProgress"
 import { FiX, FiMenu, FiUsers, FiMessageSquare, FiSun, FiMoon, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
+import { MessageSquare } from 'lucide-react';
 import { API_URL } from './config';
 import { useAuth } from './context/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -28,6 +29,8 @@ import StreakCounter from './components/streak-counter';
 // import AIAssistant from './components/ai-assistant';
 import ResourcesModal from './components/ResourcesModal';
 import AllSubjectsModal from './components/AllSubjectsModal';
+import SurveyModal from './components/SurveyModal';
+import FlashcardModal from './components/FlashcardModal';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
@@ -47,6 +50,9 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showContrarrelojPopup, setShowContrarrelojPopup] = useState(false);
   const [showResourcesModal, setShowResourcesModal] = useState(false);
   const [showAllSubjectsModal, setShowAllSubjectsModal] = useState(false);
+  const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const [showFlashcardModal, setShowFlashcardModal] = useState(false);
+  const [hasErrorsAvailable, setHasErrorsAvailable] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const examsPerPage = 6;
@@ -155,6 +161,58 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       // Si localStorage falla, no bloquear la UI
       console.warn('No se pudo acceder a localStorage para tutorial:', e);
     }
+  }, [userId]);
+
+  // Mostrar flashcard diaria cuando el usuario entra al dashboard
+  useEffect(() => {
+    if (!userId) return;
+    
+    // Verificar si ya se mostró la flashcard hoy
+    const today = new Date().toDateString();
+    const flashcardShownKey = `flashcardShown_${userId}_${today}`;
+    const alreadyShown = localStorage.getItem(flashcardShownKey);
+    
+    if (!alreadyShown) {
+      // Esperar un poco para que el dashboard se cargue primero
+      const timer = setTimeout(() => {
+        // Verificar primero si hay flashcards disponibles antes de mostrar
+        checkAndShowFlashcard();
+        localStorage.setItem(flashcardShownKey, 'true');
+      }, 3000); // 3 segundos después de cargar el dashboard
+      
+      return () => clearTimeout(timer);
+    }
+  }, [userId]);
+
+  // Verificar si hay errores disponibles al cargar el dashboard y mostrar pregunta automáticamente
+  useEffect(() => {
+    if (!userId) return;
+    
+    const checkErrorsAvailable = async () => {
+      try {
+        // Verificar si hay preguntas disponibles (errores o unanswered)
+        const response = await fetch(`${API_URL}/flashcards/daily/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.question) {
+            setHasErrorsAvailable(true);
+            // Mostrar automáticamente al entrar
+            setShowFlashcardModal(true);
+          }
+        }
+      } catch (err) {
+        // Silenciar errores
+      }
+    };
+    
+    checkErrorsAvailable();
   }, [userId]);
 
   // Calcular racha de acceso a la plataforma
@@ -1243,7 +1301,7 @@ const handleErroresClick = () => {
                       }
                     >
                       {answersDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`pie-cell-answers-${entry.name}-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip 
@@ -1296,7 +1354,7 @@ const handleErroresClick = () => {
                       >
                         {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].slice(0, 8).map((entry, index) => (
                           <Cell 
-                            key={`cell-${index}`} 
+                            key={`bar-cell-subjects-${entry.name}-${index}`} 
                             fill={`rgba(255, ${68 + (index * 12)}, ${68 + (index * 12)}, 0.8)`}
                           />
                         ))}
@@ -1399,7 +1457,7 @@ const handleErroresClick = () => {
                       <Bar dataKey="count" name="Fallos" fill="#ff7c7c">
                         {[...subjectsPerformanceData.bloque1, ...subjectsPerformanceData.bloque2].map((entry, index) => (
                           <Cell 
-                            key={`cell-${index}`} 
+                            key={`bar-cell-all-subjects-${entry.name}-${index}`} 
                             fill={`rgba(255, ${68 + (index * 8)}, ${68 + (index * 8)}, 0.8)`}
                           />
                         ))}
@@ -2048,6 +2106,7 @@ const handleErroresClick = () => {
           toggleDarkMode={handleToggleDarkMode}
           onTutorialClick={openTutorialModal}
           onResourcesClick={() => setShowResourcesModal(true)}
+          onSurveyClick={() => setShowSurveyModal(true)}
         />
         
         {/* Main Content */}
@@ -2060,17 +2119,19 @@ const handleErroresClick = () => {
           )}
           <main className="container mx-auto p-6 space-y-6">
             {/* Header con gradient */}
-            <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-8 shadow-sm">
+            <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-4 md:p-8 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 md:gap-4">
                   <img 
                     src="/Logo_oscuro.png" 
                     alt="SIMULIA Logo" 
-                    className="h-12 w-auto"
+                    className="h-8 md:h-12 w-auto"
                     style={{ maxHeight: '48px' }}
                   />
-                  <h1 className="text-3xl font-bold tracking-tight">
-                    {currentUser?.name || authUser?.displayName ? `¿${currentUser?.name || authUser?.displayName}, list@ para practicar?` : '¿Listo para practicar?'}
+                  <h1 className="text-xl md:text-3xl font-bold tracking-tight">
+                    {(currentUser?.name || authUser?.displayName)?.split(' ')[0] 
+                      ? `¿${(currentUser?.name || authUser?.displayName).split(' ')[0]}, list@ para practicar?` 
+                      : '¿Listo para practicar?'}
                   </h1>
                 </div>
                 <div className="flex flex-col items-end gap-4">
@@ -2082,6 +2143,18 @@ const handleErroresClick = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {/* <AIAssistant /> */}
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowFlashcardModal(true)}
+                      className="flex items-center gap-2 relative"
+                      title="Ver flashcard diaria"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Flashcard</span>
+                      {hasErrorsAvailable && (
+                        <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800 animate-pulse" />
+                      )}
+                    </Button>
                     <Button
                       variant="outline"
                       onClick={handleToggleDarkMode}
@@ -2180,7 +2253,7 @@ const handleErroresClick = () => {
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
                             {answersDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                              <Cell key={`pie-cell-${entry.name}-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
                           <Tooltip />
@@ -2251,6 +2324,17 @@ const handleErroresClick = () => {
         <AllSubjectsModal
           isOpen={showAllSubjectsModal}
           onClose={() => setShowAllSubjectsModal(false)}
+          userId={userId}
+          isDarkMode={isDarkMode}
+        />
+        <SurveyModal
+          isOpen={showSurveyModal}
+          onClose={() => setShowSurveyModal(false)}
+          isDarkMode={isDarkMode}
+        />
+        <FlashcardModal
+          isOpen={showFlashcardModal}
+          onClose={() => setShowFlashcardModal(false)}
           userId={userId}
           isDarkMode={isDarkMode}
         />

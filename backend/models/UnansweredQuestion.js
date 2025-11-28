@@ -29,3 +29,10 @@ unansweredQuestionSchema.index({ userId: 1, subject: 1 });
 unansweredQuestionSchema.index({ userId: 1, lastSeen: -1 });
 
 module.exports = mongoose.model('UnansweredQuestion', unansweredQuestionSchema); 
+
+
+
+
+
+
+
