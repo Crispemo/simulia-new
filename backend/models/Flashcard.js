@@ -70,3 +70,4 @@ flashcardSchema.index({ userId: 1, lastViewed: 1 });
 module.exports = mongoose.model('Flashcard', flashcardSchema);
 
 
+

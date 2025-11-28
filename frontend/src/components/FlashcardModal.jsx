@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowRight } from 'lucide-react';
+import { X, Check } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { API_URL } from '../config';
 import './FlashcardModal.css';
 
@@ -59,10 +60,49 @@ const FlashcardModal = ({ isOpen, onClose, userId, isDarkMode }) => {
 
   const handleShowAnswer = () => {
     setShowAnswer(true);
+    
+    // Lanzar confeti para celebrar que intentaron aprender
+    // El objetivo es motivar, no importa si acertaron o no
+    const duration = 2000;
+    const end = Date.now() + duration;
+
+    const colors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'];
+    
+    (function frame() {
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+    
+    // También lanzar confeti desde el centro
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: colors
+      });
+    }, 250);
   };
 
   const handleNext = () => {
-    loadQuestion();
+    // Cerrar el modal después de ver la respuesta (solo 1 pregunta por sesión)
+    handleClose();
   };
 
   const handleClose = () => {
@@ -78,10 +118,15 @@ const FlashcardModal = ({ isOpen, onClose, userId, isDarkMode }) => {
   };
 
   const isCorrect = (index) => {
-    if (!showAnswer || selectedAnswer === null) return false;
+    if (!showAnswer || selectedAnswer === null || !question) return false;
     const answerLetter = getAnswerLetter(index);
     const correctAnswer = question.answer;
     return answerLetter === correctAnswer || (index + 1).toString() === correctAnswer;
+  };
+  
+  const userAnswerIsCorrect = () => {
+    if (!showAnswer || selectedAnswer === null || !question) return false;
+    return isCorrect(selectedAnswer);
   };
 
   const isSelected = (index) => {
@@ -171,6 +216,16 @@ const FlashcardModal = ({ isOpen, onClose, userId, isDarkMode }) => {
                     <p>{question.long_answer}</p>
                   </div>
                 )}
+                
+                {showAnswer && (
+                  <div className="flashcard-motivational-message">
+                    <div className="flashcard-celebration-icon">🎉</div>
+                    <p className="flashcard-motivational-text">
+                      ¡Bien hecho por intentarlo! Lo importante es que estás aprendiendo. 
+                      {userAnswerIsCorrect() ? ' ¡Y además acertaste! 🎯' : ' Sigue así, cada intento te acerca más al éxito. 💪'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flashcard-actions">
@@ -184,11 +239,11 @@ const FlashcardModal = ({ isOpen, onClose, userId, isDarkMode }) => {
                   </button>
                 ) : (
                   <button
-                    className="flashcard-action-btn flashcard-btn-next"
-                    onClick={handleNext}
+                    className="flashcard-action-btn flashcard-btn-close"
+                    onClick={handleClose}
                   >
-                    <ArrowRight size={18} />
-                    <span>Siguiente pregunta</span>
+                    <Check size={18} />
+                    <span>Entendido, cerrar</span>
                   </button>
                 )}
               </div>

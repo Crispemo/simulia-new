@@ -163,57 +163,52 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     }
   }, [userId]);
 
-  // Mostrar flashcard diaria cuando el usuario entra al dashboard
+  // Mostrar 1 pregunta cuando el usuario inicia sesión (solo una vez por sesión)
   useEffect(() => {
     if (!userId) return;
     
-    // Verificar si ya se mostró la flashcard hoy
-    const today = new Date().toDateString();
-    const flashcardShownKey = `flashcardShown_${userId}_${today}`;
-    const alreadyShown = localStorage.getItem(flashcardShownKey);
+    // Verificar si ya se mostró la pregunta en esta sesión usando sessionStorage
+    const sessionKey = `flashcardShown_${userId}`;
+    const alreadyShown = sessionStorage.getItem(sessionKey);
     
     if (!alreadyShown) {
+      // Marcar como mostrada inmediatamente para evitar múltiples llamadas
+      sessionStorage.setItem(sessionKey, 'true');
+      
       // Esperar un poco para que el dashboard se cargue primero
       const timer = setTimeout(() => {
-        // Verificar primero si hay flashcards disponibles antes de mostrar
         checkAndShowFlashcard();
-        localStorage.setItem(flashcardShownKey, 'true');
-      }, 3000); // 3 segundos después de cargar el dashboard
+      }, 2000); // 2 segundos después de cargar el dashboard
       
       return () => clearTimeout(timer);
     }
   }, [userId]);
 
-  // Verificar si hay errores disponibles al cargar el dashboard y mostrar pregunta automáticamente
-  useEffect(() => {
+  // Función para verificar y mostrar flashcard
+  const checkAndShowFlashcard = async () => {
     if (!userId) return;
     
-    const checkErrorsAvailable = async () => {
-      try {
-        // Verificar si hay preguntas disponibles (errores o unanswered)
-        const response = await fetch(`${API_URL}/flashcards/daily/${userId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.question) {
-            setHasErrorsAvailable(true);
-            // Mostrar automáticamente al entrar
-            setShowFlashcardModal(true);
-          }
+    try {
+      const response = await fetch(`${API_URL}/flashcards/daily/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Solo mostrar el modal si hay preguntas disponibles
+        if (data.question) {
+          setShowFlashcardModal(true);
         }
-      } catch (err) {
-        // Silenciar errores
       }
-    };
-    
-    checkErrorsAvailable();
-  }, [userId]);
+    } catch (err) {
+      console.log('No hay preguntas disponibles:', err);
+      // No mostrar el modal si hay error o no hay preguntas
+    }
+  };
 
   // Calcular racha de acceso a la plataforma
   // useEffect(() => {
