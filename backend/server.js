@@ -448,7 +448,11 @@ app.use((err, req, res, next) => {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/simuliadb';
 console.log('Conectando a MongoDB:', MONGODB_URI);
 
-mongoose.connect(MONGODB_URI)
+// Conectar a MongoDB sin bloquear el inicio del servidor
+mongoose.connect(MONGODB_URI, {
+  serverSelectionTimeoutMS: 10000, // Timeout de 10 segundos
+  socketTimeoutMS: 45000,
+})
   .then(() => {
     console.log('MongoDB connection established');
     console.log('MongoDB connection successful');
@@ -471,8 +475,10 @@ mongoose.connect(MONGODB_URI)
     });
   })
   .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
+    console.error('MongoDB connection error:', err.message);
+    console.warn('⚠️  Servidor iniciará sin MongoDB. Se reintentará la conexión...');
+    // NO hacer exit - permitir que el servidor inicie
+    // MongoDB se reconectará automáticamente cuando esté disponible
   });
 
 // Email Configuration - Se maneja en emailService.js
