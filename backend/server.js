@@ -155,12 +155,7 @@ async function sendWebhookToN8N(userData) {
   }
 }
 
-// Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK PRIMERO
-app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
-
-// Para todas las demás rutas, usar JSON parsing
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// CORS debe configurarse ANTES de otros middlewares
 // CORS seguro con credenciales y whitelist
 const corsWhitelist = [
   'http://localhost:3000',
@@ -185,11 +180,16 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Aplicar CORS a todas las rutas
+// Aplicar CORS PRIMERO, antes de cualquier otro middleware
 app.use(cors(corsOptions));
-
-// Manejar preflight explícitamente con la misma configuración
 app.options('*', cors(corsOptions));
+
+// Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
+app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
+
+// Para todas las demás rutas, usar JSON parsing
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
