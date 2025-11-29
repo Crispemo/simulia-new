@@ -169,23 +169,8 @@ const corsWhitelist = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && corsWhitelist.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Vary', 'Origin');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  // Responder preflight rápidamente
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-  next();
-});
-
-app.use(cors({
+// Configuración de CORS
+const corsOptions = {
   origin: function (origin, callback) {
     // Permitir herramientas sin origin (Postman/cURL) y orígenes en whitelist
     if (!origin || corsWhitelist.includes(origin)) {
@@ -195,11 +180,16 @@ app.use(cors({
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+  credentials: true,  // CRÍTICO: debe ser true para peticiones con credentials: 'include'
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
 
-// Asegurar manejo de OPTIONS en todas las rutas
-app.options('*', cors());
+// Aplicar CORS a todas las rutas
+app.use(cors(corsOptions));
+
+// Manejar preflight explícitamente con la misma configuración
+app.options('*', cors(corsOptions));
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
