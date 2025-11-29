@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
     "@fortawesome/react-fontawesome": "0.2.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-slot": "1.0.2",
@@ -41,8 +42,8 @@
     "web-vitals": "2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -63,6 +64,7 @@
     "@types/react-dom": "18.2.0",
     "autoprefixer": "10.4.16",
     "postcss": "8.4.31",
+    "react-app-rewired": "^2.2.1",
     "tailwindcss": "3.3.5"
   }
 }

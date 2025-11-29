@@ -159,11 +159,28 @@ async function sendWebhookToN8N(userData) {
 const corsWhitelist = [
   'https://www.simulia.es',
   'https://simulia.es',
+  'http://www.simulia.es', // HTTP por si acaso (aunque no recomendado)
+  'http://simulia.es', // HTTP por si acaso (aunque no recomendado)
   'http://localhost:3000', // para desarrollo
+  'http://localhost:3001', // para desarrollo alternativo
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
+
+// Función helper para establecer headers CORS
+const setCorsHeaders = (res, origin) => {
+  if (origin && corsWhitelist.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept, X-CSRF-Token');
+    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
+    res.setHeader('Vary', 'Origin');
+    return true;
+  }
+  return false;
+};
 
 // 2. ELIMINAR LA CONFIGURACIÓN corsOptions (no se usará)
 // const corsOptions = { ... } // ELIMINAR ESTO
@@ -183,20 +200,15 @@ app.use((req, res, next) => {
   }
   
   // CRÍTICO: Establecer headers CORS para TODOS los origins en la whitelist
-  if (origin && corsWhitelist.includes(origin)) {
-    // Headers CORS obligatorios
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: debe ser string 'true'
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
-    res.setHeader('Vary', 'Origin');
-    
+  const corsSet = setCorsHeaders(res, origin);
+  
+  if (corsSet) {
     if (process.env.NODE_ENV !== 'production') {
       console.log('✅ CORS Headers establecidos para:', origin);
     }
   } else if (origin) {
     console.warn('⚠️ Origin no permitido:', origin);
+    console.warn('📋 Orígenes permitidos:', corsWhitelist);
   }
   
   // Manejar preflight (OPTIONS) - DEBE responder inmediatamente
@@ -448,11 +460,10 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err);
   
-  // Asegurar CORS también en errores
-  const origin = req.headers.origin;
-  if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  // Asegurar CORS también en errores - establecer TODOS los headers necesarios
+  if (!res.headersSent) {
+    const origin = req.headers.origin;
+    setCorsHeaders(res, origin);
   }
   
   if (!res.headersSent) {
