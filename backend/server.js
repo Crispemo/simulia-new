@@ -164,7 +164,28 @@ const corsWhitelist = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// Configuración de CORS
+// Middleware CORS explícito y robusto - DEBE IR PRIMERO
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Si el origen está en la whitelist, establecer TODOS los headers CORS
+  if (origin && corsWhitelist.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Vary', 'Origin');
+  }
+  
+  // Manejar preflight (OPTIONS) explícitamente
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
+// Configuración de CORS adicional como respaldo
 const corsOptions = {
   origin: function (origin, callback) {
     // Permitir herramientas sin origin (Postman/cURL) y orígenes en whitelist
@@ -180,9 +201,8 @@ const corsOptions = {
   optionsSuccessStatus: 204
 };
 
-// Aplicar CORS PRIMERO, antes de cualquier otro middleware
+// Aplicar CORS también con la librería cors como respaldo
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 // Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
