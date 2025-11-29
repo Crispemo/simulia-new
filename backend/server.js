@@ -444,11 +444,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// 4. Middleware de errores (al final) - asegurar CORS también en errores
+// 6. Middleware de errores - al final (asegurar CORS también en errores)
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('❌ Error:', err);
   
-  // Aseguramos CORS también en errores
+  // Asegurar CORS también en errores
   const origin = req.headers.origin;
   if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
     res.setHeader('Access-Control-Allow-Origin', origin);
