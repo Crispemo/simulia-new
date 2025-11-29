@@ -178,9 +178,12 @@ const corsOptions = {
 };
 
 // 3. CORS debe ir SIEMPRE antes que las rutas
-// Middleware CORS manual robusto para garantizar headers correctos
+// Middleware CORS manual ÚNICO - sin librería cors para evitar conflictos
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
+  console.log('🔵 CORS Middleware - Method:', req.method, 'URL:', req.url, 'Origin:', origin);
+  console.log('🔵 CORS Whitelist:', corsWhitelist);
   
   // Si el origen está en la whitelist, establecer TODOS los headers CORS
   if (origin && corsWhitelist.includes(origin)) {
@@ -189,20 +192,23 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
     res.setHeader('Vary', 'Origin');
+    
+    console.log('🔵 CORS Headers establecidos:', {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+    });
+  } else {
+    console.log('⚠️ CORS: Origin no permitido:', origin);
   }
   
   // Manejar preflight (OPTIONS) explícitamente
   if (req.method === 'OPTIONS') {
-    console.log('🔵 OPTIONS preflight recibido:', req.url, 'Origin:', origin);
+    console.log('🔵 OPTIONS preflight - Respondiendo 204');
     return res.status(204).end();
   }
   
   next();
 });
-
-// También aplicar CORS de la librería como respaldo
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // preflight global
 
 // Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
