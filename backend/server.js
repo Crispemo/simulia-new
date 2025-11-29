@@ -155,36 +155,31 @@ async function sendWebhookToN8N(userData) {
   }
 }
 
-// CORS debe configurarse ANTES de otros middlewares
-// CORS seguro con credenciales y whitelist
+// 1. Lista de orígenes permitidos
 const corsWhitelist = [
-  'http://localhost:3000',
   'https://www.simulia.es',
   'https://simulia.es',
+  'http://localhost:3000', // para desarrollo
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// Configuración de CORS con la librería cors
+// 2. Opciones de CORS
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir herramientas sin origin (Postman/cURL) y orígenes en whitelist
+  origin(origin, callback) {
+    // Permitir también herramientas sin origin (Postman, curl)
     if (!origin || corsWhitelist.includes(origin)) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
   },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
-  credentials: true,  // CRÍTICO: debe ser true para peticiones con credentials: 'include'
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
-// Aplicar CORS PRIMERO - antes de cualquier otro middleware
+// 3. CORS debe ir SIEMPRE antes que las rutas
 app.use(cors(corsOptions));
-
-// Manejar OPTIONS explícitamente para todas las rutas
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // preflight global
 
 // Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
@@ -417,21 +412,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware para logging de errores - asegurar headers CORS en errores
+// 4. Middleware de errores (al final) - asegurar CORS también en errores
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   
-  // Asegurar headers CORS incluso en errores
+  // Aseguramos CORS también en errores
   const origin = req.headers.origin;
-  if (origin && corsWhitelist.includes(origin)) {
+  if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   
-  res.status(500).json({
-    error: 'Error interno del servidor',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+  if (!res.headersSent) {
+    res.status(err.status || 500).json({
+      error: 'Error interno del servidor',
+      message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  } else {
+    next(err);
+  }
 });
 
 // Conectar a MongoDB
