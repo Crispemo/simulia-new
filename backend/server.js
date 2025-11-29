@@ -164,28 +164,7 @@ const corsWhitelist = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-// Middleware CORS explícito y robusto - DEBE IR PRIMERO
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Si el origen está en la whitelist, establecer TODOS los headers CORS
-  if (origin && corsWhitelist.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Vary', 'Origin');
-  }
-  
-  // Manejar preflight (OPTIONS) explícitamente
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  
-  next();
-});
-
-// Configuración de CORS adicional como respaldo
+// Configuración de CORS con la librería cors
 const corsOptions = {
   origin: function (origin, callback) {
     // Permitir herramientas sin origin (Postman/cURL) y orígenes en whitelist
@@ -195,14 +174,17 @@ const corsOptions = {
     return callback(new Error('Not allowed by CORS'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
   credentials: true,  // CRÍTICO: debe ser true para peticiones con credentials: 'include'
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
 
-// Aplicar CORS también con la librería cors como respaldo
+// Aplicar CORS PRIMERO - antes de cualquier otro middleware
 app.use(cors(corsOptions));
+
+// Manejar OPTIONS explícitamente para todas las rutas
+app.options('*', cors(corsOptions));
 
 // Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
