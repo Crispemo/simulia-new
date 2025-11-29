@@ -4828,19 +4828,8 @@ const findAvailablePort = async (startPort) => {
   });
 };
 
-// En producción, servir la aplicación React compilada
-if (isProduction) {
-  // Servir archivos estáticos desde la carpeta build
-  const buildPath = path.join(__dirname, '../frontend/build');
-  app.use(express.static(buildPath));
-  
-  // Para cualquier ruta no definida, servir el index.html
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-  });
-  
-  console.log('Configurado para servir aplicación React en producción');
-}
+// NOTA: El frontend se despliega por separado en Vercel
+// No intentar servir archivos estáticos del frontend desde el backend
 
 // Iniciar servidor con puerto automático
 findAvailablePort(PORT).then(availablePort => {
