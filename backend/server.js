@@ -181,6 +181,19 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // preflight global
 
+// Debug: Log para verificar que CORS se aplica
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    console.log('🔵 OPTIONS preflight recibido:', req.url);
+    console.log('🔵 Origin:', req.headers.origin);
+    console.log('🔵 CORS headers establecidos:', {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+    });
+  }
+  next();
+});
+
 // Middleware Configuration - CONFIGURAR RAW BODY PARA STRIPE WEBHOOK
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 
