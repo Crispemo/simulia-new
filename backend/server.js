@@ -417,9 +417,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware para logging de errores
+// Middleware para logging de errores - asegurar headers CORS en errores
 app.use((err, req, res, next) => {
   console.error('Error:', err);
+  
+  // Asegurar headers CORS incluso en errores
+  const origin = req.headers.origin;
+  if (origin && corsWhitelist.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
   res.status(500).json({
     error: 'Error interno del servidor',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
