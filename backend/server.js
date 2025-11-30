@@ -33,6 +33,12 @@ const axios = require('axios');
 const OpenAI = require('openai');
 const app = express();
 
+// Configurar Express para confiar en el proxy de Railway (importante para CORS)
+if (isProduction) {
+  app.set('trust proxy', 1); // Confiar en el primer proxy (Railway)
+  console.log('🔒 Trust proxy configurado para Railway');
+}
+
 // Inicializar OpenAI
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -165,65 +171,61 @@ const corsWhitelist = [
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
-// 2. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
+// 2. Configuración CORS usando el paquete cors (más robusto para Railway)
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Log para debugging
+    console.log('🔵 CORS Request Origin:', origin || 'NO ORIGIN');
+    
+    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Verificar si el origin está en la whitelist
+    if (corsWhitelist.includes(origin)) {
+      console.log('✅ CORS Origin permitido:', origin);
+      callback(null, true);
+    } else {
+      console.warn('⚠️ CORS Origin NO permitido:', origin);
+      console.warn('⚠️ Whitelist actual:', corsWhitelist);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // CRÍTICO: permite cookies y credenciales
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
+  exposedHeaders: [],
+  maxAge: 86400, // Cache preflight por 24 horas
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+};
+
+// 3. Aplicar middleware CORS - DEBE ir PRIMERO, antes de cualquier otra cosa
+app.use(cors(corsOptions));
+
+// 3.1. Middleware de respaldo CORS (por si el paquete cors no funciona correctamente en Railway)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Log para debugging (siempre en producción para diagnosticar)
-  console.log('🔵 CORS Request:', {
-    method: req.method,
-    url: req.url,
-    origin: origin || 'NO ORIGIN',
-    isInWhitelist: origin ? corsWhitelist.includes(origin) : false,
-    whitelist: corsWhitelist
-  });
-  
-  // CRÍTICO: Manejar OPTIONS (preflight) PRIMERO
-  if (req.method === 'OPTIONS') {
-    // Para OPTIONS, establecer headers SI el origin está en la whitelist
-    if (origin && corsWhitelist.includes(origin)) {
-      // Usar res.header() que es el método Express recomendado
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: debe ser string 'true'
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-      res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
-      res.header('Vary', 'Origin');
-      
-      console.log('✅ OPTIONS preflight - Headers establecidos para:', origin);
-      console.log('✅ Access-Control-Allow-Credentials:', res.get('Access-Control-Allow-Credentials'));
-    } else if (origin) {
-      console.warn('⚠️ OPTIONS preflight - Origin no permitido:', origin);
-      console.warn('⚠️ Whitelist actual:', corsWhitelist);
-    }
-    
-    // Responder inmediatamente a OPTIONS
-    return res.status(204).end();
-  }
-  
-  // Para todas las demás peticiones, establecer headers CORS si el origin está en la whitelist
+  // Solo establecer headers si el origin está en la whitelist
   if (origin && corsWhitelist.includes(origin)) {
-    // Headers CORS obligatorios - ESTABLECER SIEMPRE usando res.header()
+    // Asegurar que los headers CORS estén establecidos (respaldo)
+    // Esto es especialmente importante en Railway donde el proxy puede interferir
     res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
+    res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-    res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
     res.header('Vary', 'Origin');
     
-    console.log('✅ CORS Headers establecidos para:', origin);
-    console.log('✅ Access-Control-Allow-Credentials:', res.get('Access-Control-Allow-Credentials'));
-  } else if (origin) {
-    console.warn('⚠️ Origin no permitido:', origin);
-    console.warn('⚠️ Whitelist actual:', corsWhitelist);
+    // Manejar OPTIONS explícitamente como respaldo
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
   }
   
-  // Continuar con la siguiente middleware
   next();
 });
-
-// 3. NO usar el paquete cors adicional - el middleware personalizado es suficiente
-// Esto evita conflictos y asegura control total sobre los headers CORS
 
 // 4. Middleware de body parsing - DESPUÉS de CORS
 // IMPORTANTE: /stripe-webhook DEBE ir ANTES del body parser JSON
@@ -232,9 +234,6 @@ app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 // Para todas las demás rutas, usar JSON parsing
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// 5. ELIMINAR cualquier uso de app.use(cors()) si existe
-// NO usar: app.use(cors(corsOptions));
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
