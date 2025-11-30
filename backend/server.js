@@ -161,38 +161,19 @@ async function sendWebhookToN8N(userData) {
   }
 }
 
-// 1. Lista de orígenes permitidos
-const corsWhitelist = [
-  'https://www.simulia.es',
-  'https://simulia.es',
-  'http://localhost:3000', // para desarrollo
-  process.env.FRONTEND_URL
-].filter(Boolean);
+// ⚠️ TEMPORAL: CORS abierto para cualquier origen (solo para debugging)
+console.log('⚠️ CORS configurado para permitir CUALQUIER origen (TEMPORAL)');
 
-console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
-
-// 2. Configuración CORS usando el paquete cors (más robusto para Railway)
+// 2. Configuración CORS permitiendo cualquier origen (TEMPORAL)
 const corsOptions = {
   origin: function (origin, callback) {
     // Log para debugging
     console.log('🔵 CORS Request Origin:', origin || 'NO ORIGIN');
-    
-    // Permitir requests sin origin (mobile apps, Postman, etc.)
-    if (!origin) {
-      return callback(null, true);
-    }
-    
-    // Verificar si el origin está en la whitelist
-    if (corsWhitelist.includes(origin)) {
-      console.log('✅ CORS Origin permitido:', origin);
-      callback(null, true);
-    } else {
-      console.warn('⚠️ CORS Origin NO permitido:', origin);
-      console.warn('⚠️ Whitelist actual:', corsWhitelist);
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Permitir CUALQUIER origen (TEMPORAL)
+    console.log('✅ CORS Origin permitido (cualquiera):', origin || 'sin origin');
+    callback(null, true);
   },
-  credentials: true, // CRÍTICO: permite cookies y credenciales
+  credentials: true, // Permite cookies y credenciales
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
   exposedHeaders: [],
@@ -204,14 +185,12 @@ const corsOptions = {
 // 3. Aplicar middleware CORS - DEBE ir PRIMERO, antes de cualquier otra cosa
 app.use(cors(corsOptions));
 
-// 3.1. Middleware de respaldo CORS (por si el paquete cors no funciona correctamente en Railway)
+// 3.1. Middleware de respaldo CORS (permite cualquier origen - TEMPORAL)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Solo establecer headers si el origin está en la whitelist
-  if (origin && corsWhitelist.includes(origin)) {
-    // Asegurar que los headers CORS estén establecidos (respaldo)
-    // Esto es especialmente importante en Railway donde el proxy puede interferir
+  // Permitir CUALQUIER origen (TEMPORAL)
+  if (origin) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -219,6 +198,15 @@ app.use((req, res, next) => {
     res.header('Vary', 'Origin');
     
     // Manejar OPTIONS explícitamente como respaldo
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+  } else {
+    // Si no hay origin, establecer headers básicos
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    
     if (req.method === 'OPTIONS') {
       return res.status(204).end();
     }
