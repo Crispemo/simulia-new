@@ -165,35 +165,53 @@ const corsWhitelist = [
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
-// 2. Configuración de CORS usando el paquete cors
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (móviles, Postman, etc.) solo en desarrollo
-    if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        return callback(new Error('No origin header'), false);
-      }
-      return callback(null, true);
-    }
+// 2. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Log para debugging (siempre en producción para diagnosticar)
+  console.log('🔵 CORS Request:', {
+    method: req.method,
+    url: req.url,
+    origin: origin || 'NO ORIGIN',
+    isInWhitelist: origin ? corsWhitelist.includes(origin) : false,
+    whitelist: corsWhitelist
+  });
+  
+  // CRÍTICO: Establecer headers CORS para origins en la whitelist
+  if (origin && corsWhitelist.includes(origin)) {
+    // Headers CORS obligatorios - ESTABLECER SIEMPRE
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
+    res.setHeader('Vary', 'Origin');
     
-    if (corsWhitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.warn('⚠️ Origin no permitido:', origin);
-      callback(new Error('Not allowed by CORS'), false);
-    }
-  },
-  credentials: true, // CRÍTICO: Permitir credenciales
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 86400, // 24 horas
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+    console.log('✅ CORS Headers establecidos para:', origin);
+    console.log('✅ Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
+  } else if (origin) {
+    console.warn('⚠️ Origin no permitido:', origin);
+    console.warn('⚠️ Whitelist actual:', corsWhitelist);
+  }
+  
+  // Manejar preflight (OPTIONS) - DEBE responder inmediatamente CON LOS HEADERS YA ESTABLECIDOS
+  if (req.method === 'OPTIONS') {
+    console.log('🔵 OPTIONS preflight - Respondiendo 204');
+    console.log('🔵 Headers antes de responder:', {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+    });
+    // Asegurar que los headers estén establecidos antes de responder
+    return res.status(204).end();
+  }
+  
+  // Continuar con la siguiente middleware
+  next();
+});
 
-// 3. Aplicar middleware CORS - DEBE ir ANTES de cualquier otra configuración
-app.use(cors(corsOptions));
+// 3. NO usar el paquete cors adicional - el middleware personalizado es suficiente
+// Esto evita conflictos y asegura control total sobre los headers CORS
 
 // 4. Middleware de body parsing - DESPUÉS de CORS
 // IMPORTANTE: /stripe-webhook DEBE ir ANTES del body parser JSON
