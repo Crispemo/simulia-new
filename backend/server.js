@@ -159,15 +159,13 @@ async function sendWebhookToN8N(userData) {
 const corsWhitelist = [
   'https://www.simulia.es',
   'https://simulia.es',
-  'http://www.simulia.es', // HTTP por si acaso (aunque no recomendado)
-  'http://simulia.es', // HTTP por si acaso (aunque no recomendado)
   'http://localhost:3000', // para desarrollo
-  'http://localhost:3001', // para desarrollo alternativo
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
+<<<<<<< HEAD
 // Función helper para establecer headers CORS
 const setCorsHeaders = (res, origin) => {
   if (!origin) {
@@ -213,8 +211,8 @@ app.use((req, res, next) => {
     console.log('🔵 CORS Request:', {
       method: req.method,
       url: req.url,
-      origin: origin,
-      hasOrigin: !!origin
+      origin: origin || 'NO ORIGIN',
+      isInWhitelist: origin ? corsWhitelist.includes(origin) : false
     });
   }
   
@@ -226,6 +224,13 @@ app.use((req, res, next) => {
     if (corsSet) {
       if (process.env.NODE_ENV !== 'production') {
         console.log('✅ OPTIONS preflight - Headers CORS establecidos para:', origin);
+      }
+      // Verificar que los headers estén correctamente establecidos
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔵 Headers antes de responder:', {
+          'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+          'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+        });
       }
       // Responder inmediatamente con 204 y headers CORS
       return res.status(204).end();
