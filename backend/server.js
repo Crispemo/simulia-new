@@ -178,50 +178,41 @@ app.use((req, res, next) => {
     whitelist: corsWhitelist
   });
   
-  // CRÍTICO: Para peticiones OPTIONS (preflight), establecer headers SIEMPRE
+  // CRÍTICO: Manejar OPTIONS (preflight) PRIMERO
   if (req.method === 'OPTIONS') {
+    // Para OPTIONS, establecer headers SI el origin está en la whitelist
     if (origin && corsWhitelist.includes(origin)) {
-      // Headers CORS obligatorios - ESTABLECER SIEMPRE para OPTIONS
+      // Usar res.header() que es el método Express recomendado
       res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
+      res.header('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: debe ser string 'true'
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
       res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
       res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
       res.header('Vary', 'Origin');
       
-      console.log('✅ CORS Headers establecidos para OPTIONS:', origin);
-      console.log('✅ Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
-    } else {
-      console.warn('⚠️ OPTIONS request con origin no permitido:', origin);
+      console.log('✅ OPTIONS preflight - Headers establecidos para:', origin);
+      console.log('✅ Access-Control-Allow-Credentials:', res.get('Access-Control-Allow-Credentials'));
+    } else if (origin) {
+      console.warn('⚠️ OPTIONS preflight - Origin no permitido:', origin);
       console.warn('⚠️ Whitelist actual:', corsWhitelist);
-      // Aún así, establecer headers básicos para evitar errores
-      if (origin) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-      }
     }
     
-    console.log('🔵 OPTIONS preflight - Respondiendo 204');
-    console.log('🔵 Headers antes de responder:', {
-      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
-      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
-    });
     // Responder inmediatamente a OPTIONS
     return res.status(204).end();
   }
   
-  // Para otras peticiones, establecer headers CORS solo si el origin está en la whitelist
+  // Para todas las demás peticiones, establecer headers CORS si el origin está en la whitelist
   if (origin && corsWhitelist.includes(origin)) {
-    // Headers CORS obligatorios - ESTABLECER SIEMPRE
+    // Headers CORS obligatorios - ESTABLECER SIEMPRE usando res.header()
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
     res.header('Vary', 'Origin');
     
-    console.log('✅ CORS Headers establecidos para:', req.method, origin);
+    console.log('✅ CORS Headers establecidos para:', origin);
+    console.log('✅ Access-Control-Allow-Credentials:', res.get('Access-Control-Allow-Credentials'));
   } else if (origin) {
     console.warn('⚠️ Origin no permitido:', origin);
     console.warn('⚠️ Whitelist actual:', corsWhitelist);
@@ -466,30 +457,6 @@ app.post('/send-dispute', async (req, res) => {
 // Añadir un middleware para debugging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
-
-// 5.5. Middleware para asegurar headers CORS en todas las respuestas (después de todas las rutas)
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Si el origin está en la whitelist y los headers CORS no están establecidos, establecerlos
-  if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
-    const currentOrigin = res.getHeader('Access-Control-Allow-Origin');
-    const currentCredentials = res.getHeader('Access-Control-Allow-Credentials');
-    
-    // Solo establecer si no están ya establecidos o si están incorrectos
-    if (!currentOrigin || currentOrigin !== origin || currentCredentials !== 'true') {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-      res.header('Vary', 'Origin');
-      
-      console.log('🔧 Headers CORS re-establecidos en middleware final para:', origin);
-    }
-  }
-  
   next();
 });
 

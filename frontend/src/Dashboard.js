@@ -796,7 +796,14 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       } catch (error) {
         // Manejar errores de red/CORS de forma más elegante
         if (error.message?.includes('Failed to fetch') || error.message?.includes('CORS')) {
-          console.warn('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:5001');
+          const isProduction = typeof window !== 'undefined' && 
+            (window.location.hostname === 'www.simulia.es' || 
+             window.location.hostname === 'simulia.es');
+          if (!isProduction) {
+            console.warn('Error de conexión. Asegúrate de que el backend esté corriendo en http://localhost:5001');
+          } else {
+            console.error('Error de conexión con el servidor. Por favor, intenta recargar la página.');
+          }
           setExamData([]);
         } else {
           console.error('Error al cargar historial:', error);
