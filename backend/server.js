@@ -33,12 +33,6 @@ const axios = require('axios');
 const OpenAI = require('openai');
 const app = express();
 
-// Configurar Express para confiar en el proxy de Railway (importante para CORS)
-if (isProduction) {
-  app.set('trust proxy', 1); // Confiar en el primer proxy (Railway)
-  console.log('🔒 Trust proxy configurado para Railway');
-}
-
 // Inicializar OpenAI
 const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -161,59 +155,63 @@ async function sendWebhookToN8N(userData) {
   }
 }
 
-// ⚠️ TEMPORAL: CORS abierto para cualquier origen (solo para debugging)
-console.log('⚠️ CORS configurado para permitir CUALQUIER origen (TEMPORAL)');
+// 1. Lista de orígenes permitidos
+const corsWhitelist = [
+  'https://www.simulia.es',
+  'https://simulia.es',
+  'http://localhost:3000', // para desarrollo
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
-// 2. Configuración CORS permitiendo cualquier origen (TEMPORAL)
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Log para debugging
-    console.log('🔵 CORS Request Origin:', origin || 'NO ORIGIN');
-    // Permitir CUALQUIER origen (TEMPORAL)
-    console.log('✅ CORS Origin permitido (cualquiera):', origin || 'sin origin');
-    callback(null, true);
-  },
-  credentials: true, // Permite cookies y credenciales
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
-  exposedHeaders: [],
-  maxAge: 86400, // Cache preflight por 24 horas
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
-// 3. Aplicar middleware CORS - DEBE ir PRIMERO, antes de cualquier otra cosa
-app.use(cors(corsOptions));
-
-// 3.1. Middleware de respaldo CORS (permite cualquier origen - TEMPORAL)
+// 2. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Permitir CUALQUIER origen (TEMPORAL)
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-    res.header('Vary', 'Origin');
+  // Log para debugging (siempre en producción para diagnosticar)
+  console.log('🔵 CORS Request:', {
+    method: req.method,
+    url: req.url,
+    origin: origin || 'NO ORIGIN',
+    isInWhitelist: origin ? corsWhitelist.includes(origin) : false,
+    whitelist: corsWhitelist
+  });
+  
+  // CRÍTICO: Establecer headers CORS para origins en la whitelist
+  if (origin && corsWhitelist.includes(origin)) {
+    // Headers CORS obligatorios - ESTABLECER SIEMPRE
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
+    res.setHeader('Vary', 'Origin');
     
-    // Manejar OPTIONS explícitamente como respaldo
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end();
-    }
-  } else {
-    // Si no hay origin, establecer headers básicos
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
-    
-    if (req.method === 'OPTIONS') {
-      return res.status(204).end();
-    }
+    console.log('✅ CORS Headers establecidos para:', origin);
+    console.log('✅ Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
+  } else if (origin) {
+    console.warn('⚠️ Origin no permitido:', origin);
+    console.warn('⚠️ Whitelist actual:', corsWhitelist);
   }
   
+  // Manejar preflight (OPTIONS) - DEBE responder inmediatamente CON LOS HEADERS YA ESTABLECIDOS
+  if (req.method === 'OPTIONS') {
+    console.log('🔵 OPTIONS preflight - Respondiendo 204');
+    console.log('🔵 Headers antes de responder:', {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
+      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+    });
+    // Asegurar que los headers estén establecidos antes de responder
+    return res.status(204).end();
+  }
+  
+  // Continuar con la siguiente middleware
   next();
 });
+
+// 3. NO usar el paquete cors adicional - el middleware personalizado es suficiente
+// Esto evita conflictos y asegura control total sobre los headers CORS
 
 // 4. Middleware de body parsing - DESPUÉS de CORS
 // IMPORTANTE: /stripe-webhook DEBE ir ANTES del body parser JSON
@@ -222,6 +220,9 @@ app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 // Para todas las demás rutas, usar JSON parsing
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// 5. ELIMINAR cualquier uso de app.use(cors()) si existe
+// NO usar: app.use(cors(corsOptions));
 
 // Registrar las rutas de impugnaciones
 app.use(disputeRoutes);
@@ -454,10 +455,10 @@ app.use((err, req, res, next) => {
   // Asegurar CORS también en errores usando la misma configuración
   const origin = req.headers.origin;
   if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
   }
   
   if (!res.headersSent) {
