@@ -159,67 +159,41 @@ async function sendWebhookToN8N(userData) {
 const corsWhitelist = [
   'https://www.simulia.es',
   'https://simulia.es',
-  'http://www.simulia.es', // HTTP por si acaso (aunque no recomendado)
-  'http://simulia.es', // HTTP por si acaso (aunque no recomendado)
   'http://localhost:3000', // para desarrollo
-  'http://localhost:3001', // para desarrollo alternativo
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
-// Función helper para establecer headers CORS
-const setCorsHeaders = (res, origin) => {
-  if (origin && corsWhitelist.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept, X-CSRF-Token');
-    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
-    res.setHeader('Vary', 'Origin');
-    return true;
-  }
-  return false;
+// 2. Configuración de CORS usando el paquete cors
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (móviles, Postman, etc.) solo en desarrollo
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return callback(new Error('No origin header'), false);
+      }
+      return callback(null, true);
+    }
+    
+    if (corsWhitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.warn('⚠️ Origin no permitido:', origin);
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: true, // CRÍTICO: Permitir credenciales
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 horas
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// 2. ELIMINAR LA CONFIGURACIÓN corsOptions (no se usará)
-// const corsOptions = { ... } // ELIMINAR ESTO
-
-// 3. Middleware CORS CORREGIDO - Debe ir ANTES de cualquier otra configuración
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Log para debugging
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('🔵 CORS Request:', {
-      method: req.method,
-      url: req.url,
-      origin: origin,
-      hasOrigin: !!origin
-    });
-  }
-  
-  // CRÍTICO: Establecer headers CORS para TODOS los origins en la whitelist
-  const corsSet = setCorsHeaders(res, origin);
-  
-  if (corsSet) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('✅ CORS Headers establecidos para:', origin);
-    }
-  } else if (origin) {
-    console.warn('⚠️ Origin no permitido:', origin);
-    console.warn('📋 Orígenes permitidos:', corsWhitelist);
-  }
-  
-  // Manejar preflight (OPTIONS) - DEBE responder inmediatamente
-  if (req.method === 'OPTIONS') {
-    console.log('🔵 OPTIONS preflight - Respondiendo 204');
-    return res.status(204).end();
-  }
-  
-  // Continuar con la siguiente middleware
-  next();
-});
+// 3. Aplicar middleware CORS - DEBE ir ANTES de cualquier otra configuración
+app.use(cors(corsOptions));
 
 // 4. Middleware de body parsing - DESPUÉS de CORS
 // IMPORTANTE: /stripe-webhook DEBE ir ANTES del body parser JSON
@@ -460,10 +434,13 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err);
   
-  // Asegurar CORS también en errores - establecer TODOS los headers necesarios
-  if (!res.headersSent) {
-    const origin = req.headers.origin;
-    setCorsHeaders(res, origin);
+  // Asegurar CORS también en errores usando la misma configuración
+  const origin = req.headers.origin;
+  if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
   }
   
   if (!res.headersSent) {
