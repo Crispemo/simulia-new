@@ -170,16 +170,35 @@ console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
 // Función helper para establecer headers CORS
 const setCorsHeaders = (res, origin) => {
-  if (origin && corsWhitelist.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept, X-CSRF-Token');
-    res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
-    res.setHeader('Vary', 'Origin');
-    return true;
+  if (!origin) {
+    // Si no hay origen, no es una petición CORS, no establecer headers
+    return false;
   }
-  return false;
+  
+  // Verificar si el origen está en la whitelist (comparación case-sensitive)
+  const isAllowed = corsWhitelist.includes(origin);
+  
+  if (isAllowed) {
+    // CRÍTICO: Establecer TODOS los headers CORS necesarios
+    // IMPORTANTE: Usar res.header() en lugar de res.setHeader() para asegurar que se establezcan correctamente
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true'); // DEBE ser 'true' como string, nunca vacío
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept, X-CSRF-Token');
+    res.header('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
+    res.header('Vary', 'Origin');
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('✅ CORS Headers establecidos correctamente para:', origin);
+    }
+    return true;
+  } else {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ Origin no permitido:', origin);
+      console.warn('📋 Orígenes permitidos:', corsWhitelist);
+    }
+    return false;
+  }
 };
 
 // 2. ELIMINAR LA CONFIGURACIÓN corsOptions (no se usará)
@@ -199,7 +218,31 @@ app.use((req, res, next) => {
     });
   }
   
-  // CRÍTICO: Establecer headers CORS para TODOS los origins en la whitelist
+  // CRÍTICO: Manejar peticiones OPTIONS (preflight) PRIMERO
+  if (req.method === 'OPTIONS') {
+    // Establecer headers CORS ANTES de responder
+    const corsSet = setCorsHeaders(res, origin);
+    
+    if (corsSet) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ OPTIONS preflight - Headers CORS establecidos para:', origin);
+      }
+      // Responder inmediatamente con 204 y headers CORS
+      return res.status(204).end();
+    } else if (origin) {
+      // Si el origen no está permitido, aún responder 204 pero sin headers CORS
+      // Esto evita errores en el navegador
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('⚠️ OPTIONS preflight - Origin no permitido:', origin);
+      }
+      return res.status(204).end();
+    } else {
+      // Si no hay origen, no es una petición CORS
+      return res.status(204).end();
+    }
+  }
+  
+  // Para peticiones que NO son OPTIONS, establecer headers CORS y continuar
   const corsSet = setCorsHeaders(res, origin);
   
   if (corsSet) {
@@ -207,21 +250,54 @@ app.use((req, res, next) => {
       console.log('✅ CORS Headers establecidos para:', origin);
     }
   } else if (origin) {
-    console.warn('⚠️ Origin no permitido:', origin);
-    console.warn('📋 Orígenes permitidos:', corsWhitelist);
-  }
-  
-  // Manejar preflight (OPTIONS) - DEBE responder inmediatamente
-  if (req.method === 'OPTIONS') {
-    console.log('🔵 OPTIONS preflight - Respondiendo 204');
-    return res.status(204).end();
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('⚠️ Origin no permitido:', origin);
+      console.warn('📋 Orígenes permitidos:', corsWhitelist);
+    }
   }
   
   // Continuar con la siguiente middleware
   next();
 });
 
-// 4. Middleware de body parsing - DESPUÉS de CORS
+// 4. Middleware adicional para asegurar CORS en todas las respuestas
+// Este middleware intercepta las respuestas para asegurar que los headers CORS estén siempre presentes
+app.use((req, res, next) => {
+  // Guardar las funciones originales
+  const originalJson = res.json;
+  const originalEnd = res.end;
+  const originalSend = res.send;
+  
+  // Función helper para establecer CORS antes de responder
+  const ensureCors = () => {
+    const origin = req.headers.origin;
+    if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
+      setCorsHeaders(res, origin);
+    }
+  };
+  
+  // Interceptar res.json
+  res.json = function(body) {
+    ensureCors();
+    return originalJson.call(this, body);
+  };
+  
+  // Interceptar res.end
+  res.end = function(chunk, encoding) {
+    ensureCors();
+    return originalEnd.call(this, chunk, encoding);
+  };
+  
+  // Interceptar res.send
+  res.send = function(body) {
+    ensureCors();
+    return originalSend.call(this, body);
+  };
+  
+  next();
+});
+
+// 5. Middleware de body parsing - DESPUÉS de CORS
 // IMPORTANTE: /stripe-webhook DEBE ir ANTES del body parser JSON
 app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 
@@ -229,7 +305,7 @@ app.use('/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 5. ELIMINAR cualquier uso de app.use(cors()) si existe
+// 6. ELIMINAR cualquier uso de app.use(cors()) si existe
 // NO usar: app.use(cors(corsOptions));
 
 // Registrar las rutas de impugnaciones
@@ -456,14 +532,17 @@ app.use((req, res, next) => {
   next();
 });
 
-// 6. Middleware de errores - al final (asegurar CORS también en errores)
+// 7. Middleware de errores - al final (asegurar CORS también en errores)
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err);
   
   // Asegurar CORS también en errores - establecer TODOS los headers necesarios
   if (!res.headersSent) {
     const origin = req.headers.origin;
-    setCorsHeaders(res, origin);
+    // Establecer headers CORS antes de enviar la respuesta de error
+    if (origin && corsWhitelist.includes(origin)) {
+      setCorsHeaders(res, origin);
+    }
   }
   
   if (!res.headersSent) {
