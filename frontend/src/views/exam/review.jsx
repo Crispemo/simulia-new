@@ -88,7 +88,7 @@ const ReviewView = ({
            window.location.hostname === 'simulia.es' ||
            window.location.protocol === 'https:');
         
-        const apiUrl = isProduction ? 'https://backend-production-cc6b.up.railway.app' : API_URL;
+        const apiUrl = isProduction ? 'https://simulia-new-production-f21e.up.railway.app' : API_URL;
         console.log('🔧 REVIEW DEBUG - isProduction:', isProduction, 'apiUrl:', apiUrl);
         
         const response = await fetch(`${apiUrl}/exam-review/${examId}`, {

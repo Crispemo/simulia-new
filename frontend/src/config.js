@@ -9,7 +9,7 @@ const isProduction = typeof window !== 'undefined' &&
   process.env.NODE_ENV === 'production';
 
 if (isProduction) {
-  API_URL = 'https://backend-production-cc6b.up.railway.app';
+  API_URL = 'https://simulia-new-production-f21e.up.railway.app';
   console.log('🔧 CONFIG DEBUG - PRODUCCIÓN DETECTADA - Usando Railway');
 } else {
   API_URL = 'http://localhost:5001';
