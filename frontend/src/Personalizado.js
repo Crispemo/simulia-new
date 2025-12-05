@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
-import './Exam.css';
 import { useNavigate } from 'react-router-dom';
-import { useLogo } from './context/LogoContext';
 import SuccessNotification from './components/SuccessNotification';
 import { API_URL } from './config';
 import { finalizeExam, saveExamProgress } from './lib/examUtils';
@@ -11,7 +9,6 @@ import ExamView from './views/exam/exam';
 
 const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   const navigate = useNavigate();
-  const { logoSrc } = useLogo();
   
   const [questions, setQuestions] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -21,22 +18,16 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]);
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showStartPopup, setShowStartPopup] = useState(true);
-  const [showFinalizePopup, setShowFinalizePopup] = useState(false);
-  const [isDisputing, setIsDisputing] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [examId, setExamId] = useState(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [markedAsDoubt, setMarkedAsDoubt] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
-  const [isFinishing, setIsFinishing] = useState(false);
  
   // Cargar datos del examen personalizado
   useEffect(() => {
@@ -315,19 +306,14 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     setHasPendingChanges(true);
   };
 
-  // Función para manejar el botón "Finalizar"
-  const handleFinalizeClick = () => {
-    setShowFinalizePopup(true);
-  };
-        
-  const handleDisputeSubmit = async (questionId) => {
-    if (!disputeReason.trim()) {
+  const handleDisputeSubmit = async (questionId, reason) => {
+    if (!reason || !reason.trim()) {
       return;
     }
     
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
-      reason: disputeReason,
+      reason: reason,
       userAnswer: selectedAnswers[questionId] || "Sin respuesta",
       userId: userId || 'test_user_1'
     };
@@ -352,17 +338,11 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
       console.error('Error:', error);
       setSuccessMessage('Error al enviar impugnación');
       setShowSuccessNotification(true);
-    } finally {
-      // SIEMPRE cerrar el modal, sin importar si fue exitoso o no
-      setIsDisputing(false);
-      setDisputeReason('');
     }
   };
 
   const confirmFinalize = async () => {
     try {
-      setIsFinishing(true);
-      setShowFinalizePopup(false);
       
       // Guardar cambios pendientes primero
       if (hasPendingChanges) {
@@ -433,12 +413,7 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     } catch (error) {
       console.error('Error general al finalizar examen:', error);
       alert(`Error al finalizar el examen: ${error.message || 'Inténtalo de nuevo más tarde'}`);
-      setIsFinishing(false);
     }
-  };
-
-  const handleCancelFinish = () => {
-    setShowFinalizePopup(false);
   };
 
   // Formato de tiempo
@@ -450,17 +425,48 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
 
   if (isLoading) {
-    return <div className="loading">Cargando tu examen personalizado...</div>;
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <div>Cargando tu examen personalizado...</div>
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="exam-error">
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        padding: '20px',
+        textAlign: 'center'
+      }}>
         <h2>Error al cargar tu examen personalizado</h2>
         <p>{error}</p>
-        <button onClick={() => navigate('/dashboard')} className="control-btn">
-          Volver al Dashboard
-        </button>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: '#7ea0a7',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            Volver al Dashboard
+          </button>
+        </div>
       </div>
     );
   }
@@ -473,8 +479,26 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
   // Renderizar popup de inicio si es necesario
   if (showStartPopup) {
     return (
-      <div className="popup-overlay">
-        <div className="popup">
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+        }}>
           <h2><strong>¡Comienza tu examen personalizado!</strong></h2>
           <p>
             Este examen consta de <strong>{questions.length} preguntas</strong> y dispones de 
@@ -482,7 +506,22 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
             Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
             tus respuestas antes de finalizar.
           </p>
-          <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
+          <button 
+            onClick={handleStartExam} 
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#7ea0a7',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500'
+            }}
+          >
+            Estoy list@
+          </button>
         </div>
       </div>
     );
@@ -523,10 +562,7 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
         isDarkMode={isDarkMode}
         currentQuestion={currentQuestion}
         onNavigate={handleNavigate}
-        onImpugnarSubmit={async (questionId, reason) => {
-          setDisputeReason(reason);
-          await handleDisputeSubmit(questionId);
-        }}
+        onImpugnarSubmit={handleDisputeSubmit}
       />
 
       {showSuccessNotification && (

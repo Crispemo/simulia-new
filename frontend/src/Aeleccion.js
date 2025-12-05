@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Aeleccion.css';
-import './Exam.css'; // Importamos los estilos de Exam
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import ExamHeader from './components/ExamHeader'; // Add this import
-import { downloadCurrentExamPdf, downloadExamPdfFromData } from './lib/pdfUtils';
-import QuestionBox from './components/QuestionBox';
-import Pagination from './components/Pagination';
+import { downloadExamPdfFromData } from './lib/pdfUtils';
 import { finalizeExam, saveExamProgress, resumeExam as resumeExamUtil } from './lib/examUtils';
 import SuccessNotification from './components/SuccessNotification';
 import { API_URL } from './config';
+import ExamView from './views/exam/exam';
 
 const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
   const navigate = useNavigate();
@@ -26,11 +22,7 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
   const [userAnswers, setUserAnswers] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showStartPopup, setShowStartPopup] = useState(false);
-  const [isDisputing, setIsDisputing] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
-  const [showFinalizePopup, setShowFinalizePopup] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [examId, setExamId] = useState(null);
   const [lastSaveTime, setLastSaveTime] = useState(0);
@@ -363,18 +355,36 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
       return updated;
     });
     
-    // Actualizar userAnswers
+    // Actualizar userAnswers con el formato completo
     setUserAnswers(prev => {
-      const answers = [...prev];
-      answers[questionId] = selectedOption;
-      return answers;
+      const newAnswers = [...prev];
+      const question = preguntas[questionId];
+      const isDoubtful = doubtfulQuestions.includes(questionId);
+      
+      newAnswers[questionId] = {
+        questionId: question?._id || `question_${questionId}`,
+        selectedAnswer: selectedOption,
+        isCorrect: null,
+        markedAsDoubt: isDoubtful,
+        questionData: {
+          question: question?.question || "",
+          option_1: question?.option_1 || question?.options?.[0] || "",
+          option_2: question?.option_2 || question?.options?.[1] || "",
+          option_3: question?.option_3 || question?.options?.[2] || "",
+          option_4: question?.option_4 || question?.options?.[3] || "",
+          option_5: question?.option_5 || question?.options?.[4] || "-",
+          answer: question?.answer || "",
+          subject: question?.subject || question?.categoria || "General",
+          image: question?.image || null,
+          _id: question?._id || `question_${questionId}`,
+          long_answer: question?.long_answer || null
+        }
+      };
+      return newAnswers;
     });
     
     // Marcar que hay cambios pendientes
     setHasPendingChanges(true);
-    
-    // Remove automatic saving after answer selection
-    // queueSave();
   };
 
   // Navegación entre preguntas
@@ -424,10 +434,16 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
   };
 
   // Añade esta función para manejar el envío de la impugnación
-  const handleDisputeSubmit = async (questionId) => {
+  const handleDisputeSubmit = async (questionId, reason) => {
+    if (!reason || !reason.trim()) {
+      return;
+    }
+    
     const disputeData = {
       question: preguntas[questionId]?.question || "Pregunta no disponible",
-      reason: disputeReason,
+      reason: reason,
+      userAnswer: selectedAnswers[questionId] || "Sin respuesta",
+      userId: userId || 'test_user_1'
     };
 
     try {
@@ -450,10 +466,6 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
       console.error('Error:', error);
       setSuccessMessage('Error al enviar impugnación');
       setShowSuccessNotification(true);
-    } finally {
-      // SIEMPRE cerrar el modal, sin importar si fue exitoso o no
-      setIsDisputing(false);
-      setDisputeReason('');
     }
   };
 
@@ -465,7 +477,6 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
       }
 
       setIsFinishing(true);
-      setShowFinalizePopup(false);
 
       // PASO CRUCIAL: Guardar cambios pendientes primero
       if (hasPendingChanges) {
@@ -529,13 +540,6 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
     }
   };
 
-  const handleFinalizeClick = () => {
-    setShowFinalizePopup(true);
-  };
-
-  const handleCancelFinish = () => {
-    setShowFinalizePopup(false);
-  };
 
   // Add pagination navigation functions
   const goToNextPage = () => {
@@ -573,11 +577,66 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
         newDoubtful = [...prev, questionIndex];
       }
       
+      // Actualizar también markedAsDoubt en userAnswers
+      setUserAnswers(prevUserAnswers => {
+        const newUserAnswers = [...prevUserAnswers];
+        if (questionIndex < newUserAnswers.length) {
+          if (newUserAnswers[questionIndex]) {
+            if (typeof newUserAnswers[questionIndex] === 'object') {
+              newUserAnswers[questionIndex] = {
+                ...newUserAnswers[questionIndex],
+                markedAsDoubt: !isCurrentlyDoubtful
+              };
+            } else {
+              const question = preguntas[questionIndex];
+              newUserAnswers[questionIndex] = {
+                questionId: question._id || `question_${questionIndex}`,
+                selectedAnswer: newUserAnswers[questionIndex],
+                isCorrect: null,
+                markedAsDoubt: !isCurrentlyDoubtful,
+                questionData: {
+                  question: question.question || "",
+                  option_1: question.option_1 || question.options?.[0] || "",
+                  option_2: question.option_2 || question.options?.[1] || "",
+                  option_3: question.option_3 || question.options?.[2] || "",
+                  option_4: question.option_4 || question.options?.[3] || "",
+                  option_5: question.option_5 || question.options?.[4] || "-",
+                  answer: question.answer || "",
+                  subject: question.subject || question.categoria || "General",
+                  image: question.image || null,
+                  _id: question._id || `question_${questionIndex}`,
+                  long_answer: question.long_answer || null
+                }
+              };
+            }
+          } else {
+            const question = preguntas[questionIndex];
+            newUserAnswers[questionIndex] = {
+              questionId: question._id || `question_${questionIndex}`,
+              selectedAnswer: null,
+              isCorrect: null,
+              markedAsDoubt: !isCurrentlyDoubtful,
+              questionData: {
+                question: question.question || "",
+                option_1: question.option_1 || question.options?.[0] || "",
+                option_2: question.option_2 || question.options?.[1] || "",
+                option_3: question.option_3 || question.options?.[2] || "",
+                option_4: question.option_4 || question.options?.[3] || "",
+                option_5: question.option_5 || question.options?.[4] || "-",
+                answer: question.answer || "",
+                subject: question.subject || question.categoria || "General",
+                image: question.image || null,
+                _id: question._id || `question_${questionIndex}`,
+                long_answer: question.long_answer || null
+              }
+            };
+          }
+        }
+        return newUserAnswers;
+      });
+      
       // Marcar que hay cambios pendientes
       setHasPendingChanges(true);
-      
-      // Remove automatic saving after toggling doubt
-      // queueSave();
       
       return newDoubtful;
     });
@@ -688,120 +747,59 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
     if (!showStartPopup) return null;
 
     return (
-      <div className="popup-overlay">
-        <div className="popup" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-          <h2>¡Comienza tu examen!</h2>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '500px',
+          width: '100%',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+        }}>
+          <h2><strong>¡Comienza tu examen personalizado!</strong></h2>
           <p>
             Este examen consta de <strong>{preguntas.length} preguntas</strong> y dispones de 
             <strong> {formatTime(timeLeft)}</strong> para completarlo.
+            Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
+            tus respuestas antes de finalizar.
           </p>
           <button 
-            className="control-btn" 
             onClick={() => {
               setShowStartPopup(false);
               setIsPaused(false);
               // Guardar el estado inicialmente
               queueSave();
             }}
-          >
-            Comenzar
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  // Renderizar el popup de confirmación de finalización
-  const renderConfirmPopup = () => {
-    if (!showConfirmPopup) return null;
-
-    return (
-      <div className="popup-overlay">
-        <div className="popup" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-          <h2>¿Estás seguro de que deseas finalizar el examen?</h2>
-          <p>Una vez finalizado, no podrás modificar tus respuestas.</p>
-          <div className="popup-buttons">
-            <button 
-              className="control-btn" 
-              onClick={() => setShowConfirmPopup(false)}
-            >
-              Volver
-            </button>
-            <button 
-              className="control-btn" 
-              onClick={confirmFinalize}
-            >
-              Finalizar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Renderizar el modal de impugnación
-  const renderDisputeModal = () => {
-    if (!isDisputing) return null;
-
-    return (
-      <div className="popup-overlay">
-        <div className="dispute-modal">
-          <button 
-            className="modal-close-button"
-            onClick={() => {
-              setIsDisputing(false);
-              setDisputeReason('');
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#7ea0a7',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: '500'
             }}
           >
-            ×
+            Estoy list@
           </button>
-          <h3>Escribe tu razón para impugnar</h3>
-          <textarea
-            value={disputeReason}
-            onChange={(e) => setDisputeReason(e.target.value)}
-            placeholder="Escribe tu razón para impugnar"
-          ></textarea>
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                handleDisputeSubmit(currentQuestion);
-              }}
-              className="submit-dispute-btn"
-            >
-              Enviar
-            </button>
-          </div>
         </div>
       </div>
     );
   };
 
-  // Renderizar el popup de finalización
-  const renderFinalizePopup = () => {
-    if (!showFinalizePopup) return null;
-
-    // Count answered questions correctly in the structured format
-    const answeredQuestions = userAnswers.filter(answer => 
-      answer && typeof answer === 'object' && answer.selectedAnswer
-    ).length;
-
-    return (
-      <div className="popup-overlay">
-        <div className="popup" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-          <h2>¿Finalizar el examen?</h2>
-          <p>Has respondido {answeredQuestions} de {preguntas.length} preguntas.</p>
-          <div className="popup-buttons">
-            <button onClick={handleCancelFinish} className="control-btn" disabled={isFinishing}>
-              Continuar revisando
-            </button>
-            <button onClick={confirmFinalize} className="control-btn" disabled={isFinishing}>
-              {isFinishing ? 'Procesando...' : 'Finalizar examen'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // Función para optimizar el guardado - reemplaza queueProgressSave
   const queueSave = (isForceComplete = false) => {
@@ -1490,20 +1488,22 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
 
   // Paso 3: Renderizar el examen
   if (step === 3) {
+    // Convertir doubtfulQuestions array a markedAsDoubt objeto
+    const markedAsDoubt = doubtfulQuestions.reduce((map, idx) => ({ ...map, [idx]: true }), {});
+    
     return (
-      <div id="exam-root" className="exam-container">
+      <>
         {renderStartPopup()}
-        {renderConfirmPopup()}
         
-        <ExamHeader
-          timeLeft={timeLeft}
-          onPause={() => setIsPaused(!isPaused)}
+        <ExamView
+          questions={preguntas}
+          userAnswers={userAnswers}
+          handleAnswerClick={handleAnswerClick}
+          markedAsDoubt={markedAsDoubt}
+          toggleDoubtMark={handleToggleDoubtful}
           onSave={() => queueSave()}
-          onFinish={() => setShowConfirmPopup(true)}
-          isPaused={isPaused}
-          isSaving={isSaving}
-          hasPendingChanges={hasPendingChanges}
-          toggleDarkMode={toggleDarkMode}
+          onFinalize={confirmFinalize}
+          onPause={() => setIsPaused(!isPaused)}
           onDownload={() => downloadExamPdfFromData({
             questions: preguntas,
             title: 'SIMULIA',
@@ -1516,12 +1516,27 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             showBubbleSheet: true,
             fileName: 'examen-personalizado.pdf'
           })}
+          onExit={() => navigate('/dashboard')}
+          timeLeft={timeLeft}
+          totalTime={tiempoAsignado * 60}
+          isPaused={isPaused}
+          isSaving={isSaving}
+          hasPendingChanges={hasPendingChanges}
+          examType="personalizado"
+          isReviewMode={false}
+          disabledButtons={[]}
+          isDarkMode={isDarkMode}
+          currentQuestion={currentQuestion}
+          onNavigate={(index) => {
+            setCurrentQuestion(index);
+            const newPage = Math.floor(index / 25);
+            if (newPage !== currentPage) {
+              setCurrentPage(newPage);
+            }
+            setHasPendingChanges(true);
+          }}
+          onImpugnarSubmit={handleDisputeSubmit}
         />
-
-        {renderQuestion()}
-        {renderQuestionIndex()}
-        {renderDisputeModal()}
-        {renderFinalizePopup()}
         
         {showSuccessNotification && (
           <SuccessNotification
@@ -1530,7 +1545,7 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             autoCloseTime={successMessage.includes('Impugnación') ? 1500 : 1000}
           />
         )}
-      </div>
+      </>
     );
   }
 
@@ -1549,7 +1564,7 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
           <div className="popup-buttons">
             <button 
               className="control-btn" 
-              onClick={() => setShowFinalizePopup(true)}
+              onClick={confirmFinalize}
             >
               Finalizar
             </button>
@@ -1575,7 +1590,6 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             <button 
               className="control-btn" 
               onClick={() => {
-                setShowFinalizePopup(false);
                 onClose();
               }}
             >
