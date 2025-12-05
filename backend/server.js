@@ -155,17 +155,62 @@ async function sendWebhookToN8N(userData) {
   }
 }
 
-// 1. Lista de orígenes permitidos
+// 1. Función para verificar si un origen está permitido
+const isOriginAllowed = (origin) => {
+  if (!origin) return false;
+  
+  try {
+    const originUrl = new URL(origin);
+    const originHost = originUrl.hostname;
+    
+    // Dominios permitidos (acepta tanto con www como sin www)
+    const allowedDomains = [
+      'www.simulia.es',
+      'simulia.es',
+      'localhost'
+    ];
+    
+    // Normalizar hostname (remover www para comparación)
+    const normalizedHost = originHost.replace(/^www\./, '');
+    
+    // Verificar si el hostname está en la lista de permitidos
+    const isAllowed = allowedDomains.some(domain => {
+      const normalizedDomain = domain.replace(/^www\./, '');
+      // Comparar hostname normalizado (sin www)
+      return normalizedHost === normalizedDomain || originHost === domain;
+    });
+    
+    // También verificar FRONTEND_URL si está definida
+    if (!isAllowed && process.env.FRONTEND_URL) {
+      try {
+        const frontendUrl = new URL(process.env.FRONTEND_URL);
+        if (originHost === frontendUrl.hostname) {
+          return true;
+        }
+      } catch (e) {
+        // Si FRONTEND_URL no es una URL válida, ignorar
+      }
+    }
+    
+    return isAllowed;
+  } catch (e) {
+    // Si el origin no es una URL válida, rechazar
+    console.warn('⚠️ Origin inválido:', origin);
+    return false;
+  }
+};
+
+// 2. Lista de orígenes permitidos (para logging)
 const corsWhitelist = [
   'https://www.simulia.es',
   'https://simulia.es',
-  'http://localhost:3000', // para desarrollo
+  'http://localhost:3000',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 
-// 2. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
+// 3. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
@@ -174,12 +219,11 @@ app.use((req, res, next) => {
     method: req.method,
     url: req.url,
     origin: origin || 'NO ORIGIN',
-    isInWhitelist: origin ? corsWhitelist.includes(origin) : false,
-    whitelist: corsWhitelist
+    isAllowed: origin ? isOriginAllowed(origin) : false
   });
   
-  // CRÍTICO: Establecer headers CORS para origins en la whitelist
-  if (origin && corsWhitelist.includes(origin)) {
+  // CRÍTICO: Establecer headers CORS para origins permitidos
+  if (origin && isOriginAllowed(origin)) {
     // Headers CORS obligatorios - ESTABLECER SIEMPRE
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
@@ -192,7 +236,7 @@ app.use((req, res, next) => {
     console.log('✅ Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
   } else if (origin) {
     console.warn('⚠️ Origin no permitido:', origin);
-    console.warn('⚠️ Whitelist actual:', corsWhitelist);
+    console.warn('⚠️ Dominios permitidos: www.simulia.es, simulia.es, localhost:3000');
   }
   
   // Manejar preflight (OPTIONS) - DEBE responder inmediatamente CON LOS HEADERS YA ESTABLECIDOS
