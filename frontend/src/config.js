@@ -9,8 +9,8 @@ const isProduction = typeof window !== 'undefined' &&
   process.env.NODE_ENV === 'production';
 
 if (isProduction) {
-  API_URL = 'https://simulia-new-production-f21e.up.railway.app';
-  console.log('🔧 CONFIG DEBUG - PRODUCCIÓN DETECTADA - Usando Railway');
+  API_URL = 'https://social-emmi-simulia-845ca5f1.koyeb.app';
+  console.log('🔧 CONFIG DEBUG - PRODUCCIÓN DETECTADA - Usando Koyeb');
 } else {
   API_URL = 'http://localhost:5001';
   console.log('🔧 CONFIG DEBUG - DESARROLLO DETECTADO - Usando localhost:5001');
