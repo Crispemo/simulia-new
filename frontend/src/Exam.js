@@ -231,6 +231,16 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
               // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
               const imageField = q.image || q.imagen || null;
               
+              // Log de depuración para verificar imágenes
+              if (imageField) {
+                console.log('Pregunta con imagen detectada:', {
+                  questionId: q._id,
+                  image: q.image,
+                  imagen: q.imagen,
+                  imageField: imageField
+                });
+              }
+              
               // Normalizar campo answer: convertir número a string si es necesario
               let answerField = q.answer;
               if (typeof answerField === 'number') {
@@ -240,9 +250,9 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
               }
               
               // Asegurar que todas las opciones existan (las preguntas con imágenes pueden no tener option_5)
-              return {
+              const normalizedQuestion = {
                 ...q,
-                image: imageField,
+                image: imageField, // Asegurar que image esté presente
                 imagen: imageField, // Mantener ambos para compatibilidad
                 answer: answerField,
                 option_1: q.option_1 || '',
@@ -259,9 +269,19 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                   q.option_5 || '-'
                 ].filter(opt => opt && opt !== '-')
               };
+              
+              // Verificar que la imagen se haya preservado
+              if (imageField && !normalizedQuestion.image) {
+                console.error('ERROR: Imagen no preservada en pregunta normalizada:', q._id);
+              }
+              
+              return normalizedQuestion;
             });
             
             console.log('Preguntas con fotos normalizadas:', fotosData.length);
+            // Verificar cuántas tienen imagen
+            const withImages = fotosData.filter(q => q.image || q.imagen).length;
+            console.log(`De las cuales ${withImages} tienen imagen`);
           } else {
             // No crítico - continuar sin fotos
             console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
@@ -279,25 +299,36 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         }
         
         // Normalizar también las preguntas completas para asegurar formato consistente
-        completosData = completosData.map(q => ({
-          ...q,
-          option_1: q.option_1 || '',
-          option_2: q.option_2 || '',
-          option_3: q.option_3 || '',
-          option_4: q.option_4 || '',
-          option_5: q.option_5 || '-',
-          // Crear array de opciones si no existe
-          options: q.options || [
-            q.option_1 || '',
-            q.option_2 || '',
-            q.option_3 || '',
-            q.option_4 || '',
-            q.option_5 || '-'
-          ].filter(opt => opt && opt !== '-')
-        }));
+        completosData = completosData.map(q => {
+          // Normalizar campo de imagen si existe
+          const imageField = q.image || q.imagen || null;
+          
+          return {
+            ...q,
+            image: imageField, // Asegurar que image esté presente
+            imagen: imageField, // Mantener ambos para compatibilidad
+            option_1: q.option_1 || '',
+            option_2: q.option_2 || '',
+            option_3: q.option_3 || '',
+            option_4: q.option_4 || '',
+            option_5: q.option_5 || '-',
+            // Crear array de opciones si no existe
+            options: q.options || [
+              q.option_1 || '',
+              q.option_2 || '',
+              q.option_3 || '',
+              q.option_4 || '',
+              q.option_5 || '-'
+            ].filter(opt => opt && opt !== '-')
+          };
+        });
         
         // Combinar las preguntas
         allQuestions = [...completosData, ...fotosData];
+        
+        // Verificar que las imágenes se hayan preservado después de combinar
+        const questionsWithImages = allQuestions.filter(q => q.image || q.imagen).length;
+        console.log(`Total de preguntas: ${allQuestions.length}, de las cuales ${questionsWithImages} tienen imagen`);
         
         // Ajustar el tiempo según el tipo de examen
         if (currentExamType === 'protocolos') {

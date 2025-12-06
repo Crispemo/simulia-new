@@ -77,8 +77,39 @@ const QuestionBox = ({
   }
 
   const currentQuestionData = questions[currentQuestion];
-  const hasImage = currentQuestionData.image || (currentQuestionData.imagen && currentQuestionData.imagen !== '');
-  const imagePath = currentQuestionData.image || currentQuestionData.imagen;
+  
+  // Detectar imagen de múltiples formas posibles
+  const imageField = currentQuestionData?.image || currentQuestionData?.imagen || null;
+  const hasImage = imageField && 
+                   imageField !== '' && 
+                   imageField !== null && 
+                   imageField !== undefined &&
+                   String(imageField).trim() !== '';
+  const imagePath = hasImage ? imageField : null;
+  
+  // Log de depuración para verificar si hay imagen
+  useEffect(() => {
+    if (hasImage && imagePath) {
+      console.log('✅ Pregunta con imagen detectada:', {
+        questionIndex: currentQuestion,
+        questionId: currentQuestionData?._id,
+        image: currentQuestionData?.image,
+        imagen: currentQuestionData?.imagen,
+        imagePath: imagePath,
+        hasImage: hasImage
+      });
+    } else if (currentQuestionData?.image || currentQuestionData?.imagen) {
+      // Si hay campo de imagen pero no se detectó correctamente
+      console.warn('⚠️ Campo de imagen presente pero no válido:', {
+        questionIndex: currentQuestion,
+        questionId: currentQuestionData?._id,
+        image: currentQuestionData?.image,
+        imagen: currentQuestionData?.imagen,
+        imagePath: imagePath,
+        hasImage: hasImage
+      });
+    }
+  }, [currentQuestion, hasImage, imagePath, currentQuestionData]);
   
   // Get the correct answer from the question data or correctAnswersMap
   const rawCorrectAnswer =
@@ -226,7 +257,8 @@ const QuestionBox = ({
         </h3>
 
         <div className={`${styles.questionContent} ${hasImage ? styles.withImage : ''}`}>
-          {hasImage && renderQuestionImage(imagePath)}
+          {/* Renderizar imagen si existe, independientemente de hasImage para asegurar que se muestre */}
+          {(imagePath && imagePath !== '' && imagePath !== null) && renderQuestionImage(imagePath)}
 
           <div className={styles.optionsContainer}>
             {options.map((option, index) => {
