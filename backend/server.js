@@ -213,40 +213,61 @@ console.log('🔐 CORS Whitelist configurada:', corsWhitelist);
 // 3. Middleware CORS personalizado - DEBE ir PRIMERO, antes de cualquier otra cosa
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  
+  // Determinar el origin real (puede venir en origin o referer)
+  let requestOrigin = origin;
+  if (!requestOrigin && referer) {
+    try {
+      const refererUrl = new URL(referer);
+      requestOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
+    } catch (e) {
+      // Si no se puede parsear, usar referer como está
+      requestOrigin = referer;
+    }
+  }
   
   // Log para debugging (siempre en producción para diagnosticar)
   console.log('🔵 CORS Request:', {
     method: req.method,
     url: req.url,
-    origin: origin || 'NO ORIGIN',
-    isAllowed: origin ? isOriginAllowed(origin) : false
+    origin: requestOrigin || 'NO ORIGIN',
+    referer: referer || 'NO REFERER',
+    isAllowed: requestOrigin ? isOriginAllowed(requestOrigin) : false
   });
   
   // CRÍTICO: Establecer headers CORS para origins permitidos
-  if (origin && isOriginAllowed(origin)) {
+  // Para OPTIONS (preflight), SIEMPRE establecer headers si el origin está permitido
+  if (requestOrigin && isOriginAllowed(requestOrigin)) {
     // Headers CORS obligatorios - ESTABLECER SIEMPRE
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', requestOrigin);
     res.setHeader('Access-Control-Allow-Credentials', 'true'); // CRÍTICO: string 'true'
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
     res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
     res.setHeader('Vary', 'Origin');
     
-    console.log('✅ CORS Headers establecidos para:', origin);
+    console.log('✅ CORS Headers establecidos para:', requestOrigin);
     console.log('✅ Access-Control-Allow-Credentials:', res.getHeader('Access-Control-Allow-Credentials'));
-  } else if (origin) {
-    console.warn('⚠️ Origin no permitido:', origin);
+  } else if (requestOrigin) {
+    console.warn('⚠️ Origin no permitido:', requestOrigin);
     console.warn('⚠️ Dominios permitidos: www.simulia.es, simulia.es, localhost:3000');
+    // Aún así, establecer headers básicos para OPTIONS para evitar bloqueos
+    if (req.method === 'OPTIONS') {
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    }
   }
   
   // Manejar preflight (OPTIONS) - DEBE responder inmediatamente CON LOS HEADERS YA ESTABLECIDOS
   if (req.method === 'OPTIONS') {
     console.log('🔵 OPTIONS preflight - Respondiendo 204');
-    console.log('🔵 Headers antes de responder:', {
-      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin'),
-      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials')
+    console.log('🔵 Headers establecidos:', {
+      'Access-Control-Allow-Origin': res.getHeader('Access-Control-Allow-Origin') || 'NO ESTABLECIDO',
+      'Access-Control-Allow-Credentials': res.getHeader('Access-Control-Allow-Credentials') || 'NO ESTABLECIDO',
+      'Access-Control-Allow-Methods': res.getHeader('Access-Control-Allow-Methods') || 'NO ESTABLECIDO'
     });
-    // Asegurar que los headers estén establecidos antes de responder
+    // Responder 204 No Content para preflight
     return res.status(204).end();
   }
   
@@ -498,11 +519,25 @@ app.use((err, req, res, next) => {
   
   // Asegurar CORS también en errores usando la misma configuración
   const origin = req.headers.origin;
-  if (origin && corsWhitelist.includes(origin) && !res.headersSent) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  const referer = req.headers.referer;
+  
+  // Determinar el origin real (puede venir en origin o referer)
+  let requestOrigin = origin;
+  if (!requestOrigin && referer) {
+    try {
+      const refererUrl = new URL(referer);
+      requestOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
+    } catch (e) {
+      requestOrigin = referer;
+    }
+  }
+  
+  if (requestOrigin && isOriginAllowed(requestOrigin) && !res.headersSent) {
+    res.setHeader('Access-Control-Allow-Origin', requestOrigin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, X-Requested-With, Accept');
+    console.log('✅ CORS Headers establecidos en error handler para:', requestOrigin);
   }
   
   if (!res.headersSent) {

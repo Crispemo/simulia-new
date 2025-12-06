@@ -158,18 +158,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       const seen = localStorage.getItem(key);
       if (!seen) {
         setShowTutorialModal(true);
-      } else {
-        // Si ya vio el tutorial, verificar si debe mostrar el popup de diagnóstico
-        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
-        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
-        
-        // Mostrar popup de diagnóstico SIEMPRE si no se ha completado (sin excusas)
-        if (!diagnosticCompleted) {
-          // Esperar un momento para que el dashboard se cargue
-          setTimeout(() => {
-            setShowDiagnosticPopup(true);
-          }, 1000);
-        }
       }
     } catch (e) {
       // Si localStorage falla, no bloquear la UI
@@ -177,9 +165,57 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     }
   }, [userId]);
 
-  // Mostrar 1 pregunta cuando el usuario inicia sesión (solo una vez por sesión)
+  // Mostrar popup de diagnóstico SOLO si el usuario NUNCA ha hecho un examen
   useEffect(() => {
-    if (!userId) return;
+    try {
+      if (!userId || isLoadingDashboard) return;
+      
+      // Verificar si hay exámenes completados
+      const completedExams = examData.filter(exam => exam.status === 'completed');
+      const hasCompletedExams = completedExams.length > 0;
+      
+      // Si hay exámenes completados, ocultar el popup de diagnóstico
+      if (hasCompletedExams) {
+        setShowDiagnosticPopup(false);
+        return;
+      }
+      
+      // Solo mostrar diagnóstico si NO hay exámenes completados
+      const key = `tutorialSeen_${userId}`;
+      const seen = localStorage.getItem(key);
+      
+      // Solo mostrar después de que el usuario haya visto el tutorial
+      if (seen) {
+        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+        
+        // Mostrar popup de diagnóstico si no se ha completado
+        if (!diagnosticCompleted) {
+          // Esperar un momento para que el dashboard se cargue
+          setTimeout(() => {
+            setShowDiagnosticPopup(true);
+          }, 1000);
+        } else {
+          setShowDiagnosticPopup(false);
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo verificar estado del diagnóstico:', e);
+    }
+  }, [userId, examData, isLoadingDashboard]);
+
+  // Mostrar 1 pregunta cuando el usuario inicia sesión (solo si tiene al menos 1 examen completado)
+  useEffect(() => {
+    if (!userId || isLoadingDashboard) return;
+    
+    // Verificar si hay exámenes completados
+    const completedExams = examData.filter(exam => exam.status === 'completed');
+    const hasCompletedExams = completedExams.length >= 1;
+    
+    // Solo mostrar flashcards si el usuario tiene al menos 1 examen completado
+    if (!hasCompletedExams) {
+      return;
+    }
     
     // Verificar si ya se mostró la pregunta en esta sesión usando sessionStorage
     const sessionKey = `flashcardShown_${userId}`;
@@ -196,7 +232,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       
       return () => clearTimeout(timer);
     }
-  }, [userId]);
+  }, [userId, examData, isLoadingDashboard]);
 
   // Función para verificar y mostrar flashcard
   const checkAndShowFlashcard = async () => {
@@ -268,16 +304,22 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       if (userId) {
         localStorage.setItem(`tutorialSeen_${userId}`, 'true');
         
-        // Después de cerrar el tutorial, SIEMPRE mostrar el popup de diagnóstico si no está completado
-        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
-        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+        // Después de cerrar el tutorial, verificar si debe mostrar el popup de diagnóstico
+        // Solo si NO hay exámenes completados
+        const completedExams = examData.filter(exam => exam.status === 'completed');
+        const hasCompletedExams = completedExams.length > 0;
         
-        // Mostrar popup SIEMPRE si no se ha completado (sin excusas)
-        if (!diagnosticCompleted) {
-          // Esperar un momento antes de mostrar el popup para mejor UX
-          setTimeout(() => {
-            setShowDiagnosticPopup(true);
-          }, 500);
+        if (!hasCompletedExams) {
+          const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+          const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+          
+          // Mostrar popup solo si no se ha completado y no hay exámenes
+          if (!diagnosticCompleted) {
+            // Esperar un momento antes de mostrar el popup para mejor UX
+            setTimeout(() => {
+              setShowDiagnosticPopup(true);
+            }, 500);
+          }
         }
       }
     } catch (e) {
@@ -1170,16 +1212,16 @@ const handleErroresClick = () => {
     
     if (stats.totalCorrect === 0 && stats.totalIncorrect === 0 && totalUnanswered === 0) {
       return [
-        { name: 'Correctas', value: 0, color: '#4CAF50' },
-        { name: 'Incorrectas', value: 0, color: '#F44336' },
-        { name: 'Sin contestar', value: 0, color: '#9E9E9E' }
+        { id: 'correct-0', name: 'Correctas', value: 0, color: '#4CAF50' },
+        { id: 'incorrect-0', name: 'Incorrectas', value: 0, color: '#F44336' },
+        { id: 'unanswered-0', name: 'Sin contestar', value: 0, color: '#9E9E9E' }
       ];
     }
     
     return [
-      { name: 'Correctas', value: stats.totalCorrect, color: '#4CAF50' },
-      { name: 'Incorrectas', value: stats.totalIncorrect, color: '#F44336' },
-      { name: 'Sin contestar', value: totalUnanswered, color: '#9E9E9E' }
+      { id: 'correct', name: 'Correctas', value: stats.totalCorrect, color: '#4CAF50' },
+      { id: 'incorrect', name: 'Incorrectas', value: stats.totalIncorrect, color: '#F44336' },
+      { id: 'unanswered', name: 'Sin contestar', value: totalUnanswered, color: '#9E9E9E' }
     ];
   }, [stats, unansweredQuestions]);
   
@@ -1310,7 +1352,7 @@ const handleErroresClick = () => {
               <div className="chart-container" style={{ overflow: 'visible' }}>
                 <h3>Distribución de respuestas</h3>
                 <ResponsiveContainer width="100%" height={windowWidth < 576 ? 200 : 250}>
-                  <PieChart>
+                  <PieChart key="pie-chart-answers-distribution">
                     <Pie
                       data={answersDistributionData}
                       cx="50%"
@@ -1320,6 +1362,7 @@ const handleErroresClick = () => {
                       innerRadius={windowWidth < 576 ? 20 : 0}
                       fill="#8884d8"
                       dataKey="value"
+                      nameKey="name"
                       label={windowWidth < 576 ? 
                         // Simplified labels for mobile
                         ({ name, percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '' 
@@ -1328,8 +1371,8 @@ const handleErroresClick = () => {
                         ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`
                       }
                     >
-                      {answersDistributionData.map((entry, index) => (
-                        <Cell key={`pie-cell-answers-${entry.name}-${index}`} fill={entry.color} />
+                      {answersDistributionData.map((entry) => (
+                        <Cell key={`pie-cell-${entry.id}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip 
@@ -2043,10 +2086,17 @@ const handleErroresClick = () => {
     navigate('/contrarreloj');
   };
 
-  // Verificar si el diagnóstico está completado
+  // Verificar si el diagnóstico está completado o si hay exámenes completados
   const isDiagnosticCompleted = () => {
     if (!userId) return false;
     try {
+      // Si hay exámenes completados, considerar el diagnóstico como completado
+      const completedExams = examData.filter(exam => exam.status === 'completed');
+      if (completedExams.length > 0) {
+        return true;
+      }
+      
+      // Si no hay exámenes, verificar el flag de diagnóstico
       const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
       return localStorage.getItem(diagnosticKey) === 'true';
     } catch (e) {
@@ -2454,7 +2504,7 @@ const handleErroresClick = () => {
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
+                        <PieChart key="pie-chart-answers-distribution-card">
                           <Pie
                             data={answersDistributionData}
                             cx="50%"
@@ -2463,10 +2513,11 @@ const handleErroresClick = () => {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
+                            nameKey="name"
                             label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                           >
-                            {answersDistributionData.map((entry, index) => (
-                              <Cell key={`pie-cell-${entry.name}-${index}`} fill={entry.color} />
+                            {answersDistributionData.map((entry) => (
+                              <Cell key={`pie-cell-card-${entry.id}`} fill={entry.color} />
                             ))}
                           </Pie>
                           <Tooltip />

@@ -9,7 +9,8 @@ const isProduction = typeof window !== 'undefined' &&
   process.env.NODE_ENV === 'production';
 
 if (isProduction) {
-  API_URL = 'https://social-emmi-simulia-845ca5f1.koyeb.app';
+  // Usar variable de entorno si está disponible, sino usar la URL de Koyeb
+  API_URL = process.env.REACT_APP_API_URL || 'https://social-emmi-simulia-845ca5f1.koyeb.app';
   console.log('🔧 CONFIG DEBUG - PRODUCCIÓN DETECTADA - Usando Koyeb');
 } else {
   API_URL = 'http://localhost:5001';
