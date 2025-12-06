@@ -225,6 +225,43 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           if (fotosResponse.ok) {
             fotosData = await fotosResponse.json();
             console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
+            
+            // Normalizar preguntas con imágenes para asegurar formato consistente
+            fotosData = fotosData.map(q => {
+              // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+              const imageField = q.image || q.imagen || null;
+              
+              // Normalizar campo answer: convertir número a string si es necesario
+              let answerField = q.answer;
+              if (typeof answerField === 'number') {
+                answerField = String(answerField);
+              } else if (!answerField) {
+                answerField = '';
+              }
+              
+              // Asegurar que todas las opciones existan (las preguntas con imágenes pueden no tener option_5)
+              return {
+                ...q,
+                image: imageField,
+                imagen: imageField, // Mantener ambos para compatibilidad
+                answer: answerField,
+                option_1: q.option_1 || '',
+                option_2: q.option_2 || '',
+                option_3: q.option_3 || '',
+                option_4: q.option_4 || '',
+                option_5: q.option_5 || '-', // Añadir option_5 si no existe
+                // Crear array de opciones para facilitar el renderizado
+                options: [
+                  q.option_1 || '',
+                  q.option_2 || '',
+                  q.option_3 || '',
+                  q.option_4 || '',
+                  q.option_5 || '-'
+                ].filter(opt => opt && opt !== '-')
+              };
+            });
+            
+            console.log('Preguntas con fotos normalizadas:', fotosData.length);
           } else {
             // No crítico - continuar sin fotos
             console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
@@ -240,6 +277,24 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         if (completosData.length === 0 && fotosData.length === 0) {
           throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
         }
+        
+        // Normalizar también las preguntas completas para asegurar formato consistente
+        completosData = completosData.map(q => ({
+          ...q,
+          option_1: q.option_1 || '',
+          option_2: q.option_2 || '',
+          option_3: q.option_3 || '',
+          option_4: q.option_4 || '',
+          option_5: q.option_5 || '-',
+          // Crear array de opciones si no existe
+          options: q.options || [
+            q.option_1 || '',
+            q.option_2 || '',
+            q.option_3 || '',
+            q.option_4 || '',
+            q.option_5 || '-'
+          ].filter(opt => opt && opt !== '-')
+        }));
         
         // Combinar las preguntas
         allQuestions = [...completosData, ...fotosData];
@@ -268,24 +323,29 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       setQuestions(allQuestions);
       
       // Inicializar userAnswers con objetos completos para todas las preguntas
-      const initialUserAnswers = allQuestions.map(question => ({
-        questionId: question._id,
-        selectedAnswer: null,
-        isCorrect: null,
-        markedAsDoubt: false,
-        questionData: {
-          question: question.question || '',
-          option_1: question.option_1 || question.options?.[0] || '',
-          option_2: question.option_2 || question.options?.[1] || '',
-          option_3: question.option_3 || question.options?.[2] || '',
-          option_4: question.option_4 || question.options?.[3] || '',
-          option_5: question.option_5 || question.options?.[4] || '',
-          answer: question.answer || question.correctAnswer || '',
-          subject: question.subject || question.categoria || 'General',
-          image: question.image || null,
-          long_answer: question.long_answer || ''
-        }
-      }));
+      const initialUserAnswers = allQuestions.map(question => {
+        // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+        const imageField = question.image || question.imagen || null;
+        
+        return {
+          questionId: question._id,
+          selectedAnswer: null,
+          isCorrect: null,
+          markedAsDoubt: false,
+          questionData: {
+            question: question.question || '',
+            option_1: question.option_1 || question.options?.[0] || '',
+            option_2: question.option_2 || question.options?.[1] || '',
+            option_3: question.option_3 || question.options?.[2] || '',
+            option_4: question.option_4 || question.options?.[3] || '',
+            option_5: question.option_5 || question.options?.[4] || '-',
+            answer: question.answer || question.correctAnswer || '',
+            subject: question.subject || question.categoria || 'General',
+            image: imageField,
+            long_answer: question.long_answer || ''
+          }
+        };
+      });
       
       setUserAnswers(initialUserAnswers);
       setCurrentQuestion(0);
@@ -324,17 +384,41 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       if (progress.questions && Array.isArray(progress.questions)) {
         // Convertir las preguntas al formato usado en el frontend
         const formattedQuestions = progress.questions.map(q => {
+          // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+          const imageField = q.image || q.imagen || null;
+          
+          // Normalizar campo answer: convertir número a string si es necesario
+          let answerField = q.answer || q.correctAnswer || '';
+          if (typeof answerField === 'number') {
+            answerField = String(answerField);
+          }
+          
+          // Manejar opciones: si viene como array, usarlo; sino construir desde option_1, etc.
+          const optionsArray = Array.isArray(q.options) && q.options.length > 0
+            ? q.options
+            : [
+                q.option_1 || '',
+                q.option_2 || '',
+                q.option_3 || '',
+                q.option_4 || '',
+                q.option_5 || '-'
+              ].filter(opt => opt && opt !== '-');
+          
           // Manejar tanto el formato guardado como el formato original
           return {
             _id: q.questionId || q._id,
             question: q.question || '',
-            option_1: Array.isArray(q.options) ? q.options[0] : '',
-            option_2: Array.isArray(q.options) ? q.options[1] : '',
-            option_3: Array.isArray(q.options) ? q.options[2] : '',
-            option_4: Array.isArray(q.options) ? q.options[3] : '',
-            options: q.options || [],
-            correctAnswer: q.correctAnswer || '',
+            option_1: Array.isArray(q.options) ? (q.options[0] || '') : (q.option_1 || ''),
+            option_2: Array.isArray(q.options) ? (q.options[1] || '') : (q.option_2 || ''),
+            option_3: Array.isArray(q.options) ? (q.options[2] || '') : (q.option_3 || ''),
+            option_4: Array.isArray(q.options) ? (q.options[3] || '') : (q.option_4 || ''),
+            option_5: Array.isArray(q.options) ? (q.options[4] || '-') : (q.option_5 || '-'),
+            options: optionsArray,
+            answer: answerField,
+            correctAnswer: answerField,
             subject: q.subject || q.categoria || '',
+            image: imageField,
+            imagen: imageField, // Mantener ambos para compatibilidad
             long_answer: q.long_answer || ''  // Asegurar que long_answer se restaura
           };
         });
@@ -343,24 +427,29 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         console.log(`Restauradas ${formattedQuestions.length} preguntas`);
         
         // Preparar el array para almacenar las respuestas con objetos completos
-        const fullAnswersArray = formattedQuestions.map(question => ({
-          questionId: question._id,
-          selectedAnswer: null,
-          isCorrect: null,
-          markedAsDoubt: false,
-          questionData: {
-            question: question.question || '',
-            option_1: question.option_1 || question.options?.[0] || '',
-            option_2: question.option_2 || question.options?.[1] || '',
-            option_3: question.option_3 || question.options?.[2] || '',
-            option_4: question.option_4 || question.options?.[3] || '',
-            option_5: question.option_5 || question.options?.[4] || '',
-            answer: question.answer || question.correctAnswer || '',
-            subject: question.subject || question.categoria || 'General',
-            image: question.image || null,
-            long_answer: question.long_answer || ''
-          }
-        }));
+        const fullAnswersArray = formattedQuestions.map(question => {
+          // Normalizar campo de imagen
+          const imageField = question.image || question.imagen || null;
+          
+          return {
+            questionId: question._id,
+            selectedAnswer: null,
+            isCorrect: null,
+            markedAsDoubt: false,
+            questionData: {
+              question: question.question || '',
+              option_1: question.option_1 || question.options?.[0] || '',
+              option_2: question.option_2 || question.options?.[1] || '',
+              option_3: question.option_3 || question.options?.[2] || '',
+              option_4: question.option_4 || question.options?.[3] || '',
+              option_5: question.option_5 || question.options?.[4] || '-',
+              answer: question.answer || question.correctAnswer || '',
+              subject: question.subject || question.categoria || 'General',
+              image: imageField,
+              long_answer: question.long_answer || ''
+            }
+          };
+        });
         
         // Restaurar las respuestas del usuario
         if (progress.userAnswers) {
@@ -923,6 +1012,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     
     console.log(`Respuesta seleccionada: ${selectedOption}, Respuesta correcta: ${currentQuestionData?.answer}, Es correcta: ${isCorrect}`);
     
+    // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+    const imageField = currentQuestionData?.image || currentQuestionData?.imagen || 
+                      existingAnswerObject?.questionData?.image || 
+                      existingAnswerObject?.questionData?.imagen || null;
+    
     // Asegurarnos de que mantenemos la estructura completa del objeto de respuesta
     const updatedAnswer = {
       questionId: existingAnswerObject?.questionId || currentQuestionData?._id,
@@ -935,13 +1029,18 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         option_2: currentQuestionData?.option_2 || currentQuestionData?.options?.[1] || '',
         option_3: currentQuestionData?.option_3 || currentQuestionData?.options?.[2] || '',
         option_4: currentQuestionData?.option_4 || currentQuestionData?.options?.[3] || '',
-        option_5: currentQuestionData?.option_5 || currentQuestionData?.options?.[4] || '',
+        option_5: currentQuestionData?.option_5 || currentQuestionData?.options?.[4] || '-',
         answer: currentQuestionData?.answer || currentQuestionData?.correctAnswer || '',
         subject: currentQuestionData?.subject || currentQuestionData?.categoria || 'General',
-        image: currentQuestionData?.image || null,
+        image: imageField,
         long_answer: currentQuestionData?.long_answer || (existingAnswerObject?.questionData?.long_answer || '')
       }
     };
+    
+    // Asegurar que el campo de imagen esté presente incluso si ya existe questionData
+    if (updatedAnswer.questionData && !updatedAnswer.questionData.image && imageField) {
+      updatedAnswer.questionData.image = imageField;
+    }
     
     // Verificar si updatedAnswer tiene long_answer
     if (updatedAnswer.questionData && !updatedAnswer.questionData.long_answer && currentQuestionData?.long_answer) {

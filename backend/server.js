@@ -3590,15 +3590,36 @@ app.post('/random-fotos', async (req, res) => {
         option_4: 1, 
         option_5: 1, 
         answer: 1,
-        image: 1,
+        imagen: 1,  // Campo correcto según el modelo
+        image: '$imagen',  // Alias para compatibilidad con frontend
         exam_name: 1,
         subject: 1,
+        long_answer: 1,  // Incluir long_answer si existe
         _id: 1
       }}
     ]);
     
-    console.log(`Enviando ${questions.length} preguntas con imágenes`);
-    res.json(questions);
+    // Normalizar las preguntas para asegurar formato consistente
+    const normalizedQuestions = questions.map(q => {
+      // Asegurar que todas las opciones existan
+      const normalized = {
+        ...q,
+        option_1: q.option_1 || '',
+        option_2: q.option_2 || '',
+        option_3: q.option_3 || '',
+        option_4: q.option_4 || '',
+        option_5: q.option_5 || '-',
+        // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+        image: q.image || q.imagen || null,
+        imagen: q.imagen || q.image || null,
+        // Normalizar answer: convertir número a string si es necesario
+        answer: typeof q.answer === 'number' ? String(q.answer) : (q.answer || '')
+      };
+      return normalized;
+    });
+    
+    console.log(`Enviando ${normalizedQuestions.length} preguntas con imágenes`);
+    res.json(normalizedQuestions);
   } catch (error) {
     console.error('Error al obtener preguntas con fotos:', error);
     res.status(500).json({ error: 'Error al obtener preguntas con fotos' });
