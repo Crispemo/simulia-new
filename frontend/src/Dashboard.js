@@ -92,6 +92,8 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [savingPracticePrefs, setSavingPracticePrefs] = useState(false);
   // Tutorial modal (primera visita)
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  // Popup de diagnóstico inicial (después del tutorial)
+  const [showDiagnosticPopup, setShowDiagnosticPopup] = useState(false);
   // Racha de acceso a la plataforma
   // const [streakDays, setStreakDays] = useState(0);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
@@ -156,6 +158,18 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       const seen = localStorage.getItem(key);
       if (!seen) {
         setShowTutorialModal(true);
+      } else {
+        // Si ya vio el tutorial, verificar si debe mostrar el popup de diagnóstico
+        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+        
+        // Mostrar popup de diagnóstico SIEMPRE si no se ha completado (sin excusas)
+        if (!diagnosticCompleted) {
+          // Esperar un momento para que el dashboard se cargue
+          setTimeout(() => {
+            setShowDiagnosticPopup(true);
+          }, 1000);
+        }
       }
     } catch (e) {
       // Si localStorage falla, no bloquear la UI
@@ -253,6 +267,18 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     try {
       if (userId) {
         localStorage.setItem(`tutorialSeen_${userId}`, 'true');
+        
+        // Después de cerrar el tutorial, SIEMPRE mostrar el popup de diagnóstico si no está completado
+        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+        
+        // Mostrar popup SIEMPRE si no se ha completado (sin excusas)
+        if (!diagnosticCompleted) {
+          // Esperar un momento antes de mostrar el popup para mejor UX
+          setTimeout(() => {
+            setShowDiagnosticPopup(true);
+          }, 500);
+        }
       }
     } catch (e) {
       console.warn('No se pudo guardar el estado del tutorial en localStorage:', e);
@@ -2004,6 +2030,120 @@ const handleErroresClick = () => {
     );
   };
 
+  // Popup de diagnóstico inicial
+  const closeDiagnosticPopup = () => {
+    // No permitir cerrar fácilmente - el usuario debe hacer el diagnóstico
+    // Solo cerrar si realmente va a empezar el examen
+    setShowDiagnosticPopup(false);
+  };
+
+  const handleStartDiagnostic = () => {
+    // Cerrar el popup y navegar al examen contrarreloj
+    setShowDiagnosticPopup(false);
+    navigate('/contrarreloj');
+  };
+
+  // Verificar si el diagnóstico está completado
+  const isDiagnosticCompleted = () => {
+    if (!userId) return false;
+    try {
+      const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+      return localStorage.getItem(diagnosticKey) === 'true';
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const renderDiagnosticPopup = () => {
+    if (!showDiagnosticPopup) return null;
+    return (
+      <div className="error-popup-overlay" onClick={(e) => {
+        // No permitir cerrar haciendo clic fuera del popup para forzar la acción
+        e.stopPropagation();
+      }}>
+        <div className="error-popup tutorial-modal" onClick={(e) => e.stopPropagation()}>
+          <h3>🎯 Haz tu diagnóstico inicial</h3>
+          <div style={{ 
+            padding: '1.5rem 0',
+            textAlign: 'center',
+            lineHeight: '1.8'
+          }}>
+            <p style={{ 
+              fontSize: '1.2rem', 
+              marginBottom: '1rem',
+              color: 'var(--text-color)',
+              fontWeight: '600'
+            }}>
+              Descubre tus puntos débiles en 4 minutos
+            </p>
+            <p style={{ 
+              fontSize: '1rem',
+              color: 'var(--text-color-secondary)',
+              marginBottom: '1.5rem',
+              lineHeight: '1.6'
+            }}>
+              Este examen rápido te ayudará a identificar las áreas que necesitas reforzar. 
+              Una vez completado, verás tus métricas en el dashboard y tendrás un examen que revisar.
+            </p>
+            <div style={{
+              background: isDarkMode ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)',
+              padding: '1.25rem',
+              borderRadius: '10px',
+              marginBottom: '1.5rem',
+              border: `2px solid ${isDarkMode ? '#4caf50' : '#66bb6a'}`,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+            }}>
+              <p style={{ 
+                margin: 0,
+                fontSize: '1rem',
+                color: 'var(--text-color)',
+                fontWeight: '500'
+              }}>
+                ⏱️ <strong>20 preguntas</strong> en <strong>14 minutos</strong>
+              </p>
+            </div>
+          </div>
+          <div className="tutorial-buttons" style={{ 
+            justifyContent: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            <button 
+              onClick={handleStartDiagnostic}
+              style={{
+                background: 'var(--theme-color)',
+                color: 'white',
+                fontWeight: '600',
+                padding: '14px 40px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.1rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s',
+                flex: '0 0 auto',
+                width: '100%',
+                maxWidth: '300px'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = 'var(--theme-color-light)';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = 'var(--theme-color)';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+              }}
+            >
+              Empezar diagnóstico →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Función mejorada para alternar el modo oscuro
   const handleToggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
@@ -2120,6 +2260,77 @@ const handleErroresClick = () => {
             </div>
           )}
           <main className="container mx-auto p-6 space-y-6">
+            {/* Badge de diagnóstico inicial - Solo mostrar si no está completado */}
+            {!isDiagnosticCompleted() && (
+              <div 
+                onClick={handleStartDiagnostic}
+                style={{
+                  background: isDarkMode 
+                    ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(56, 142, 60, 0.15) 100%)'
+                    : 'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(56, 142, 60, 0.1) 100%)',
+                  border: `2px solid ${isDarkMode ? '#4caf50' : '#66bb6a'}`,
+                  borderRadius: '12px',
+                  padding: '1.25rem 1.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(76, 175, 80, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  marginBottom: '1rem'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.3)';
+                  e.currentTarget.style.borderColor = isDarkMode ? '#66bb6a' : '#4caf50';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.2)';
+                  e.currentTarget.style.borderColor = isDarkMode ? '#4caf50' : '#66bb6a';
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    <span style={{ fontSize: '1.5rem' }}>🎯</span>
+                    <h3 style={{
+                      margin: 0,
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
+                      color: isDarkMode ? '#4caf50' : '#2e7d32'
+                    }}>
+                      Completa tu diagnóstico inicial
+                    </h3>
+                  </div>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '0.95rem',
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+                    lineHeight: '1.5'
+                  }}>
+                    Descubre tus puntos débiles en 4 minutos • 20 preguntas en 14 minutos
+                  </p>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: isDarkMode ? '#4caf50' : '#2e7d32',
+                  fontWeight: '600',
+                  fontSize: '1rem'
+                }}>
+                  <span>Empezar</span>
+                  <span style={{ fontSize: '1.2rem' }}>→</span>
+                </div>
+              </div>
+            )}
+            
             {/* Header con gradient */}
             <div className="relative overflow-hidden rounded-xl border border-accent bg-gradient-to-b from-accent/10 to-background p-4 md:p-8 shadow-sm">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -2344,6 +2555,7 @@ const handleErroresClick = () => {
         {renderAvatarPopup()}
         {renderRecurrencePopup()}
         {renderTutorialModal()}
+        {renderDiagnosticPopup()}
       </div>
     </GoogleOAuthProvider>
   );

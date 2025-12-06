@@ -584,6 +584,21 @@ const Contrarreloj = ({ userId }) => {
         throw new Error(result.error);
       }
 
+      // Marcar diagnóstico inicial como completado al finalizar cualquier examen contrarreloj
+      // Esto asegura que el usuario perciba valor desde el principio
+      try {
+        const diagnosticKey = `diagnosticInitialCompleted_${effectiveUserId}`;
+        const alreadyCompleted = localStorage.getItem(diagnosticKey);
+        
+        // Solo marcar como completado si no estaba ya completado (evitar sobrescribir)
+        if (alreadyCompleted !== 'true') {
+          localStorage.setItem(diagnosticKey, 'true');
+          console.log('Diagnóstico inicial marcado como completado');
+        }
+      } catch (e) {
+        console.warn('No se pudo guardar el estado del diagnóstico:', e);
+      }
+
       // Mostrar notificación de éxito
       setSuccessMessage('¡Examen contrarreloj finalizado con éxito!');
       setShowSuccessNotification(true);
