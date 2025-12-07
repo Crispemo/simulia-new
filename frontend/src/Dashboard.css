@@ -1587,7 +1587,7 @@ input:checked + .slider:before {
   color: var(--theme-color-light);
 }
 
-/* Contenedor responsive para el video de YouTube */
+/* Contenedor responsive para el video de Loom */
 .tutorial-video-container {
   position: relative;
   width: 100%;

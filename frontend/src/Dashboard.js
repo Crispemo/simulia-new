@@ -2042,7 +2042,7 @@ const handleErroresClick = () => {
     );
   };
 
-  // Modal de Tutorial (video YouTube)
+  // Modal de Tutorial (video Loom)
   const renderTutorialModal = () => {
     if (!showTutorialModal) return null;
     return (
@@ -2051,7 +2051,7 @@ const handleErroresClick = () => {
           <h3>Cómo funciona Simulia (Tutorial rápido)</h3>
           <div className="tutorial-video-container">
             <iframe
-              src="https://www.youtube.com/embed/4x5YkhD5TJU"
+              src="https://www.loom.com/embed/8000afd0c9ad452dbf1c2cf92bb236fa"
               title="Tutorial Simulia"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -2060,11 +2060,11 @@ const handleErroresClick = () => {
           </div>
           <div className="tutorial-buttons">
             <a
-              href="https://youtu.be/4x5YkhD5TJU"
+              href="https://www.loom.com/share/8000afd0c9ad452dbf1c2cf92bb236fa"
               target="_blank"
               rel="noreferrer"
             >
-              Ver en YouTube
+              Ver en Loom
             </a>
             <button onClick={closeTutorialModal}>Entendido</button>
           </div>
