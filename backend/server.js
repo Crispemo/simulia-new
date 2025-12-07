@@ -4940,63 +4940,33 @@ app.post('/admin/migrate-unanswered-questions', async (req, res) => {
 });
 
 // Start Server
+// Koyeb asigna puertos dinámicos → DEBE usar process.env.PORT para el health check
 const PORT = process.env.PORT || 5001;
-
-// Función para encontrar un puerto disponible
-const findAvailablePort = async (startPort) => {
-  const net = require('net');
-  
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    
-    server.listen(startPort, () => {
-      const port = server.address().port;
-      server.close(() => resolve(port));
-    });
-    
-    server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        // Si el puerto está ocupado, intentar con el siguiente
-        findAvailablePort(startPort + 1).then(resolve).catch(reject);
-      } else {
-        reject(err);
-      }
-    });
-  });
-};
 
 // NOTA: El frontend se despliega por separado en Vercel
 // No intentar servir archivos estáticos del frontend desde el backend
 
-// Iniciar servidor con puerto automático
-findAvailablePort(PORT).then(availablePort => {
-  app.listen(availablePort, () => {
-    console.log(`Servidor escuchando en el puerto ${availablePort}`);
-    if (availablePort !== PORT) {
-      console.log(`⚠️  Puerto ${PORT} ocupado, usando puerto ${availablePort}`);
-    }
-    if (isProduction) {
-      console.log('Modo: PRODUCCIÓN');
-    } else {
-      console.log('Modo: DESARROLLO');
-    }
-    // Programar job básico (cada ~24h) para recordatorios de práctica
-    try {
-      const { processInactiveUsersForReminders } = require('./services/notificationService');
-      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-      setInterval(() => {
-        console.log('⏰ Ejecutando job de recordatorios...');
-        processInactiveUsersForReminders().catch(err => console.error('Job recordatorios error:', err.message));
-      }, ONE_DAY_MS);
-      // Primera ejecución diferida
-      setTimeout(() => processInactiveUsersForReminders().catch(() => {}), 15000);
-    } catch (e) {
-      console.error('No se pudo iniciar el job de recordatorios:', e.message);
-    }
-  });
-}).catch(error => {
-  console.error('Error al iniciar servidor:', error);
-  process.exit(1);
+// Iniciar servidor (usar PORT directamente para Koyeb)
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en puerto ${PORT}`);
+  if (isProduction) {
+    console.log('Modo: PRODUCCIÓN');
+  } else {
+    console.log('Modo: DESARROLLO');
+  }
+  // Programar job básico (cada ~24h) para recordatorios de práctica
+  try {
+    const { processInactiveUsersForReminders } = require('./services/notificationService');
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    setInterval(() => {
+      console.log('⏰ Ejecutando job de recordatorios...');
+      processInactiveUsersForReminders().catch(err => console.error('Job recordatorios error:', err.message));
+    }, ONE_DAY_MS);
+    // Primera ejecución diferida
+    setTimeout(() => processInactiveUsersForReminders().catch(() => {}), 15000);
+  } catch (e) {
+    console.error('No se pudo iniciar el job de recordatorios:', e.message);
+  }
 });
 
 
