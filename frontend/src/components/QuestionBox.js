@@ -187,11 +187,41 @@ const QuestionBox = ({
   const renderQuestionImage = (imagePath) => {
     if (!imagePath) return null;
     
+    // Normalizar el nombre del archivo: reemplazar espacios por guiones bajos
+    let normalizedPath = String(imagePath).trim();
+    normalizedPath = normalizedPath.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
+    
+    // Si la ruta contiene '/preguntas/', reemplazarla por '/examen_fotos/'
+    normalizedPath = normalizedPath.replace(/\/preguntas\//g, '/examen_fotos/');
+    
     // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
     const timestamp = new Date().getTime();
-    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/') 
-      ? `${imagePath}?t=${timestamp}`
-      : `/examen_fotos/${imagePath}?t=${timestamp}`;
+    let fullPath;
+    
+    if (normalizedPath.startsWith('http')) {
+      // Si es una URL completa, normalizar la ruta dentro de la URL
+      try {
+        const url = new URL(normalizedPath);
+        url.pathname = url.pathname.replace(/\/preguntas\//g, '/examen_fotos/');
+        url.pathname = url.pathname.replace(/\s+/g, '_');
+        fullPath = `${url.toString()}?t=${timestamp}`;
+      } catch (e) {
+        // Si falla el parsing, usar la ruta normalizada directamente
+        fullPath = `${normalizedPath}?t=${timestamp}`;
+      }
+    } else if (normalizedPath.startsWith('/')) {
+      // Si ya es una ruta absoluta, usar directamente
+      fullPath = `${normalizedPath}?t=${timestamp}`;
+    } else {
+      // Si es solo el nombre del archivo, añadir la ruta base
+      fullPath = `/examen_fotos/${normalizedPath}?t=${timestamp}`;
+    }
+    
+    console.log('Ruta de imagen normalizada:', {
+      original: imagePath,
+      normalized: normalizedPath,
+      fullPath: fullPath
+    });
     
     return (
       <>

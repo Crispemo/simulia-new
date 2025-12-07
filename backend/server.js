@@ -3570,8 +3570,13 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Construir query base
-    let query = { image: { $exists: true, $ne: null } };
+    // Construir query base - buscar por 'imagen' que es el campo del modelo
+    let query = { 
+      $or: [
+        { imagen: { $exists: true, $ne: null, $ne: '' } },
+        { image: { $exists: true, $ne: null, $ne: '' } }
+      ]
+    };
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
     if (asignaturas && asignaturas.length > 0) {
@@ -3601,6 +3606,19 @@ app.post('/random-fotos', async (req, res) => {
     
     // Normalizar las preguntas para asegurar formato consistente
     const normalizedQuestions = questions.map(q => {
+      // Normalizar campo de imagen
+      let imageField = q.image || q.imagen || null;
+      
+      // Normalizar el nombre del archivo de imagen si existe
+      if (imageField) {
+        // Convertir a string y normalizar
+        imageField = String(imageField).trim();
+        // Reemplazar espacios por guiones bajos
+        imageField = imageField.replace(/\s+/g, '_');
+        // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+        imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+      }
+      
       // Asegurar que todas las opciones existan
       const normalized = {
         ...q,
@@ -3610,8 +3628,8 @@ app.post('/random-fotos', async (req, res) => {
         option_4: q.option_4 || '',
         option_5: q.option_5 || '-',
         // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-        image: q.image || q.imagen || null,
-        imagen: q.imagen || q.image || null,
+        image: imageField,
+        imagen: imageField,
         // Normalizar answer: convertir número a string si es necesario
         answer: typeof q.answer === 'number' ? String(q.answer) : (q.answer || '')
       };

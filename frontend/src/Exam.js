@@ -229,15 +229,27 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             // Normalizar preguntas con imágenes para asegurar formato consistente
             fotosData = fotosData.map(q => {
               // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-              const imageField = q.image || q.imagen || null;
+              let imageField = q.image || q.imagen || null;
               
-              // Log de depuración para verificar imágenes
+              // Normalizar el nombre del archivo de imagen
               if (imageField) {
-                console.log('Pregunta con imagen detectada:', {
+                // Convertir a string y normalizar
+                imageField = String(imageField).trim();
+                // Reemplazar espacios por guiones bajos
+                imageField = imageField.replace(/\s+/g, '_');
+                // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+                imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+                // Si no tiene ruta y no empieza con '/', asumir que es solo el nombre del archivo
+                if (!imageField.startsWith('/') && !imageField.startsWith('http')) {
+                  // Ya está normalizado, mantener como está (será manejado en QuestionBox)
+                }
+                
+                // Log de depuración para verificar imágenes
+                console.log('Pregunta con imagen detectada y normalizada:', {
                   questionId: q._id,
-                  image: q.image,
-                  imagen: q.imagen,
-                  imageField: imageField
+                  imageOriginal: q.image,
+                  imagenOriginal: q.imagen,
+                  imageFieldNormalized: imageField
                 });
               }
               
@@ -301,7 +313,17 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Normalizar también las preguntas completas para asegurar formato consistente
         completosData = completosData.map(q => {
           // Normalizar campo de imagen si existe
-          const imageField = q.image || q.imagen || null;
+          let imageField = q.image || q.imagen || null;
+          
+          // Normalizar el nombre del archivo de imagen si existe
+          if (imageField) {
+            // Convertir a string y normalizar
+            imageField = String(imageField).trim();
+            // Reemplazar espacios por guiones bajos
+            imageField = imageField.replace(/\s+/g, '_');
+            // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+            imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+          }
           
           return {
             ...q,
@@ -416,7 +438,17 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Convertir las preguntas al formato usado en el frontend
         const formattedQuestions = progress.questions.map(q => {
           // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-          const imageField = q.image || q.imagen || null;
+          let imageField = q.image || q.imagen || null;
+          
+          // Normalizar el nombre del archivo de imagen si existe
+          if (imageField) {
+            // Convertir a string y normalizar
+            imageField = String(imageField).trim();
+            // Reemplazar espacios por guiones bajos
+            imageField = imageField.replace(/\s+/g, '_');
+            // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+            imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+          }
           
           // Normalizar campo answer: convertir número a string si es necesario
           let answerField = q.answer || q.correctAnswer || '';
@@ -1044,9 +1076,19 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     console.log(`Respuesta seleccionada: ${selectedOption}, Respuesta correcta: ${currentQuestionData?.answer}, Es correcta: ${isCorrect}`);
     
     // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-    const imageField = currentQuestionData?.image || currentQuestionData?.imagen || 
-                      existingAnswerObject?.questionData?.image || 
-                      existingAnswerObject?.questionData?.imagen || null;
+    let imageField = currentQuestionData?.image || currentQuestionData?.imagen || 
+                     existingAnswerObject?.questionData?.image || 
+                     existingAnswerObject?.questionData?.imagen || null;
+    
+    // Normalizar el nombre del archivo de imagen si existe
+    if (imageField) {
+      // Convertir a string y normalizar
+      imageField = String(imageField).trim();
+      // Reemplazar espacios por guiones bajos
+      imageField = imageField.replace(/\s+/g, '_');
+      // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+      imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+    }
     
     // Asegurarnos de que mantenemos la estructura completa del objeto de respuesta
     const updatedAnswer = {
