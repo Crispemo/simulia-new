@@ -340,6 +340,7 @@ const ExamView = ({
             showTimeBar={showTimeBar}
             onTimeUp={onTimeUp}
             timePerQuestion={timePerQuestion}
+            isPaused={isPaused}
           />
         )}
 

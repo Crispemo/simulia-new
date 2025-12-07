@@ -39,6 +39,7 @@ const Contrarreloj = ({ userId }) => {
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [totalTime] = useState(840); // 14 minutos
   const [currentPage, setCurrentPage] = useState(0);
+  const [timePerQuestion] = useState(40); // 40 segundos por pregunta
 
   // Detectar cambios en el modo oscuro
   useEffect(() => {
@@ -269,6 +270,13 @@ const Contrarreloj = ({ userId }) => {
     } else {
       setShowFinalizePopup(true); // Si es la última pregunta, finaliza
     }
+  };
+
+  // Callback cuando se acaba el tiempo de una pregunta
+  const handleTimeUp = () => {
+    console.log('Tiempo agotado para la pregunta', currentQuestion);
+    // Saltar automáticamente a la siguiente pregunta
+    handleNextQuestion();
   };
 
   // Función para guardar progreso en el backend usando examUtils
@@ -1197,6 +1205,9 @@ const Contrarreloj = ({ userId }) => {
         isDarkMode={isDarkMode}
         currentQuestion={currentQuestion}
         onNavigate={handleNavigate}
+        showTimeBar={true}
+        timePerQuestion={timePerQuestion}
+        onTimeUp={handleTimeUp}
         onImpugnarSubmit={async (questionId, reason) => {
           setDisputeReason(reason);
           await handleDisputeSubmit(questionId);

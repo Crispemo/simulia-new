@@ -18,7 +18,8 @@ const QuestionBox = ({
   answerIsCorrect = null, // Nueva prop para determinar si una respuesta es correcta
   showTimeBar = false, // Nueva prop para mostrar la barra de tiempo
   onTimeUp = null, // Callback cuando se acaba el tiempo
-  timePerQuestion = 40 // Tiempo por pregunta en segundos
+  timePerQuestion = 40, // Tiempo por pregunta en segundos
+  isPaused = false // Si el examen está pausado
 }) => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -35,7 +36,7 @@ const QuestionBox = ({
   useEffect(() => {
     let timer;
     
-    if (showTimeBar && questionTimeLeft > 0 && !isReviewMode) {
+    if (showTimeBar && questionTimeLeft > 0 && !isReviewMode && !isPaused) {
       timer = setInterval(() => {
         setQuestionTimeLeft(prev => {
           if (prev <= 1) {
@@ -55,7 +56,7 @@ const QuestionBox = ({
         clearInterval(timer);
       }
     };
-  }, [showTimeBar, questionTimeLeft, isReviewMode, onTimeUp]);
+  }, [showTimeBar, questionTimeLeft, isReviewMode, isPaused, onTimeUp]);
 
   // Función para manejar la selección/deselección de respuestas
   const handleOptionClick = (questionIndex, option) => {
