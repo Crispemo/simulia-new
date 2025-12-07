@@ -274,62 +274,43 @@ const Errores = ({ userId }) => {
     // Crear estado inicial para guardarlo en el backend
     const userAnswersArray = new Array(processedQuestions.length).fill(null);
     
-    // Guardar el estado inicial en el backend
+    // Guardar el estado inicial en el backend usando la función de examUtils
     const saveInitialProgress = async () => {
       try {
-        // Formatear preguntas para el backend
-        const formattedQuestions = processedQuestions.map(q => ({
-          _id: q._id,
-          question: q.question || '',
-          option_1: q.option_1 || q.options?.[0] || '',
-          option_2: q.option_2 || q.options?.[1] || '',
-          option_3: q.option_3 || q.options?.[2] || '',
-          option_4: q.option_4 || q.options?.[3] || '',
-          answer: q.answer || '',
-          subject: q.subject || 'General'
-        }));
-        
-        const initialData = {
+        // Usar la función saveExamProgress de examUtils que maneja el formato correcto
+        const result = await saveExamProgress(
           userId,
-          type: 'errores',
-          questions: formattedQuestions,
-          userAnswers: userAnswersArray,
-          selectedAnswers: {},
-          timeLeft: tiempoEnSegundos,
-          currentQuestion: 0,
-          timeUsed: 0,
-          totalTime: tiempoEnSegundos,
-          completed: false,
-          status: 'in_progress'
-        };
+          null, // examId - null porque es un examen nuevo
+          'errores',
+          processedQuestions,
+          userAnswersArray,
+          {},
+          tiempoEnSegundos,
+          0, // currentQuestion
+          {}, // markedAsDoubt
+          0, // timeUsed
+          tiempoEnSegundos, // totalTime
+          false, // isCompleted
+          'in_progress' // examStatus
+        );
         
-        const response = await fetch(`${API_URL}/save-exam-progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(initialData)
-        });
-        
-        if (!response.ok) {
-          console.error('Error al guardar estado inicial del examen:', response.status);
-        } else {
-          console.log('Estado inicial del examen guardado correctamente');
+        if (result && result.error) {
+          console.error('Error al guardar estado inicial del examen:', result.error);
+        } else if (result && result.examId) {
+          console.log('Estado inicial del examen guardado correctamente, examId:', result.examId);
+          return result; // Retornar el resultado con examId
         }
       } catch (error) {
         console.error('Error al guardar estado inicial:', error);
       }
+      return null;
     };
     
     // Guardar estado inicial y comenzar examen localmente
     saveInitialProgress()
-      .then((response) => {
-        if (response && response.ok) {
-          return response.json();
-        }
-        return null;
-      })
-      .then((data) => {
-        if (data && data.examId) {
-          setExamId(data.examId);
+      .then((result) => {
+        if (result && result.examId) {
+          setExamId(result.examId);
         }
         // Establecer estado local para mostrar el examen
         setQuestions(processedQuestions);
