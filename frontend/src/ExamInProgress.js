@@ -708,7 +708,7 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
 
       // Mostrar indicador de carga
       console.log('Finalizando examen...');
-      setShowFinalizePopup(false);
+      // Nota: El popup de finalización ya se cierra en ExamView antes de llamar a onFinalize()
 
       // PASO CRUCIAL: Guardar los cambios pendientes primero para asegurar que la última respuesta
       // se incluya antes de finalizar el examen
