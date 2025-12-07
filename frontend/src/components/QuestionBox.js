@@ -189,27 +189,66 @@ const QuestionBox = ({
     
     // Normalizar el nombre del archivo: reemplazar espacios por guiones bajos
     let normalizedPath = String(imagePath).trim();
-    normalizedPath = normalizedPath.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
     
-    // Si la ruta contiene '/preguntas/', reemplazarla por '/examen_fotos/'
+    // Si ya es una URL completa (empieza con http), usarla directamente
+    if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) {
+      // Si la URL ya contiene la ruta completa, usarla tal cual
+      const timestamp = new Date().getTime();
+      const fullPath = normalizedPath.includes('?') 
+        ? `${normalizedPath}&t=${timestamp}` 
+        : `${normalizedPath}?t=${timestamp}`;
+      
+      console.log('Ruta de imagen (URL completa):', {
+        original: imagePath,
+        fullPath: fullPath
+      });
+      
+      return (
+        <>
+          <div className={styles.questionImage}>
+            <img
+              src={fullPath}
+              alt="Imagen de la pregunta"
+              className={styles.examImage}
+              onClick={() => {
+                setSelectedImage(fullPath);
+                setShowImageModal(true);
+              }}
+              style={{ cursor: 'pointer' }}
+              onLoad={() => console.log('Imagen cargada correctamente:', fullPath)}
+              onError={(e) => {
+                console.error('Error al cargar imagen:', fullPath);
+                e.target.style.display = 'none';
+                
+                const errorMsg = document.createElement('div');
+                errorMsg.className = styles.imageErrorMessage;
+                errorMsg.textContent = 'Imagen no disponible';
+                e.target.parentNode.appendChild(errorMsg);
+              }}
+            />
+          </div>
+
+          {showImageModal && selectedImage && (
+            <div className={styles.imageModalOverlay} onClick={() => setShowImageModal(false)}>
+              <div className={styles.imageModal}>
+                <img src={selectedImage} alt="Imagen ampliada" />
+                <button className={styles.closeModal} onClick={() => setShowImageModal(false)}>×</button>
+              </div>
+            </div>
+          )}
+        </>
+      );
+    }
+    
+    // Si no es URL completa, normalizar
+    normalizedPath = normalizedPath.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
     normalizedPath = normalizedPath.replace(/\/preguntas\//g, '/examen_fotos/');
     
     // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
     const timestamp = new Date().getTime();
     let fullPath;
     
-    if (normalizedPath.startsWith('http')) {
-      // Si es una URL completa, normalizar la ruta dentro de la URL
-      try {
-        const url = new URL(normalizedPath);
-        url.pathname = url.pathname.replace(/\/preguntas\//g, '/examen_fotos/');
-        url.pathname = url.pathname.replace(/\s+/g, '_');
-        fullPath = `${url.toString()}?t=${timestamp}`;
-      } catch (e) {
-        // Si falla el parsing, usar la ruta normalizada directamente
-        fullPath = `${normalizedPath}?t=${timestamp}`;
-      }
-    } else if (normalizedPath.startsWith('/')) {
+    if (normalizedPath.startsWith('/')) {
       // Si ya es una ruta absoluta, usar directamente
       fullPath = `${normalizedPath}?t=${timestamp}`;
     } else {

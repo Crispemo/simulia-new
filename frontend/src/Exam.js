@@ -66,9 +66,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]); // Añadido estado para userAnswers
   const [showStartPopup, setShowStartPopup] = useState(true);
+  const [showExamTypeSelector, setShowExamTypeSelector] = useState(false);
   const [isDisputing, setIsDisputing] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [examType, setExamType] = useState('simulacro');
+  const [selectedSimulacroType, setSelectedSimulacroType] = useState(null); // 'protocolos' o 'anteriores'
   console.log('Inicialización del tipo de examen:', examMode, '->', examType);
   const [examId, setExamId] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -128,8 +130,22 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       case 'quizz':
         return 'quizz';
       default:
+        // Si hay un tipo de simulacro seleccionado, usarlo
+        if (selectedSimulacroType === 'protocolos') {
+          return 'protocolos';
+        } else if (selectedSimulacroType === 'anteriores') {
+          return 'simulacro'; // Años anteriores es un tipo de simulacro
+        }
         return 'simulacro';
     }
+  };
+  
+  // Función para manejar la selección del tipo de simulacro
+  const handleSimulacroTypeSelect = (type) => {
+    setSelectedSimulacroType(type);
+    setShowExamTypeSelector(false);
+    // Cargar preguntas según el tipo seleccionado
+    loadQuestions();
   };
 
   // Modificar loadQuestions para inicializar userAnswers con el formato completo
@@ -142,7 +158,15 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       setExamId(null);
       
       // Determinar el tipo de examen
-      const currentExamType = getExamTypeFromMode(examMode);
+      let currentExamType = getExamTypeFromMode(examMode);
+      
+      // Si hay un tipo de simulacro seleccionado, usarlo
+      if (selectedSimulacroType === 'protocolos') {
+        currentExamType = 'protocolos';
+      } else if (selectedSimulacroType === 'anteriores') {
+        currentExamType = 'simulacro'; // Años anteriores
+      }
+      
       console.log(`Cargando preguntas para examen tipo: ${currentExamType}`);
       console.log('🔧 EXAM DEBUG - API_URL desde config:', API_URL);
       console.log('🔧 EXAM DEBUG - NODE_ENV:', process.env.NODE_ENV);
@@ -186,7 +210,9 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             },
             credentials: 'include',
             body: JSON.stringify({ 
-              count: 200,
+              // Para años anteriores: 190 preguntas completas (sin imágenes) + 10 con imágenes = 200 total
+              // Para protocolos: 200 preguntas completas sin imágenes
+              count: selectedSimulacroType === 'anteriores' ? 190 : 200,
               examType: currentExamType
             })
           });
@@ -209,18 +235,20 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           throw fetchError;
         }
 
-        // Obtener preguntas con fotos (opcional - si falla, continuar sin fotos)
+        // Obtener preguntas con fotos (solo para años anteriores, no para protocolos)
         let fotosData = [];
-        try {
-          const fotosURL = `${effectiveAPI_URL}/random-fotos`;
-          const fotosResponse = await fetch(fotosURL, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ count: 10 })
-          });
+        // Solo cargar fotos si es simulacro de años anteriores, no si es protocolos
+        if (selectedSimulacroType === 'anteriores' || (!selectedSimulacroType && currentExamType === 'simulacro')) {
+          try {
+            const fotosURL = `${effectiveAPI_URL}/random-fotos`;
+            const fotosResponse = await fetch(fotosURL, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({ count: 10 })
+            });
 
           if (fotosResponse.ok) {
             fotosData = await fotosResponse.json();
@@ -235,13 +263,30 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
               if (imageField) {
                 // Convertir a string y normalizar
                 imageField = String(imageField).trim();
-                // Reemplazar espacios por guiones bajos
-                imageField = imageField.replace(/\s+/g, '_');
-                // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
-                imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
-                // Si no tiene ruta y no empieza con '/', asumir que es solo el nombre del archivo
-                if (!imageField.startsWith('/') && !imageField.startsWith('http')) {
-                  // Ya está normalizado, mantener como está (será manejado en QuestionBox)
+                
+                // Si ya es una URL completa, no hacer más normalización
+                if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
+                  // Solo normalizar espacios en el nombre del archivo dentro de la URL
+                  try {
+                    const url = new URL(imageField);
+                    const pathParts = url.pathname.split('/');
+                    const fileName = pathParts[pathParts.length - 1];
+                    if (fileName) {
+                      const normalizedFileName = fileName.replace(/\s+/g, '_');
+                      pathParts[pathParts.length - 1] = normalizedFileName;
+                      url.pathname = pathParts.join('/');
+                      imageField = url.toString();
+                    }
+                  } catch (e) {
+                    // Si falla el parsing, solo normalizar espacios
+                    imageField = imageField.replace(/\s+/g, '_');
+                  }
+                } else {
+                  // Si no es URL completa, normalizar
+                  // Reemplazar espacios por guiones bajos
+                  imageField = imageField.replace(/\s+/g, '_');
+                  // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
+                  imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
                 }
                 
                 // Log de depuración para verificar imágenes
@@ -298,11 +343,14 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             // No crítico - continuar sin fotos
             console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
           }
-        } catch (fotosError) {
-          // No crítico - continuar sin fotos
-          if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
-            console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
+          } catch (fotosError) {
+            // No crítico - continuar sin fotos
+            if (!fotosError.message?.includes('CORS') && !fotosError.message?.includes('Failed to fetch')) {
+              console.warn('Error al cargar preguntas con fotos (no crítico):', fotosError);
+            }
           }
+        } else {
+          console.log('No se cargarán preguntas con fotos (examen de protocolos)');
         }
 
         // Validar que tengamos preguntas antes de continuar
@@ -319,10 +367,29 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           if (imageField) {
             // Convertir a string y normalizar
             imageField = String(imageField).trim();
-            // Reemplazar espacios por guiones bajos
-            imageField = imageField.replace(/\s+/g, '_');
-            // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
-            imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+            
+            // Si ya es una URL completa, no hacer más normalización
+            if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
+              // Solo normalizar espacios en el nombre del archivo dentro de la URL
+              try {
+                const url = new URL(imageField);
+                const pathParts = url.pathname.split('/');
+                const fileName = pathParts[pathParts.length - 1];
+                if (fileName) {
+                  const normalizedFileName = fileName.replace(/\s+/g, '_');
+                  pathParts[pathParts.length - 1] = normalizedFileName;
+                  url.pathname = pathParts.join('/');
+                  imageField = url.toString();
+                }
+              } catch (e) {
+                // Si falla el parsing, solo normalizar espacios
+                imageField = imageField.replace(/\s+/g, '_');
+              }
+            } else {
+              // Si no es URL completa, normalizar
+              imageField = imageField.replace(/\s+/g, '_');
+              imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+            }
           }
           
           return {
@@ -444,10 +511,29 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           if (imageField) {
             // Convertir a string y normalizar
             imageField = String(imageField).trim();
-            // Reemplazar espacios por guiones bajos
-            imageField = imageField.replace(/\s+/g, '_');
-            // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
-            imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+            
+            // Si ya es una URL completa, no hacer más normalización
+            if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
+              // Solo normalizar espacios en el nombre del archivo dentro de la URL
+              try {
+                const url = new URL(imageField);
+                const pathParts = url.pathname.split('/');
+                const fileName = pathParts[pathParts.length - 1];
+                if (fileName) {
+                  const normalizedFileName = fileName.replace(/\s+/g, '_');
+                  pathParts[pathParts.length - 1] = normalizedFileName;
+                  url.pathname = pathParts.join('/');
+                  imageField = url.toString();
+                }
+              } catch (e) {
+                // Si falla el parsing, solo normalizar espacios
+                imageField = imageField.replace(/\s+/g, '_');
+              }
+            } else {
+              // Si no es URL completa, normalizar
+              imageField = imageField.replace(/\s+/g, '_');
+              imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+            }
           }
           
           // Normalizar campo answer: convertir número a string si es necesario
@@ -705,26 +791,51 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
 
   // Usar loadQuestions en el useEffect
   useEffect(() => {
-    // Si hay userId, intentar primero restaurar el progreso
-    if (effectiveUserId) {
-      resumeExam()
-        .then(progressRestored => {
-          // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
-          if (!progressRestored || !questions || questions.length === 0) {
-            loadQuestions();
-          } else {
-            // Si se restauró, no mostrar popup de inicio
-            setShowStartPopup(false);
-            setHasStarted(true);
-          }
-        })
-        .catch(error => {
-          console.error('Error al intentar restaurar el examen:', error);
-          loadQuestions();
-        });
+    // Si no hay modo específico y es simulacro, mostrar selector de tipo
+    if (!examMode || examMode === 'simulacro') {
+      // Si hay userId, intentar primero restaurar el progreso
+      if (effectiveUserId) {
+        resumeExam()
+          .then(progressRestored => {
+            // Si no se restauró progreso anterior o no hubo preguntas, mostrar selector
+            if (!progressRestored || !questions || questions.length === 0) {
+              setShowExamTypeSelector(true);
+            } else {
+              // Si se restauró, no mostrar popup de inicio
+              setShowStartPopup(false);
+              setHasStarted(true);
+            }
+          })
+          .catch(error => {
+            console.error('Error al intentar restaurar el examen:', error);
+            setShowExamTypeSelector(true);
+          });
+      } else {
+        // Si no hay userId, mostrar selector
+        setShowExamTypeSelector(true);
+      }
     } else {
-      // Si no hay userId, simplemente cargar nuevas preguntas
-      loadQuestions();
+      // Si hay modo específico, cargar directamente
+      if (effectiveUserId) {
+        resumeExam()
+          .then(progressRestored => {
+            // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
+            if (!progressRestored || !questions || questions.length === 0) {
+              loadQuestions();
+            } else {
+              // Si se restauró, no mostrar popup de inicio
+              setShowStartPopup(false);
+              setHasStarted(true);
+            }
+          })
+          .catch(error => {
+            console.error('Error al intentar restaurar el examen:', error);
+            loadQuestions();
+          });
+      } else {
+        // Si no hay userId, simplemente cargar nuevas preguntas
+        loadQuestions();
+      }
     }
   }, [examMode]);
   
@@ -1084,10 +1195,29 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     if (imageField) {
       // Convertir a string y normalizar
       imageField = String(imageField).trim();
-      // Reemplazar espacios por guiones bajos
-      imageField = imageField.replace(/\s+/g, '_');
-      // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
-      imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+      
+      // Si ya es una URL completa, no hacer más normalización
+      if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
+        // Solo normalizar espacios en el nombre del archivo dentro de la URL
+        try {
+          const url = new URL(imageField);
+          const pathParts = url.pathname.split('/');
+          const fileName = pathParts[pathParts.length - 1];
+          if (fileName) {
+            const normalizedFileName = fileName.replace(/\s+/g, '_');
+            pathParts[pathParts.length - 1] = normalizedFileName;
+            url.pathname = pathParts.join('/');
+            imageField = url.toString();
+          }
+        } catch (e) {
+          // Si falla el parsing, solo normalizar espacios
+          imageField = imageField.replace(/\s+/g, '_');
+        }
+      } else {
+        // Si no es URL completa, normalizar
+        imageField = imageField.replace(/\s+/g, '_');
+        imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+      }
     }
     
     // Asegurarnos de que mantenemos la estructura completa del objeto de respuesta
@@ -1501,6 +1631,97 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     return null;
   }
 
+  // Renderizar selector de tipo de simulacro si es necesario
+  if (showExamTypeSelector && (!examMode || examMode === 'simulacro')) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '600px',
+          width: '100%',
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)'
+        }}>
+          <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <strong>Elige tu tipo de simulacro EIR</strong>
+          </h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <button
+              onClick={() => handleSimulacroTypeSelect('anteriores')}
+              style={{
+                padding: '20px',
+                backgroundColor: '#f8f9fa',
+                border: '2px solid #7ea0a7',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                textAlign: 'left',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#e9ecef';
+                e.target.style.borderColor = '#5a8a6a';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#f8f9fa';
+                e.target.style.borderColor = '#7ea0a7';
+              }}
+            >
+              <div style={{ fontWeight: '600', marginBottom: '8px' }}>
+                Examen EIR Años Anteriores
+              </div>
+              <div style={{ color: '#666', fontSize: '14px' }}>
+                200 preguntas • 10 imágenes • 4 horas y 30 minutos
+              </div>
+            </button>
+            
+            <button
+              onClick={() => handleSimulacroTypeSelect('protocolos')}
+              style={{
+                padding: '20px',
+                backgroundColor: '#f8f9fa',
+                border: '2px solid #7ea0a7',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                textAlign: 'left',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#e9ecef';
+                e.target.style.borderColor = '#5a8a6a';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#f8f9fa';
+                e.target.style.borderColor = '#7ea0a7';
+              }}
+            >
+              <div style={{ fontWeight: '600', marginBottom: '8px' }}>
+                Examen de Protocolos
+              </div>
+              <div style={{ color: '#666', fontSize: '14px' }}>
+                200 preguntas • 4 horas y 30 minutos
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Renderizar popup de inicio si es necesario
   if (showStartPopup) {
     return (
@@ -1532,6 +1753,25 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                 de tus errores anteriores. Dispones de <strong>{formatTime(timeLeft)}</strong> para 
                 completarlo. Administra bien tu tiempo y recuerda que puedes revisar y ajustar 
                 tus respuestas antes de finalizar.
+              </p>
+            </>
+          ) : selectedSimulacroType === 'anteriores' ? (
+            <>
+              <h2><strong>¡Comienza tu simulacro EIR!</strong></h2>
+              <p>
+                Este examen consta de <strong>200 preguntas</strong> y dispones de 
+                <strong> 4 horas y 30 minutos</strong> para completarlo. De estas preguntas, 
+                <strong> 10 incluyen imágenes</strong>. Administra bien tu tiempo y recuerda 
+                que puedes revisar y ajustar tus respuestas antes de finalizar.
+              </p>
+            </>
+          ) : selectedSimulacroType === 'protocolos' ? (
+            <>
+              <h2><strong>¡Comienza tu examen de protocolos!</strong></h2>
+              <p>
+                Este examen consta de <strong>200 preguntas</strong> y dispones de 
+                <strong> 4 horas y 30 minutos</strong> para completarlo. Administra bien tu tiempo 
+                y recuerda que puedes revisar y ajustar tus respuestas antes de finalizar.
               </p>
             </>
           ) : (
