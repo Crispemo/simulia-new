@@ -851,7 +851,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         loadQuestions();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [examMode, effectiveUserId]);
   
   // Asegurarse de que el examen esté pausado al inicio
