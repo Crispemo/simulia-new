@@ -801,7 +801,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             if (!progressRestored || !questions || questions.length === 0) {
               setShowExamTypeSelector(true);
             } else {
-              // Si se restauró, no mostrar popup de inicio
+              // Si se restauró, no mostrar popup de inicio ni selector
+              setShowExamTypeSelector(false);
               setShowStartPopup(false);
               setHasStarted(true);
             }
@@ -816,6 +817,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       }
     } else {
       // Si hay modo específico, cargar directamente
+      setShowExamTypeSelector(false); // Asegurar que el selector no se muestre
       if (effectiveUserId) {
         resumeExam()
           .then(progressRestored => {
@@ -837,7 +839,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         loadQuestions();
       }
     }
-  }, [examMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examMode, effectiveUserId]);
   
   // Asegurarse de que el examen esté pausado al inicio
   useEffect(() => {
@@ -1602,36 +1605,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     addToBatch('question', { newQuestion: index });
   };
 
-  // 6. Mejorar el manejo de errores general
-  if (isError) {
-    return (
-      <ErrorDisplay 
-        onRetry={loadQuestions}
-        onReturn={() => navigate('/dashboard')}
-      />
-    );
-  }
-
-  // Si está cargando, mostrar indicador
-  if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        minHeight: '100vh' 
-      }}>
-        <div>Cargando examen...</div>
-      </div>
-    );
-  }
-
-  // Si no hay preguntas aún, no renderizar nada
-  if (!questions || questions.length === 0) {
-    return null;
-  }
-
-  // Renderizar selector de tipo de simulacro si es necesario
+  // Renderizar selector de tipo de simulacro si es necesario (ANTES de otras verificaciones)
   if (showExamTypeSelector && (!examMode || examMode === 'simulacro')) {
     return (
       <div style={{
@@ -1720,6 +1694,35 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         </div>
       </div>
     );
+  }
+
+  // 6. Mejorar el manejo de errores general
+  if (isError) {
+    return (
+      <ErrorDisplay 
+        onRetry={loadQuestions}
+        onReturn={() => navigate('/dashboard')}
+      />
+    );
+  }
+
+  // Si está cargando, mostrar indicador
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh' 
+      }}>
+        <div>Cargando examen...</div>
+      </div>
+    );
+  }
+
+  // Si no hay preguntas aún, no renderizar nada (solo si no estamos en el selector)
+  if ((!questions || questions.length === 0) && !showExamTypeSelector) {
+    return null;
   }
 
   // Renderizar popup de inicio si es necesario
