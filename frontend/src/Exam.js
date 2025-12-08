@@ -66,7 +66,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [userAnswers, setUserAnswers] = useState([]); // Añadido estado para userAnswers
   const [showStartPopup, setShowStartPopup] = useState(true);
-  const [showExamTypeSelector, setShowExamTypeSelector] = useState(false);
+  // Inicializar como true si es simulacro para que se muestre inmediatamente
+  const [showExamTypeSelector, setShowExamTypeSelector] = useState(!examMode || examMode === 'simulacro');
   const [isDisputing, setIsDisputing] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [examType, setExamType] = useState('simulacro');
@@ -797,32 +798,43 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       if (effectiveUserId) {
         resumeExam()
           .then(progressRestored => {
-            // Si no se restauró progreso anterior o no hubo preguntas, mostrar selector
-            if (!progressRestored || !questions || questions.length === 0) {
+            // Si no se restauró progreso anterior, mostrar selector
+            if (!progressRestored) {
+              console.log('No hay progreso anterior, mostrando selector de tipo de examen');
               setShowExamTypeSelector(true);
             } else {
-              // Si se restauró, no mostrar popup de inicio ni selector
-              setShowExamTypeSelector(false);
-              setShowStartPopup(false);
-              setHasStarted(true);
+              // Si se restauró, verificar si hay preguntas
+              // Si hay preguntas, no mostrar selector ni popup
+              if (progressRestored.progress && progressRestored.progress.questions && progressRestored.progress.questions.length > 0) {
+                console.log('Progreso restaurado con preguntas, ocultando selector');
+                setShowExamTypeSelector(false);
+                setShowStartPopup(false);
+                setHasStarted(true);
+              } else {
+                console.log('Progreso restaurado pero sin preguntas, mostrando selector');
+                setShowExamTypeSelector(true);
+              }
             }
           })
           .catch(error => {
             console.error('Error al intentar restaurar el examen:', error);
+            console.log('Error al restaurar, mostrando selector de tipo de examen');
             setShowExamTypeSelector(true);
           });
       } else {
         // Si no hay userId, mostrar selector
+        console.log('No hay userId, mostrando selector de tipo de examen');
         setShowExamTypeSelector(true);
       }
     } else {
       // Si hay modo específico, cargar directamente
+      console.log('Modo específico detectado, ocultando selector y cargando preguntas');
       setShowExamTypeSelector(false); // Asegurar que el selector no se muestre
       if (effectiveUserId) {
         resumeExam()
           .then(progressRestored => {
             // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
-            if (!progressRestored || !questions || questions.length === 0) {
+            if (!progressRestored || (progressRestored.progress && (!progressRestored.progress.questions || progressRestored.progress.questions.length === 0))) {
               loadQuestions();
             } else {
               // Si se restauró, no mostrar popup de inicio
@@ -1606,7 +1618,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
 
   // Renderizar selector de tipo de simulacro si es necesario (ANTES de otras verificaciones)
+  // IMPORTANTE: Verificar esto primero para evitar que la página quede en blanco
+  console.log('🔍 Renderizando Exam - showExamTypeSelector:', showExamTypeSelector, 'examMode:', examMode, 'questions.length:', questions?.length || 0, 'isLoading:', isLoading);
+  
   if (showExamTypeSelector && (!examMode || examMode === 'simulacro')) {
+    console.log('✅ Mostrando selector de tipo de examen');
     return (
       <div style={{
         position: 'fixed',
@@ -1720,9 +1736,37 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     );
   }
 
-  // Si no hay preguntas aún, no renderizar nada (solo si no estamos en el selector)
-  if ((!questions || questions.length === 0) && !showExamTypeSelector) {
-    return null;
+  // Si no hay preguntas aún y no estamos en el selector, mostrar mensaje en lugar de null
+  if ((!questions || questions.length === 0) && !showExamTypeSelector && !isLoading) {
+    console.log('⚠️ No hay preguntas, no hay selector, y no está cargando - mostrando mensaje');
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <div>Preparando examen...</div>
+        <button 
+          onClick={() => {
+            console.log('Forzando mostrar selector');
+            setShowExamTypeSelector(true);
+          }}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#7ea0a7',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
+        >
+          Seleccionar tipo de examen
+        </button>
+      </div>
+    );
   }
 
   // Renderizar popup de inicio si es necesario
