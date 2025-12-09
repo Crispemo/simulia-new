@@ -420,6 +420,22 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         const questionsWithImages = allQuestions.filter(q => q.image || q.imagen).length;
         console.log(`Total de preguntas: ${allQuestions.length}, de las cuales ${questionsWithImages} tienen imagen`);
         
+        // Log detallado de las preguntas con imágenes para verificar
+        const questionsWithImagesList = allQuestions.filter(q => q.image || q.imagen);
+        if (questionsWithImagesList.length > 0) {
+          console.log('🔍 PREGUNTAS CON IMÁGENES DETECTADAS:');
+          questionsWithImagesList.forEach((q, idx) => {
+            console.log(`Pregunta ${idx + 1} con imagen:`, {
+              id: q._id,
+              image: q.image,
+              imagen: q.imagen,
+              question: q.question?.substring(0, 50) + '...'
+            });
+          });
+        } else {
+          console.warn('⚠️ NO SE ENCONTRARON PREGUNTAS CON IMÁGENES después de combinar');
+        }
+        
         // Ajustar el tiempo según el tipo de examen
         if (currentExamType === 'protocolos') {
           // Para protocolos: 30 minutos
@@ -441,32 +457,87 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       }
       
       console.log(`Total de preguntas: ${allQuestions.length}`);
-      setQuestions(allQuestions);
+      
+      // Asegurar que TODAS las preguntas tengan el campo 'image' (incluso si es null)
+      // Esto es crítico para que QuestionBox pueda detectar las imágenes correctamente
+      const questionsWithImageField = allQuestions.map(q => ({
+        ...q,
+        image: q.image || q.imagen || null, // Asegurar que 'image' esté presente
+        imagen: q.imagen || q.image || null // Mantener ambos para compatibilidad
+      }));
+      
+      // Verificar una vez más que las imágenes estén presentes
+      const finalCheckWithImages = questionsWithImageField.filter(q => q.image || q.imagen).length;
+      console.log(`✅ Verificación final: ${questionsWithImageField.length} preguntas, ${finalCheckWithImages} con campo image/imagen`);
+      
+      setQuestions(questionsWithImageField);
       
       // Inicializar userAnswers con objetos completos para todas las preguntas
-      const initialUserAnswers = allQuestions.map(question => {
+      // IMPORTANTE: Asegurar que el campo 'image' se incluya correctamente
+      const initialUserAnswers = allQuestions.map((question, index) => {
         // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-        const imageField = question.image || question.imagen || null;
+        // El campo image debería estar ya normalizado en question después de la normalización anterior
+        let imageField = question.image || question.imagen || null;
+        
+        // Si aún no hay imageField, verificar si la pregunta tiene algún indicador de imagen
+        if (!imageField) {
+          // Algunas preguntas pueden tener el campo en diferentes formatos
+          imageField = question.image || question.imagen || null;
+        }
+        
+        // Log si la pregunta tiene imagen
+        if (imageField) {
+          console.log(`✅ Pregunta ${index + 1} tiene imagen en userAnswers:`, {
+            questionId: question._id,
+            image: imageField,
+            question: question.question?.substring(0, 30) + '...',
+            hasImageInQuestion: !!question.image,
+            hasImagenInQuestion: !!question.imagen
+          });
+        }
+        
+        // Asegurar que questionData incluya TODOS los campos necesarios, especialmente 'image'
+        const questionData = {
+          question: question.question || '',
+          option_1: question.option_1 || question.options?.[0] || '',
+          option_2: question.option_2 || question.options?.[1] || '',
+          option_3: question.option_3 || question.options?.[2] || '',
+          option_4: question.option_4 || question.options?.[3] || '',
+          option_5: question.option_5 || question.options?.[4] || '-',
+          answer: question.answer || question.correctAnswer || '',
+          subject: question.subject || question.categoria || 'General',
+          image: imageField, // CRÍTICO: Asegurar que image esté presente
+          imagen: imageField, // Mantener ambos para compatibilidad
+          long_answer: question.long_answer || ''
+        };
         
         return {
           questionId: question._id,
           selectedAnswer: null,
           isCorrect: null,
           markedAsDoubt: false,
-          questionData: {
-            question: question.question || '',
-            option_1: question.option_1 || question.options?.[0] || '',
-            option_2: question.option_2 || question.options?.[1] || '',
-            option_3: question.option_3 || question.options?.[2] || '',
-            option_4: question.option_4 || question.options?.[3] || '',
-            option_5: question.option_5 || question.options?.[4] || '-',
-            answer: question.answer || question.correctAnswer || '',
-            subject: question.subject || question.categoria || 'General',
-            image: imageField,
-            long_answer: question.long_answer || ''
-          }
+          questionData: questionData
         };
       });
+      
+      // Verificar que las imágenes se hayan incluido en userAnswers
+      const userAnswersWithImages = initialUserAnswers.filter(ua => 
+        ua && ua.questionData && (ua.questionData.image || ua.questionData.imagen)
+      ).length;
+      console.log(`📊 userAnswers inicializados: ${initialUserAnswers.length} total, ${userAnswersWithImages} con imagen en questionData`);
+      
+      // Log de ejemplo de una pregunta con imagen en userAnswers
+      const exampleWithImage = initialUserAnswers.find(ua => 
+        ua && ua.questionData && (ua.questionData.image || ua.questionData.imagen)
+      );
+      if (exampleWithImage) {
+        console.log('📸 Ejemplo de userAnswer con imagen:', {
+          questionId: exampleWithImage.questionId,
+          hasImage: !!exampleWithImage.questionData.image,
+          image: exampleWithImage.questionData.image,
+          question: exampleWithImage.questionData.question?.substring(0, 30) + '...'
+        });
+      }
       
       setUserAnswers(initialUserAnswers);
       setCurrentQuestion(0);
