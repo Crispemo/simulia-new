@@ -255,6 +255,17 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             fotosData = await fotosResponse.json();
             console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
             
+            // LOG CRÍTICO: Ver qué está llegando del backend ANTES de normalizar
+            if (fotosData.length > 0) {
+              console.log('🔍 DATOS RAW DE FOTOSDATA (ANTES DE NORMALIZAR):');
+              console.log('Primera pregunta RAW:', JSON.stringify(fotosData[0], null, 2));
+              console.log('Campos de la primera pregunta:', Object.keys(fotosData[0]));
+              console.log('¿Tiene campo image?:', !!fotosData[0].image);
+              console.log('¿Tiene campo imagen?:', !!fotosData[0].imagen);
+              console.log('Valor de image:', fotosData[0].image);
+              console.log('Valor de imagen:', fotosData[0].imagen);
+            }
+            
             // Normalizar preguntas con imágenes para asegurar formato consistente
             fotosData = fotosData.map(q => {
               // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
@@ -340,6 +351,41 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             // Verificar cuántas tienen imagen
             const withImages = fotosData.filter(q => q.image || q.imagen).length;
             console.log(`De las cuales ${withImages} tienen imagen`);
+            
+            // LOG CRÍTICO: Ver qué hay DESPUÉS de normalizar
+            if (fotosData.length > 0) {
+              console.log('🔍 DATOS NORMALIZADOS DE FOTOSDATA (DESPUÉS DE NORMALIZAR):');
+              const firstNormalized = fotosData[0];
+              console.log('Primera pregunta normalizada:', {
+                id: firstNormalized._id,
+                hasQuestion: !!firstNormalized.question,
+                question: firstNormalized.question?.substring(0, 50) + '...',
+                hasImage: !!firstNormalized.image,
+                hasImagen: !!firstNormalized.imagen,
+                imageValue: firstNormalized.image,
+                imagenValue: firstNormalized.imagen,
+                hasOption1: !!firstNormalized.option_1,
+                hasOption2: !!firstNormalized.option_2,
+                allFields: Object.keys(firstNormalized)
+              });
+              
+              // Verificar todas las preguntas normalizadas
+              fotosData.forEach((q, idx) => {
+                if (q.image || q.imagen) {
+                  console.log(`✅ Pregunta ${idx + 1} de fotosData tiene imagen:`, {
+                    id: q._id,
+                    image: q.image,
+                    imagen: q.imagen
+                  });
+                } else {
+                  console.warn(`⚠️ Pregunta ${idx + 1} de fotosData NO tiene imagen:`, {
+                    id: q._id,
+                    hasImage: !!q.image,
+                    hasImagen: !!q.imagen
+                  });
+                }
+              });
+            }
           } else {
             // No crítico - continuar sin fotos
             console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
@@ -416,9 +462,30 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Combinar las preguntas
         allQuestions = [...completosData, ...fotosData];
         
+        // LOG CRÍTICO: Verificar qué hay después de combinar
+        console.log('🔍 DESPUÉS DE COMBINAR completosData y fotosData:');
+        console.log(`Total completosData: ${completosData.length}`);
+        console.log(`Total fotosData: ${fotosData.length}`);
+        console.log(`Total allQuestions: ${allQuestions.length}`);
+        
         // Verificar que las imágenes se hayan preservado después de combinar
         const questionsWithImages = allQuestions.filter(q => q.image || q.imagen).length;
         console.log(`Total de preguntas: ${allQuestions.length}, de las cuales ${questionsWithImages} tienen imagen`);
+        
+        // Verificar específicamente las últimas 10 preguntas (que deberían ser las de fotosData)
+        const last10Questions = allQuestions.slice(-10);
+        console.log('🔍 ÚLTIMAS 10 PREGUNTAS (deberían ser de fotosData):');
+        last10Questions.forEach((q, idx) => {
+          const globalIdx = allQuestions.length - 10 + idx;
+          console.log(`Pregunta ${globalIdx + 1}:`, {
+            id: q._id,
+            hasImage: !!q.image,
+            hasImagen: !!q.imagen,
+            imageValue: q.image,
+            imagenValue: q.imagen,
+            question: q.question?.substring(0, 30) + '...'
+          });
+        });
         
         // Log detallado de las preguntas con imágenes para verificar
         const questionsWithImagesList = allQuestions.filter(q => q.image || q.imagen);
