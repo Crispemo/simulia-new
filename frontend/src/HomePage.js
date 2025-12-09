@@ -17,6 +17,7 @@ function HomePage() {
   const [preguntas, setPreguntas] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const { logoSrc } = useLogo();
@@ -392,10 +393,51 @@ function HomePage() {
               {renderActionButtons()}
             </div>
 
-            <button className="md:hidden text-white" onClick={() => setShowPopup(!showPopup)}>
-              ☰
+            <button 
+              className="md:hidden text-white text-2xl focus:outline-none" 
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              aria-label="Menú móvil"
+            >
+              {showMobileMenu ? '✕' : '☰'}
             </button>
           </div>
+          
+          {/* Menú móvil desplegable */}
+          {showMobileMenu && (
+            <div className="md:hidden border-t border-white/20 bg-secondary/98 backdrop-blur">
+              <div className="px-4 py-4 space-y-4">
+                <a 
+                  href="/blog" 
+                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  Blog
+                </a>
+                <div onClick={() => setShowMobileMenu(false)}>
+                  {currentUser ? (
+                    <button 
+                      onClick={handleLoginClick}
+                      className="w-full bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                      aria-label="Comenzar simulacro"
+                    >
+                      Entrar en Simulia
+                      <span>→</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleLoginClick} 
+                      className="w-full bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      disabled={isSigningIn}
+                      aria-label="Comenzar simulacro"
+                    >
+                      {isSigningIn ? 'Iniciando sesión...' : 'Haz tu simulacro EIR'}
+                      {!isSigningIn && <span>→</span>}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
     </nav>
       {showPopup && (
@@ -699,13 +741,18 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 space-y-6">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-primary text-primary-foreground px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-                Más popular • Ahorra 50%
-              </span>
+          <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
+            <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
+              <div className="flex flex-col items-center gap-1">
+                <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
+                  Más popular • Ahorra
+                </span>
+                <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg">
+                  50%
+                </span>
+              </div>
             </div>
-            <div>
+            <div className="mt-2 md:mt-0">
               <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-5xl font-bold text-primary">39.99 €</span>
