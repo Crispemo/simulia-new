@@ -473,70 +473,51 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       setQuestions(questionsWithImageField);
       
       // Inicializar userAnswers con objetos completos para todas las preguntas
-      // IMPORTANTE: Asegurar que el campo 'image' se incluya correctamente
-      const initialUserAnswers = allQuestions.map((question, index) => {
-        // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
-        // El campo image debería estar ya normalizado en question después de la normalización anterior
-        let imageField = question.image || question.imagen || null;
-        
-        // Si aún no hay imageField, verificar si la pregunta tiene algún indicador de imagen
-        if (!imageField) {
-          // Algunas preguntas pueden tener el campo en diferentes formatos
-          imageField = question.image || question.imagen || null;
-        }
-        
-        // Log si la pregunta tiene imagen
-        if (imageField) {
-          console.log(`✅ Pregunta ${index + 1} tiene imagen en userAnswers:`, {
-            questionId: question._id,
-            image: imageField,
-            question: question.question?.substring(0, 30) + '...',
-            hasImageInQuestion: !!question.image,
-            hasImagenInQuestion: !!question.imagen
-          });
-        }
-        
-        // Asegurar que questionData incluya TODOS los campos necesarios, especialmente 'image'
-        const questionData = {
-          question: question.question || '',
-          option_1: question.option_1 || question.options?.[0] || '',
-          option_2: question.option_2 || question.options?.[1] || '',
-          option_3: question.option_3 || question.options?.[2] || '',
-          option_4: question.option_4 || question.options?.[3] || '',
-          option_5: question.option_5 || question.options?.[4] || '-',
-          answer: question.answer || question.correctAnswer || '',
-          subject: question.subject || question.categoria || 'General',
-          image: imageField, // CRÍTICO: Asegurar que image esté presente
-          imagen: imageField, // Mantener ambos para compatibilidad
-          long_answer: question.long_answer || ''
-        };
+      // SIGUIENDO LA LÓGICA DEL CÓDIGO ANTIGUO QUE FUNCIONABA
+      // CRÍTICO: Usar questionsWithImageField en lugar de allQuestions para tener el campo image normalizado
+      const initialUserAnswers = questionsWithImageField.map(question => {
+        // CRÍTICO: Usar question.image directamente (ya está normalizado en questionsWithImageField)
+        // El código antiguo usaba: image: question.image || null
+        const imageField = question.image || question.imagen || null;
         
         return {
           questionId: question._id,
           selectedAnswer: null,
           isCorrect: null,
           markedAsDoubt: false,
-          questionData: questionData
+          questionData: {
+            question: question.question || '',
+            option_1: question.option_1 || question.options?.[0] || '',
+            option_2: question.option_2 || question.options?.[1] || '',
+            option_3: question.option_3 || question.options?.[2] || '',
+            option_4: question.option_4 || question.options?.[3] || '',
+            option_5: question.option_5 || question.options?.[4] || '-',
+            answer: question.answer || question.correctAnswer || '',
+            subject: question.subject || question.categoria || 'General',
+            image: imageField, // CRÍTICO: Incluir image directamente desde question (ya normalizado)
+            long_answer: question.long_answer || ''
+          }
         };
       });
       
       // Verificar que las imágenes se hayan incluido en userAnswers
       const userAnswersWithImages = initialUserAnswers.filter(ua => 
-        ua && ua.questionData && (ua.questionData.image || ua.questionData.imagen)
+        ua && ua.questionData && ua.questionData.image
       ).length;
       console.log(`📊 userAnswers inicializados: ${initialUserAnswers.length} total, ${userAnswersWithImages} con imagen en questionData`);
       
-      // Log de ejemplo de una pregunta con imagen en userAnswers
+      // Log de ejemplo de una pregunta con imagen
       const exampleWithImage = initialUserAnswers.find(ua => 
-        ua && ua.questionData && (ua.questionData.image || ua.questionData.imagen)
+        ua && ua.questionData && ua.questionData.image
       );
       if (exampleWithImage) {
         console.log('📸 Ejemplo de userAnswer con imagen:', {
           questionId: exampleWithImage.questionId,
-          hasImage: !!exampleWithImage.questionData.image,
           image: exampleWithImage.questionData.image,
           question: exampleWithImage.questionData.question?.substring(0, 30) + '...'
         });
+      } else {
+        console.warn('⚠️ NO SE ENCONTRÓ NINGUNA PREGUNTA CON IMAGEN EN userAnswers');
       }
       
       setUserAnswers(initialUserAnswers);
@@ -1307,29 +1288,28 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     }
     
     // Asegurarnos de que mantenemos la estructura completa del objeto de respuesta
+    // CRÍTICO: Preservar el campo 'image' siguiendo la lógica del código antiguo
     const updatedAnswer = {
       questionId: existingAnswerObject?.questionId || currentQuestionData?._id,
       selectedAnswer: selectedOption,
       isCorrect: isCorrect,
       markedAsDoubt: existingAnswerObject?.markedAsDoubt || markedAsDoubt[questionId] || false,
-      questionData: existingAnswerObject?.questionData || {
-        question: currentQuestionData?.question || '',
-        option_1: currentQuestionData?.option_1 || currentQuestionData?.options?.[0] || '',
-        option_2: currentQuestionData?.option_2 || currentQuestionData?.options?.[1] || '',
-        option_3: currentQuestionData?.option_3 || currentQuestionData?.options?.[2] || '',
-        option_4: currentQuestionData?.option_4 || currentQuestionData?.options?.[3] || '',
-        option_5: currentQuestionData?.option_5 || currentQuestionData?.options?.[4] || '-',
-        answer: currentQuestionData?.answer || currentQuestionData?.correctAnswer || '',
-        subject: currentQuestionData?.subject || currentQuestionData?.categoria || 'General',
-        image: imageField,
-        long_answer: currentQuestionData?.long_answer || (existingAnswerObject?.questionData?.long_answer || '')
+      questionData: {
+        // Si ya existe questionData, usarlo como base, sino crear uno nuevo
+        ...(existingAnswerObject?.questionData || {}),
+        // Asegurar que todos los campos estén presentes
+        question: existingAnswerObject?.questionData?.question || currentQuestionData?.question || '',
+        option_1: existingAnswerObject?.questionData?.option_1 || currentQuestionData?.option_1 || currentQuestionData?.options?.[0] || '',
+        option_2: existingAnswerObject?.questionData?.option_2 || currentQuestionData?.option_2 || currentQuestionData?.options?.[1] || '',
+        option_3: existingAnswerObject?.questionData?.option_3 || currentQuestionData?.option_3 || currentQuestionData?.options?.[2] || '',
+        option_4: existingAnswerObject?.questionData?.option_4 || currentQuestionData?.option_4 || currentQuestionData?.options?.[3] || '',
+        option_5: existingAnswerObject?.questionData?.option_5 || currentQuestionData?.option_5 || currentQuestionData?.options?.[4] || '-',
+        answer: existingAnswerObject?.questionData?.answer || currentQuestionData?.answer || currentQuestionData?.correctAnswer || '',
+        subject: existingAnswerObject?.questionData?.subject || currentQuestionData?.subject || currentQuestionData?.categoria || 'General',
+        image: imageField || existingAnswerObject?.questionData?.image || null, // CRÍTICO: Preservar image siempre
+        long_answer: existingAnswerObject?.questionData?.long_answer || currentQuestionData?.long_answer || ''
       }
     };
-    
-    // Asegurar que el campo de imagen esté presente incluso si ya existe questionData
-    if (updatedAnswer.questionData && !updatedAnswer.questionData.image && imageField) {
-      updatedAnswer.questionData.image = imageField;
-    }
     
     // Verificar si updatedAnswer tiene long_answer
     if (updatedAnswer.questionData && !updatedAnswer.questionData.long_answer && currentQuestionData?.long_answer) {
