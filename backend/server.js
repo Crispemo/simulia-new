@@ -3604,10 +3604,34 @@ app.post('/random-fotos', async (req, res) => {
       }}
     ]);
     
+    // LOG CRÍTICO: Ver qué está llegando de la base de datos
+    console.log(`🔍 BACKEND - Preguntas obtenidas de la BD: ${questions.length}`);
+    if (questions.length > 0) {
+      console.log('🔍 BACKEND - Primera pregunta RAW de la BD:', {
+        _id: questions[0]._id,
+        hasImagen: !!questions[0].imagen,
+        hasImage: !!questions[0].image,
+        imagenValue: questions[0].imagen,
+        imageValue: questions[0].image,
+        question: questions[0].question?.substring(0, 50) + '...',
+        allFields: Object.keys(questions[0])
+      });
+    }
+    
     // Normalizar las preguntas para asegurar formato consistente
     const normalizedQuestions = questions.map(q => {
       // Normalizar campo de imagen
       let imageField = q.image || q.imagen || null;
+      
+      // LOG: Ver qué hay antes de normalizar
+      if (!imageField) {
+        console.warn('⚠️ BACKEND - Pregunta sin imagen antes de normalizar:', {
+          _id: q._id,
+          image: q.image,
+          imagen: q.imagen,
+          imageField: imageField
+        });
+      }
       
       // Normalizar el nombre del archivo de imagen si existe
       if (imageField) {
@@ -3633,10 +3657,41 @@ app.post('/random-fotos', async (req, res) => {
         // Normalizar answer: convertir número a string si es necesario
         answer: typeof q.answer === 'number' ? String(q.answer) : (q.answer || '')
       };
+      
+      // LOG: Verificar que la imagen se haya preservado
+      if (imageField && !normalized.image) {
+        console.error('❌ BACKEND - ERROR: Imagen no preservada después de normalizar:', {
+          _id: q._id,
+          imageField: imageField,
+          normalizedImage: normalized.image
+        });
+      } else if (imageField) {
+        console.log('✅ BACKEND - Imagen preservada correctamente:', {
+          _id: q._id,
+          image: normalized.image,
+          imagen: normalized.imagen
+        });
+      }
+      
       return normalized;
     });
     
-    console.log(`Enviando ${normalizedQuestions.length} preguntas con imágenes`);
+    // LOG CRÍTICO: Ver qué se está enviando al frontend
+    console.log(`🔍 BACKEND - Enviando ${normalizedQuestions.length} preguntas con imágenes`);
+    const withImages = normalizedQuestions.filter(q => q.image || q.imagen).length;
+    console.log(`🔍 BACKEND - De las cuales ${withImages} tienen campo image/imagen`);
+    
+    if (normalizedQuestions.length > 0) {
+      console.log('🔍 BACKEND - Primera pregunta normalizada que se envía:', {
+        _id: normalizedQuestions[0]._id,
+        hasImage: !!normalizedQuestions[0].image,
+        hasImagen: !!normalizedQuestions[0].imagen,
+        imageValue: normalizedQuestions[0].image,
+        imagenValue: normalizedQuestions[0].imagen,
+        question: normalizedQuestions[0].question?.substring(0, 50) + '...'
+      });
+    }
+    
     res.json(normalizedQuestions);
   } catch (error) {
     console.error('Error al obtener preguntas con fotos:', error);
