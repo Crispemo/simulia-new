@@ -256,59 +256,46 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
             
             // LOG CRÍTICO: Ver qué está llegando del backend
-            if (fotosData.length > 0) {
-              console.log('🔍 Primera pregunta con foto RAW:', fotosData[0]);
-              console.log('🔍 Campos disponibles:', Object.keys(fotosData[0]));
-              console.log('🔍 Campo image:', fotosData[0].image);
-              console.log('🔍 Campo imagen:', fotosData[0].imagen);
-            }
+            console.log('🔍 FRONTEND - Datos RAW recibidos de /random-fotos:', {
+              cantidad: fotosData.length,
+              primeraPregunta: fotosData.length > 0 ? {
+                _id: fotosData[0]._id,
+                hasImage: !!fotosData[0].image,
+                hasImagen: !!fotosData[0].imagen,
+                imageValue: fotosData[0].image,
+                imagenValue: fotosData[0].imagen,
+                allKeys: Object.keys(fotosData[0])
+              } : null
+            });
             
-            // NORMALIZAR preguntas con imágenes - LÓGICA SIMPLE Y ROBUSTA DEL CÓDIGO ANTIGUO
+            // NORMALIZAR preguntas con imágenes - LÓGICA SIMPLE
             fotosData = fotosData.map(q => {
-              // LOG CRÍTICO: Ver qué tiene la pregunta ANTES de normalizar
-              console.log('🔍 Pregunta RAW antes de normalizar:', {
-                _id: q._id,
-                hasImage: !!q.image,
-                hasImagen: !!q.imagen,
-                imageValue: q.image,
-                imagenValue: q.imagen,
-                allKeys: Object.keys(q)
-              });
-              
-              // Normalizar campo de imagen
-              let imageField = q.image || q.imagen || null;
+              // CRÍTICO: Obtener imagen (debe venir del backend)
+              let imageField = q.imagen || q.image || null;
               
               if (imageField) {
                 imageField = String(imageField).trim();
                 imageField = imageField.replace(/\s+/g, '_');
                 imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
-                
-                console.log(`✅ Imagen normalizada para pregunta ${q._id}:`, imageField);
+                console.log(`✅ FRONTEND - Imagen normalizada para pregunta ${q._id}:`, imageField);
               } else {
-                console.warn(`⚠️ Pregunta ${q._id} sin imagen - image: ${q.image}, imagen: ${q.imagen}`);
+                console.error(`❌ FRONTEND - ERROR: Pregunta ${q._id} de random-fotos SIN imagen:`, {
+                  image: q.image,
+                  imagen: q.imagen,
+                  allKeys: Object.keys(q)
+                });
               }
               
-              const normalized = {
+              return {
                 ...q,
-                image: imageField,
-                imagen: imageField, // Mantener ambos para compatibilidad
+                image: imageField,  // CRÍTICO: Campo image
+                imagen: imageField, // Mantener ambos
                 option_1: q.option_1 || '',
                 option_2: q.option_2 || '',
                 option_3: q.option_3 || '',
                 option_4: q.option_4 || '',
                 option_5: q.option_5 || '-'
               };
-              
-              // LOG: Verificar que la imagen se haya preservado
-              console.log('🔍 Pregunta DESPUÉS de normalizar:', {
-                _id: normalized._id,
-                hasImage: !!normalized.image,
-                hasImagen: !!normalized.imagen,
-                imageValue: normalized.image,
-                imagenValue: normalized.imagen
-              });
-              
-              return normalized;
             });
             
             console.log(`📊 Recibidas ${fotosData.length} preguntas con fotos RAW`);
@@ -331,11 +318,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
         }
         
-        // Normalizar también preguntas completas - LÓGICA SIMPLE
+        // Normalizar preguntas completas - NO deben tener imágenes
         completosData = completosData.map(q => ({
           ...q,
-          image: q.image || null,
-          imagen: q.imagen || null,
+          image: null,  // CRÍTICO: Las 200 primeras NO tienen imagen
+          imagen: null,
           option_1: q.option_1 || '',
           option_2: q.option_2 || '',
           option_3: q.option_3 || '',

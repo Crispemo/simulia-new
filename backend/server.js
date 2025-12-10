@@ -3595,11 +3595,11 @@ app.post('/random-fotos', async (req, res) => {
         option_4: 1, 
         option_5: 1, 
         answer: 1,
-        imagen: 1,  // Campo correcto según el modelo
-        image: '$imagen',  // Alias para compatibilidad con frontend
+        imagen: 1,  // Campo correcto según el modelo - CRÍTICO
+        image: '$imagen',  // Alias para compatibilidad con frontend - CRÍTICO
         exam_name: 1,
         subject: 1,
-        long_answer: 1,  // Incluir long_answer si existe
+        long_answer: 1,
         _id: 1
       }}
     ]);
@@ -3620,18 +3620,18 @@ app.post('/random-fotos', async (req, res) => {
     
     // Normalizar las preguntas para asegurar formato consistente
     const normalizedQuestions = questions.map(q => {
-      // Normalizar campo de imagen
-      let imageField = q.image || q.imagen || null;
+      // CRÍTICO: Obtener el campo imagen directamente (es el campo real en la BD)
+      let imageField = q.imagen || q.image || null;
       
       // LOG: Ver qué hay antes de normalizar
-      if (!imageField) {
-        console.warn('⚠️ BACKEND - Pregunta sin imagen antes de normalizar:', {
-          _id: q._id,
-          image: q.image,
-          imagen: q.imagen,
-          imageField: imageField
-        });
-      }
+      console.log('🔍 BACKEND - Pregunta antes de normalizar:', {
+        _id: q._id,
+        hasImagen: !!q.imagen,
+        hasImage: !!q.image,
+        imagenValue: q.imagen,
+        imageValue: q.image,
+        imageField: imageField
+      });
       
       // Normalizar el nombre del archivo de imagen si existe
       if (imageField) {
@@ -3641,6 +3641,19 @@ app.post('/random-fotos', async (req, res) => {
         imageField = imageField.replace(/\s+/g, '_');
         // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
         imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+        
+        console.log('✅ BACKEND - Imagen normalizada:', {
+          _id: q._id,
+          original: q.imagen || q.image,
+          normalized: imageField
+        });
+      } else {
+        console.error('❌ BACKEND - ERROR: Pregunta de random-fotos SIN imagen:', {
+          _id: q._id,
+          imagen: q.imagen,
+          image: q.image,
+          allFields: Object.keys(q)
+        });
       }
       
       // Asegurar que todas las opciones existan
@@ -3651,7 +3664,7 @@ app.post('/random-fotos', async (req, res) => {
         option_3: q.option_3 || '',
         option_4: q.option_4 || '',
         option_5: q.option_5 || '-',
-        // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+        // CRÍTICO: Asegurar que image e imagen estén presentes
         image: imageField,
         imagen: imageField,
         // Normalizar answer: convertir número a string si es necesario
