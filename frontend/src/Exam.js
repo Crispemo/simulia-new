@@ -255,15 +255,12 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             fotosData = await fotosResponse.json();
             console.log(`Recibidas ${fotosData.length} preguntas con fotos`);
             
-            // LOG CRÍTICO: Ver qué está llegando del backend ANTES de normalizar
+            // LOG CRÍTICO: Ver qué está llegando del backend
             if (fotosData.length > 0) {
-              console.log('🔍 DATOS RAW DE FOTOSDATA (ANTES DE NORMALIZAR):');
-              console.log('Primera pregunta RAW:', JSON.stringify(fotosData[0], null, 2));
-              console.log('Campos de la primera pregunta:', Object.keys(fotosData[0]));
-              console.log('¿Tiene campo image?:', !!fotosData[0].image);
-              console.log('¿Tiene campo imagen?:', !!fotosData[0].imagen);
-              console.log('Valor de image:', fotosData[0].image);
-              console.log('Valor de imagen:', fotosData[0].imagen);
+              console.log('🔍 Primera pregunta con foto RAW:', fotosData[0]);
+              console.log('🔍 Campos disponibles:', Object.keys(fotosData[0]));
+              console.log('🔍 Campo image:', fotosData[0].image);
+              console.log('🔍 Campo imagen:', fotosData[0].imagen);
             }
             
             // NORMALIZAR preguntas con imágenes - LÓGICA SIMPLE Y ROBUSTA DEL CÓDIGO ANTIGUO
