@@ -3570,12 +3570,9 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Construir query base - buscar por 'imagen' que es el campo del modelo
+    // Construir query base - buscar SOLO por 'imagen' (campo real en la BD)
     let query = { 
-      $or: [
-        { imagen: { $exists: true, $ne: null, $ne: '' } },
-        { image: { $exists: true, $ne: null, $ne: '' } }
-      ]
+      imagen: { $exists: true, $ne: null, $ne: '' }
     };
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
@@ -3583,7 +3580,9 @@ app.post('/random-fotos', async (req, res) => {
       query.subject = { $in: asignaturas };
     }
     
-    // Obtener preguntas con imágenes
+    console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
+    
+    // Obtener preguntas con imágenes - SIMPLIFICADO
     const questions = await ExamenFotos.aggregate([
       { $match: query },
       { $sample: { size: parseInt(count) } },
@@ -3595,8 +3594,7 @@ app.post('/random-fotos', async (req, res) => {
         option_4: 1, 
         option_5: 1, 
         answer: 1,
-        imagen: 1,  // Campo correcto según el modelo - CRÍTICO
-        image: '$imagen',  // Alias para compatibilidad con frontend - CRÍTICO
+        imagen: 1,  // Campo REAL en la BD
         exam_name: 1,
         subject: 1,
         long_answer: 1,
@@ -3604,108 +3602,51 @@ app.post('/random-fotos', async (req, res) => {
       }}
     ]);
     
-    // LOG CRÍTICO: Ver qué está llegando de la base de datos
     console.log(`🔍 BACKEND - Preguntas obtenidas de la BD: ${questions.length}`);
-    if (questions.length > 0) {
-      console.log('🔍 BACKEND - Primera pregunta RAW de la BD:', {
-        _id: questions[0]._id,
-        hasImagen: !!questions[0].imagen,
-        hasImage: !!questions[0].image,
-        imagenValue: questions[0].imagen,
-        imageValue: questions[0].image,
-        question: questions[0].question?.substring(0, 50) + '...',
-        allFields: Object.keys(questions[0])
-      });
-    }
     
-    // Normalizar las preguntas para asegurar formato consistente
-    const normalizedQuestions = questions.map(q => {
-      // CRÍTICO: Obtener el campo imagen directamente (es el campo real en la BD)
-      let imageField = q.imagen || q.image || null;
-      
-      // LOG: Ver qué hay antes de normalizar
-      console.log('🔍 BACKEND - Pregunta antes de normalizar:', {
-        _id: q._id,
-        hasImagen: !!q.imagen,
-        hasImage: !!q.image,
-        imagenValue: q.imagen,
-        imageValue: q.image,
-        imageField: imageField
-      });
+    // Procesar preguntas - SIMPLIFICADO
+    const processedQuestions = questions.map(q => {
+      // CRÍTICO: El campo real es 'imagen', no 'image'
+      let imageField = q.imagen || null;
       
       // Normalizar el nombre del archivo de imagen si existe
       if (imageField) {
-        // Convertir a string y normalizar
         imageField = String(imageField).trim();
-        // Reemplazar espacios por guiones bajos
         imageField = imageField.replace(/\s+/g, '_');
-        // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
         imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
-        
-        console.log('✅ BACKEND - Imagen normalizada:', {
-          _id: q._id,
-          original: q.imagen || q.image,
-          normalized: imageField
-        });
-      } else {
-        console.error('❌ BACKEND - ERROR: Pregunta de random-fotos SIN imagen:', {
-          _id: q._id,
-          imagen: q.imagen,
-          image: q.image,
-          allFields: Object.keys(q)
-        });
       }
       
-      // Asegurar que todas las opciones existan
-      const normalized = {
-        ...q,
+      // Retornar pregunta con campo 'image' (para frontend) e 'imagen' (original)
+      return {
+        _id: q._id,
+        question: q.question || '',
         option_1: q.option_1 || '',
         option_2: q.option_2 || '',
         option_3: q.option_3 || '',
         option_4: q.option_4 || '',
         option_5: q.option_5 || '-',
-        // CRÍTICO: Asegurar que image e imagen estén presentes
-        image: imageField,
-        imagen: imageField,
-        // Normalizar answer: convertir número a string si es necesario
-        answer: typeof q.answer === 'number' ? String(q.answer) : (q.answer || '')
+        answer: typeof q.answer === 'number' ? String(q.answer) : (q.answer || ''),
+        exam_name: q.exam_name || '',
+        subject: q.subject || 'General',
+        long_answer: q.long_answer || '',
+        image: imageField,  // CRÍTICO: Campo 'image' para frontend
+        imagen: imageField  // Mantener 'imagen' también
       };
-      
-      // LOG: Verificar que la imagen se haya preservado
-      if (imageField && !normalized.image) {
-        console.error('❌ BACKEND - ERROR: Imagen no preservada después de normalizar:', {
-          _id: q._id,
-          imageField: imageField,
-          normalizedImage: normalized.image
-        });
-      } else if (imageField) {
-        console.log('✅ BACKEND - Imagen preservada correctamente:', {
-          _id: q._id,
-          image: normalized.image,
-          imagen: normalized.imagen
-        });
-      }
-      
-      return normalized;
     });
     
-    // LOG CRÍTICO: Ver qué se está enviando al frontend
-    console.log(`🔍 BACKEND - Enviando ${normalizedQuestions.length} preguntas con imágenes`);
-    const withImages = normalizedQuestions.filter(q => q.image || q.imagen).length;
-    console.log(`🔍 BACKEND - De las cuales ${withImages} tienen campo image/imagen`);
+    // Verificar cuántas tienen imagen
+    const withImages = processedQuestions.filter(q => q.image).length;
+    console.log(`✅ BACKEND - Enviando ${processedQuestions.length} preguntas, ${withImages} con imagen`);
     
-    if (normalizedQuestions.length > 0) {
-      console.log('🔍 BACKEND - Primera pregunta normalizada que se envía:', {
-        _id: normalizedQuestions[0]._id,
-        hasImage: !!normalizedQuestions[0].image,
-        hasImagen: !!normalizedQuestions[0].imagen,
-        imageValue: normalizedQuestions[0].image,
-        imagenValue: normalizedQuestions[0].imagen,
-        question: normalizedQuestions[0].question?.substring(0, 50) + '...'
+    if (processedQuestions.length > 0 && !processedQuestions[0].image) {
+      console.error('❌ BACKEND - ERROR: Primera pregunta NO tiene campo image:', {
+        _id: processedQuestions[0]._id,
+        imagen: questions[0]?.imagen,
+        image: processedQuestions[0].image
       });
     }
     
-    res.json(normalizedQuestions);
+    res.json(processedQuestions);
   } catch (error) {
     console.error('Error al obtener preguntas con fotos:', error);
     res.status(500).json({ error: 'Error al obtener preguntas con fotos' });
