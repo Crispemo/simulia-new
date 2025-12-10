@@ -265,6 +265,16 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             
             // NORMALIZAR preguntas con imágenes - LÓGICA SIMPLE Y ROBUSTA DEL CÓDIGO ANTIGUO
             fotosData = fotosData.map(q => {
+              // LOG CRÍTICO: Ver qué tiene la pregunta ANTES de normalizar
+              console.log('🔍 Pregunta RAW antes de normalizar:', {
+                _id: q._id,
+                hasImage: !!q.image,
+                hasImagen: !!q.imagen,
+                imageValue: q.image,
+                imagenValue: q.imagen,
+                allKeys: Object.keys(q)
+              });
+              
               // Normalizar campo de imagen
               let imageField = q.image || q.imagen || null;
               
@@ -275,10 +285,10 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                 
                 console.log(`✅ Imagen normalizada para pregunta ${q._id}:`, imageField);
               } else {
-                console.warn(`⚠️ Pregunta ${q._id} sin imagen`);
+                console.warn(`⚠️ Pregunta ${q._id} sin imagen - image: ${q.image}, imagen: ${q.imagen}`);
               }
               
-              return {
+              const normalized = {
                 ...q,
                 image: imageField,
                 imagen: imageField, // Mantener ambos para compatibilidad
@@ -288,6 +298,17 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                 option_4: q.option_4 || '',
                 option_5: q.option_5 || '-'
               };
+              
+              // LOG: Verificar que la imagen se haya preservado
+              console.log('🔍 Pregunta DESPUÉS de normalizar:', {
+                _id: normalized._id,
+                hasImage: !!normalized.image,
+                hasImagen: !!normalized.imagen,
+                imageValue: normalized.image,
+                imagenValue: normalized.imagen
+              });
+              
+              return normalized;
             });
             
             console.log(`📊 Recibidas ${fotosData.length} preguntas con fotos RAW`);
