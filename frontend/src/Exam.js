@@ -266,126 +266,34 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
               console.log('Valor de imagen:', fotosData[0].imagen);
             }
             
-            // Normalizar preguntas con imágenes para asegurar formato consistente
+            // NORMALIZAR preguntas con imágenes - LÓGICA SIMPLE Y ROBUSTA DEL CÓDIGO ANTIGUO
             fotosData = fotosData.map(q => {
-              // Normalizar campo de imagen: usar 'image' si existe, sino 'imagen'
+              // Normalizar campo de imagen
               let imageField = q.image || q.imagen || null;
               
-              // Normalizar el nombre del archivo de imagen
               if (imageField) {
-                // Convertir a string y normalizar
                 imageField = String(imageField).trim();
+                imageField = imageField.replace(/\s+/g, '_');
+                imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
                 
-                // Si ya es una URL completa, no hacer más normalización
-                if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
-                  // Solo normalizar espacios en el nombre del archivo dentro de la URL
-                  try {
-                    const url = new URL(imageField);
-                    const pathParts = url.pathname.split('/');
-                    const fileName = pathParts[pathParts.length - 1];
-                    if (fileName) {
-                      const normalizedFileName = fileName.replace(/\s+/g, '_');
-                      pathParts[pathParts.length - 1] = normalizedFileName;
-                      url.pathname = pathParts.join('/');
-                      imageField = url.toString();
-                    }
-                  } catch (e) {
-                    // Si falla el parsing, solo normalizar espacios
-                    imageField = imageField.replace(/\s+/g, '_');
-                  }
-                } else {
-                  // Si no es URL completa, normalizar
-                  // Reemplazar espacios por guiones bajos
-                  imageField = imageField.replace(/\s+/g, '_');
-                  // Si contiene '/preguntas/', reemplazar por '/examen_fotos/'
-                  imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
-                }
-                
-                // Log de depuración para verificar imágenes
-                console.log('Pregunta con imagen detectada y normalizada:', {
-                  questionId: q._id,
-                  imageOriginal: q.image,
-                  imagenOriginal: q.imagen,
-                  imageFieldNormalized: imageField
-                });
+                console.log(`✅ Imagen normalizada para pregunta ${q._id}:`, imageField);
+              } else {
+                console.warn(`⚠️ Pregunta ${q._id} sin imagen`);
               }
               
-              // Normalizar campo answer: convertir número a string si es necesario
-              let answerField = q.answer;
-              if (typeof answerField === 'number') {
-                answerField = String(answerField);
-              } else if (!answerField) {
-                answerField = '';
-              }
-              
-              // Asegurar que todas las opciones existan (las preguntas con imágenes pueden no tener option_5)
-              const normalizedQuestion = {
+              return {
                 ...q,
-                image: imageField, // Asegurar que image esté presente
+                image: imageField,
                 imagen: imageField, // Mantener ambos para compatibilidad
-                answer: answerField,
                 option_1: q.option_1 || '',
                 option_2: q.option_2 || '',
                 option_3: q.option_3 || '',
                 option_4: q.option_4 || '',
-                option_5: q.option_5 || '-', // Añadir option_5 si no existe
-                // Crear array de opciones para facilitar el renderizado
-                options: [
-                  q.option_1 || '',
-                  q.option_2 || '',
-                  q.option_3 || '',
-                  q.option_4 || '',
-                  q.option_5 || '-'
-                ].filter(opt => opt && opt !== '-')
+                option_5: q.option_5 || '-'
               };
-              
-              // Verificar que la imagen se haya preservado
-              if (imageField && !normalizedQuestion.image) {
-                console.error('ERROR: Imagen no preservada en pregunta normalizada:', q._id);
-              }
-              
-              return normalizedQuestion;
             });
             
-            console.log('Preguntas con fotos normalizadas:', fotosData.length);
-            // Verificar cuántas tienen imagen
-            const withImages = fotosData.filter(q => q.image || q.imagen).length;
-            console.log(`De las cuales ${withImages} tienen imagen`);
-            
-            // LOG CRÍTICO: Ver qué hay DESPUÉS de normalizar
-            if (fotosData.length > 0) {
-              console.log('🔍 DATOS NORMALIZADOS DE FOTOSDATA (DESPUÉS DE NORMALIZAR):');
-              const firstNormalized = fotosData[0];
-              console.log('Primera pregunta normalizada:', {
-                id: firstNormalized._id,
-                hasQuestion: !!firstNormalized.question,
-                question: firstNormalized.question?.substring(0, 50) + '...',
-                hasImage: !!firstNormalized.image,
-                hasImagen: !!firstNormalized.imagen,
-                imageValue: firstNormalized.image,
-                imagenValue: firstNormalized.imagen,
-                hasOption1: !!firstNormalized.option_1,
-                hasOption2: !!firstNormalized.option_2,
-                allFields: Object.keys(firstNormalized)
-              });
-              
-              // Verificar todas las preguntas normalizadas
-              fotosData.forEach((q, idx) => {
-                if (q.image || q.imagen) {
-                  console.log(`✅ Pregunta ${idx + 1} de fotosData tiene imagen:`, {
-                    id: q._id,
-                    image: q.image,
-                    imagen: q.imagen
-                  });
-                } else {
-                  console.warn(`⚠️ Pregunta ${idx + 1} de fotosData NO tiene imagen:`, {
-                    id: q._id,
-                    hasImage: !!q.image,
-                    hasImagen: !!q.imagen
-                  });
-                }
-              });
-            }
+            console.log(`📊 Recibidas ${fotosData.length} preguntas con fotos RAW`);
           } else {
             // No crítico - continuar sin fotos
             console.warn('No se pudieron cargar preguntas con fotos (continuando sin ellas)');
@@ -405,103 +313,24 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
           throw new Error('No se pudieron cargar las preguntas del examen. Por favor, verifica tu conexión con el servidor y vuelve a intentarlo.');
         }
         
-        // Normalizar también las preguntas completas para asegurar formato consistente
-        completosData = completosData.map(q => {
-          // Normalizar campo de imagen si existe
-          let imageField = q.image || q.imagen || null;
-          
-          // Normalizar el nombre del archivo de imagen si existe
-          if (imageField) {
-            // Convertir a string y normalizar
-            imageField = String(imageField).trim();
-            
-            // Si ya es una URL completa, no hacer más normalización
-            if (imageField.startsWith('http://') || imageField.startsWith('https://')) {
-              // Solo normalizar espacios en el nombre del archivo dentro de la URL
-              try {
-                const url = new URL(imageField);
-                const pathParts = url.pathname.split('/');
-                const fileName = pathParts[pathParts.length - 1];
-                if (fileName) {
-                  const normalizedFileName = fileName.replace(/\s+/g, '_');
-                  pathParts[pathParts.length - 1] = normalizedFileName;
-                  url.pathname = pathParts.join('/');
-                  imageField = url.toString();
-                }
-              } catch (e) {
-                // Si falla el parsing, solo normalizar espacios
-                imageField = imageField.replace(/\s+/g, '_');
-              }
-            } else {
-              // Si no es URL completa, normalizar
-              imageField = imageField.replace(/\s+/g, '_');
-              imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
-            }
-          }
-          
-          return {
-            ...q,
-            image: imageField, // Asegurar que image esté presente
-            imagen: imageField, // Mantener ambos para compatibilidad
-            option_1: q.option_1 || '',
-            option_2: q.option_2 || '',
-            option_3: q.option_3 || '',
-            option_4: q.option_4 || '',
-            option_5: q.option_5 || '-',
-            // Crear array de opciones si no existe
-            options: q.options || [
-              q.option_1 || '',
-              q.option_2 || '',
-              q.option_3 || '',
-              q.option_4 || '',
-              q.option_5 || '-'
-            ].filter(opt => opt && opt !== '-')
-          };
-        });
+        // Normalizar también preguntas completas - LÓGICA SIMPLE
+        completosData = completosData.map(q => ({
+          ...q,
+          image: q.image || null,
+          imagen: q.imagen || null,
+          option_1: q.option_1 || '',
+          option_2: q.option_2 || '',
+          option_3: q.option_3 || '',
+          option_4: q.option_4 || '',
+          option_5: q.option_5 || '-'
+        }));
         
         // Combinar las preguntas
         allQuestions = [...completosData, ...fotosData];
         
-        // LOG CRÍTICO: Verificar qué hay después de combinar
-        console.log('🔍 DESPUÉS DE COMBINAR completosData y fotosData:');
-        console.log(`Total completosData: ${completosData.length}`);
-        console.log(`Total fotosData: ${fotosData.length}`);
-        console.log(`Total allQuestions: ${allQuestions.length}`);
-        
-        // Verificar que las imágenes se hayan preservado después de combinar
-        const questionsWithImages = allQuestions.filter(q => q.image || q.imagen).length;
-        console.log(`Total de preguntas: ${allQuestions.length}, de las cuales ${questionsWithImages} tienen imagen`);
-        
-        // Verificar específicamente las últimas 10 preguntas (que deberían ser las de fotosData)
-        const last10Questions = allQuestions.slice(-10);
-        console.log('🔍 ÚLTIMAS 10 PREGUNTAS (deberían ser de fotosData):');
-        last10Questions.forEach((q, idx) => {
-          const globalIdx = allQuestions.length - 10 + idx;
-          console.log(`Pregunta ${globalIdx + 1}:`, {
-            id: q._id,
-            hasImage: !!q.image,
-            hasImagen: !!q.imagen,
-            imageValue: q.image,
-            imagenValue: q.imagen,
-            question: q.question?.substring(0, 30) + '...'
-          });
-        });
-        
-        // Log detallado de las preguntas con imágenes para verificar
-        const questionsWithImagesList = allQuestions.filter(q => q.image || q.imagen);
-        if (questionsWithImagesList.length > 0) {
-          console.log('🔍 PREGUNTAS CON IMÁGENES DETECTADAS:');
-          questionsWithImagesList.forEach((q, idx) => {
-            console.log(`Pregunta ${idx + 1} con imagen:`, {
-              id: q._id,
-              image: q.image,
-              imagen: q.imagen,
-              question: q.question?.substring(0, 50) + '...'
-            });
-          });
-        } else {
-          console.warn('⚠️ NO SE ENCONTRARON PREGUNTAS CON IMÁGENES después de combinar');
-        }
+        // Verificar cuántas tienen imagen
+        const withImages = allQuestions.filter(q => q.image || q.imagen).length;
+        console.log(`✅ Total preguntas: ${allQuestions.length}, con imagen: ${withImages}`);
         
         // Ajustar el tiempo según el tipo de examen
         if (currentExamType === 'protocolos') {
@@ -539,12 +368,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       
       setQuestions(questionsWithImageField);
       
-      // Inicializar userAnswers con objetos completos para todas las preguntas
-      // SIGUIENDO LA LÓGICA DEL CÓDIGO ANTIGUO QUE FUNCIONABA
-      // CRÍTICO: Usar questionsWithImageField en lugar de allQuestions para tener el campo image normalizado
+      // Inicializar userAnswers con objetos completos - INCLUYENDO IMAGEN (CÓDIGO ANTIGUO)
       const initialUserAnswers = questionsWithImageField.map(question => {
-        // CRÍTICO: Usar question.image directamente (ya está normalizado en questionsWithImageField)
-        // El código antiguo usaba: image: question.image || null
         const imageField = question.image || question.imagen || null;
         
         return {
@@ -561,31 +386,17 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             option_5: question.option_5 || question.options?.[4] || '-',
             answer: question.answer || question.correctAnswer || '',
             subject: question.subject || question.categoria || 'General',
-            image: imageField, // CRÍTICO: Incluir image directamente desde question (ya normalizado)
+            image: imageField, // CRÍTICO: Incluir imagen
             long_answer: question.long_answer || ''
           }
         };
       });
       
-      // Verificar que las imágenes se hayan incluido en userAnswers
+      // Verificar que las imágenes están en userAnswers
       const userAnswersWithImages = initialUserAnswers.filter(ua => 
         ua && ua.questionData && ua.questionData.image
       ).length;
-      console.log(`📊 userAnswers inicializados: ${initialUserAnswers.length} total, ${userAnswersWithImages} con imagen en questionData`);
-      
-      // Log de ejemplo de una pregunta con imagen
-      const exampleWithImage = initialUserAnswers.find(ua => 
-        ua && ua.questionData && ua.questionData.image
-      );
-      if (exampleWithImage) {
-        console.log('📸 Ejemplo de userAnswer con imagen:', {
-          questionId: exampleWithImage.questionId,
-          image: exampleWithImage.questionData.image,
-          question: exampleWithImage.questionData.question?.substring(0, 30) + '...'
-        });
-      } else {
-        console.warn('⚠️ NO SE ENCONTRÓ NINGUNA PREGUNTA CON IMAGEN EN userAnswers');
-      }
+      console.log(`📊 userAnswers: ${initialUserAnswers.length} total, ${userAnswersWithImages} con imagen`);
       
       setUserAnswers(initialUserAnswers);
       setCurrentQuestion(0);
