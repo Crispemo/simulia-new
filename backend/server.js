@@ -3608,6 +3608,11 @@ app.post('/random-fotos', async (req, res) => {
         _id: questions[0]._id,
         hasImage: !!questions[0].image,
         imageValue: questions[0].image,
+        option_1: questions[0].option_1,
+        option_2: questions[0].option_2,
+        option_3: questions[0].option_3,
+        option_4: questions[0].option_4,
+        option_5: questions[0].option_5,
         allKeys: Object.keys(questions[0])
       });
     }
@@ -3646,11 +3651,18 @@ app.post('/random-fotos', async (req, res) => {
     const withImages = processedQuestions.filter(q => q.image).length;
     console.log(`✅ BACKEND - Enviando ${processedQuestions.length} preguntas, ${withImages} con imagen`);
     
-    if (processedQuestions.length > 0 && !processedQuestions[0].image) {
-      console.error('❌ BACKEND - ERROR: Primera pregunta NO tiene campo image:', {
-        _id: processedQuestions[0]._id,
-        image: processedQuestions[0].image,
-        rawImage: questions[0]?.image
+    if (processedQuestions.length > 0) {
+      const firstQ = processedQuestions[0];
+      console.log(`🔍 BACKEND - Primera pregunta procesada:`, {
+        _id: firstQ._id,
+        hasImage: !!firstQ.image,
+        image: firstQ.image,
+        option_1: firstQ.option_1,
+        option_2: firstQ.option_2,
+        option_3: firstQ.option_3,
+        option_4: firstQ.option_4,
+        option_5: firstQ.option_5,
+        hasOptions: !!(firstQ.option_1 || firstQ.option_2 || firstQ.option_3 || firstQ.option_4)
       });
     }
     
