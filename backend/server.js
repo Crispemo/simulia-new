@@ -3570,8 +3570,7 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Construir query base - TODOS los documentos en examen_fotos deberían tener imagen
-    // No filtrar por imagen, solo por asignaturas si se especifican
+    // Construir query base - En la BD real el campo es 'image' (no 'imagen')
     let query = {};
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
@@ -3581,7 +3580,8 @@ app.post('/random-fotos', async (req, res) => {
     
     console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
     
-    // Obtener preguntas aleatorias de examen_fotos (todos deberían tener imagen)
+    // Obtener preguntas aleatorias de examen_fotos
+    // En la BD el campo es 'image', no 'imagen'
     const questions = await ExamenFotos.aggregate([
       { $match: query },
       { $sample: { size: parseInt(count) } },
@@ -3593,7 +3593,7 @@ app.post('/random-fotos', async (req, res) => {
         option_4: 1, 
         option_5: 1, 
         answer: 1,
-        imagen: 1,  // Campo REAL en la BD
+        image: 1,  // Campo REAL en la BD es 'image'
         exam_name: 1,
         subject: 1,
         long_answer: 1,
@@ -3603,19 +3603,28 @@ app.post('/random-fotos', async (req, res) => {
     
     console.log(`🔍 BACKEND - Preguntas obtenidas de la BD: ${questions.length}`);
     
-    // Procesar preguntas - SIMPLIFICADO
+    if (questions.length > 0) {
+      console.log(`🔍 BACKEND - Primera pregunta RAW:`, {
+        _id: questions[0]._id,
+        hasImage: !!questions[0].image,
+        imageValue: questions[0].image,
+        allKeys: Object.keys(questions[0])
+      });
+    }
+    
+    // Procesar preguntas
     const processedQuestions = questions.map(q => {
-      // CRÍTICO: El campo real es 'imagen', no 'image'
-      let imageField = q.imagen || null;
+      // CRÍTICO: En la BD el campo es 'image', no 'imagen'
+      let imageField = q.image || null;
       
       // Normalizar el nombre del archivo de imagen si existe
       if (imageField) {
         imageField = String(imageField).trim();
         imageField = imageField.replace(/\s+/g, '_');
-        imageField = imageField.replace(/\/preguntas\//g, '/examen_fotos/');
+        // No hacer reemplazo de /preguntas/ porque en la BD ya viene como "IMG1_2019.png"
       }
       
-      // Retornar pregunta con campo 'image' (para frontend) e 'imagen' (original)
+      // Retornar pregunta con campo 'image' (para frontend)
       return {
         _id: q._id,
         question: q.question || '',
@@ -3629,7 +3638,7 @@ app.post('/random-fotos', async (req, res) => {
         subject: q.subject || 'General',
         long_answer: q.long_answer || '',
         image: imageField,  // CRÍTICO: Campo 'image' para frontend
-        imagen: imageField  // Mantener 'imagen' también
+        imagen: imageField  // Mantener 'imagen' también para compatibilidad
       };
     });
     
@@ -3640,8 +3649,8 @@ app.post('/random-fotos', async (req, res) => {
     if (processedQuestions.length > 0 && !processedQuestions[0].image) {
       console.error('❌ BACKEND - ERROR: Primera pregunta NO tiene campo image:', {
         _id: processedQuestions[0]._id,
-        imagen: questions[0]?.imagen,
-        image: processedQuestions[0].image
+        image: processedQuestions[0].image,
+        rawImage: questions[0]?.image
       });
     }
     

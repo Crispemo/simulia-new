@@ -19,16 +19,18 @@ const preguntaSchema = new mongoose.Schema({
 
 const preguntaFotosSchema = new mongoose.Schema({
   question: String,
-  imagen: String,
+  image: String,  // CRÍTICO: En la BD real el campo es 'image', no 'imagen'
+  imagen: String, // Mantener para compatibilidad
   option_1: String,
   option_2: String,
   option_3: String,
   option_4: String,
+  option_5: String, // Añadir option_5 por si acaso
   answer: Number,
   exam_name: String,
   subject: String,
   long_answer: String,
-}, { collection: 'examen_fotos' }); // Usa el nombre exacto de la colección
+}, { collection: 'examen_fotos', strict: false }); // strict: false para permitir campos adicionales
 
 const protocoloSchema = new mongoose.Schema({
   question: String,
