@@ -3598,13 +3598,24 @@ app.post('/random-fotos', async (req, res) => {
       console.log(`🔍 BACKEND - Documentos con filtro de asignaturas: ${withFilter}`);
     }
     
-    // Añadir condición de imagen al query
-    query.imagen = { $exists: true, $ne: null, $ne: '' };
+    // Añadir condición de imagen al query - usar query simple que funcione
+    // Si hay documentos con imagen, usar query estricto; sino, usar query permisivo
+    if (withImagenNotEmpty > 0) {
+      query.imagen = { $exists: true, $ne: null, $ne: '' };
+    } else if (withImagenField > 0) {
+      // Si hay documentos con campo imagen pero están vacíos, usar query permisivo
+      query.imagen = { $exists: true };
+      console.log('⚠️ BACKEND - Usando query permisivo (algunos documentos tienen imagen vacía)');
+    } else {
+      // Si no hay documentos con campo imagen, buscar todos (fallback)
+      delete query.imagen;
+      console.log('⚠️ BACKEND - No se encontró campo imagen, buscando todos los documentos');
+    }
     
     console.log(`🔍 BACKEND - Query final:`, JSON.stringify(query));
     
     // Obtener preguntas con imágenes
-    const sampleSize = Math.min(parseInt(count), withImagenNotEmpty || 10);
+    const sampleSize = Math.min(parseInt(count), withImagenNotEmpty || withImagenField || totalInCollection || 10);
     console.log(`🔍 BACKEND - Tamaño de sample: ${sampleSize}`);
     
     const questions = await ExamenFotos.aggregate([
