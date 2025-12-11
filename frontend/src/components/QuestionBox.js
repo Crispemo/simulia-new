@@ -151,8 +151,16 @@ const QuestionBox = ({
         option_4: currentQuestionData.option_4,
         option_5: currentQuestionData.option_5,
         optionsCount: options.length,
-        options: options
+        options: options,
+        willRender: options && options.length > 0
       });
+      
+      // Verificar que las opciones no estén vacías
+      if (options && options.length > 0) {
+        console.log('✅ QuestionBox - Opciones válidas, deberían renderizarse:', options);
+      } else {
+        console.error('❌ QuestionBox - NO HAY OPCIONES PARA RENDERIZAR');
+      }
     }
   }, [currentQuestion, currentQuestionData, options]);
 
@@ -249,9 +257,10 @@ const QuestionBox = ({
         <div className={`${styles.questionContent} ${hasImage ? styles.withImage : ''}`}>
           {hasImage && renderQuestionImage(imagePath)}
 
-          <div className={styles.optionsContainer}>
+          <div className={styles.optionsContainer} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
             {options && options.length > 0 ? (
               options.map((option, index) => {
+                console.log(`🔍 QuestionBox - Renderizando opción ${index + 1}:`, option);
                 // Determine button class based on selection and correctness
                 let buttonClass = '';
                 const isSelected = userAnswer === option;
