@@ -3570,10 +3570,11 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Construir query base - buscar SOLO por 'imagen' (campo real en la BD)
-    let query = { 
-      imagen: { $exists: true, $ne: null, $ne: '' }
-    };
+    // Construir query base - buscar preguntas con imagen (campo real en la BD)
+    let query = {};
+    
+    // Buscar por imagen: debe existir y no ser vacío
+    query.imagen = { $exists: true, $ne: null, $ne: '' };
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
     if (asignaturas && asignaturas.length > 0) {
@@ -3582,10 +3583,26 @@ app.post('/random-fotos', async (req, res) => {
     
     console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
     
-    // Obtener preguntas con imágenes - SIMPLIFICADO
+    // Primero verificar cuántas preguntas hay disponibles
+    const totalAvailable = await ExamenFotos.countDocuments(query);
+    console.log(`🔍 BACKEND - Total de preguntas disponibles en BD: ${totalAvailable}`);
+    
+    // Si no hay preguntas disponibles, intentar query más permisivo
+    if (totalAvailable === 0) {
+      console.log('⚠️ BACKEND - No se encontraron preguntas con query estricto, intentando query más permisivo...');
+      // Query más permisivo: solo que exista el campo imagen
+      query = { imagen: { $exists: true } };
+      if (asignaturas && asignaturas.length > 0) {
+        query.subject = { $in: asignaturas };
+      }
+      const totalPermissive = await ExamenFotos.countDocuments(query);
+      console.log(`🔍 BACKEND - Total con query permisivo: ${totalPermissive}`);
+    }
+    
+    // Obtener preguntas con imágenes
     const questions = await ExamenFotos.aggregate([
       { $match: query },
-      { $sample: { size: parseInt(count) } },
+      { $sample: { size: Math.min(parseInt(count), totalAvailable || 100) } },
       { $project: { 
         question: 1, 
         option_1: 1, 
