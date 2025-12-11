@@ -79,55 +79,9 @@ const QuestionBox = ({
 
   const currentQuestionData = questions[currentQuestion];
   
-  // Log detallado de la pregunta actual para depuración
-  useEffect(() => {
-    console.log('🔍 QuestionBox - Pregunta actual:', {
-      questionIndex: currentQuestion,
-      questionId: currentQuestionData?._id,
-      questionText: currentQuestionData?.question?.substring(0, 50) + '...',
-      hasImageField: !!currentQuestionData?.image,
-      hasImagenField: !!currentQuestionData?.imagen,
-      imageValue: currentQuestionData?.image,
-      imagenValue: currentQuestionData?.imagen,
-      allFields: Object.keys(currentQuestionData || {})
-    });
-  }, [currentQuestion, currentQuestionData]);
-  
-  // Detectar imagen de múltiples formas posibles
-  const imageField = currentQuestionData?.image || currentQuestionData?.imagen || null;
-  const hasImage = imageField && 
-                   imageField !== '' && 
-                   imageField !== null && 
-                   imageField !== undefined &&
-                   String(imageField).trim() !== '';
-  const imagePath = hasImage ? imageField : null;
-  
-  // Log de depuración para verificar si hay imagen
-  useEffect(() => {
-    if (hasImage && imagePath) {
-      console.log('✅ Pregunta con imagen detectada:', {
-        questionIndex: currentQuestion,
-        questionId: currentQuestionData?._id,
-        image: currentQuestionData?.image,
-        imagen: currentQuestionData?.imagen,
-        imagePath: imagePath,
-        hasImage: hasImage,
-        imagePathType: typeof imagePath,
-        imagePathLength: String(imagePath).length
-      });
-    } else {
-      // Log incluso si no hay imagen para ver qué está pasando
-      console.log('❌ Pregunta SIN imagen:', {
-        questionIndex: currentQuestion,
-        questionId: currentQuestionData?._id,
-        image: currentQuestionData?.image,
-        imagen: currentQuestionData?.imagen,
-        imageField: imageField,
-        hasImage: hasImage,
-        imagePath: imagePath
-      });
-    }
-  }, [currentQuestion, hasImage, imagePath, currentQuestionData]);
+  // Detectar imagen de forma simple (como en código antiguo)
+  const hasImage = currentQuestionData.image || (currentQuestionData.imagen && currentQuestionData.imagen !== '');
+  const imagePath = currentQuestionData.image || currentQuestionData.imagen;
   
   // Get the correct answer from the question data or correctAnswersMap
   const rawCorrectAnswer =
@@ -201,92 +155,15 @@ const QuestionBox = ({
     }
   };
 
-  // Renderizar imagen de la pregunta
+  // Renderizar imagen de la pregunta (código antiguo simplificado)
   const renderQuestionImage = (imagePath) => {
     if (!imagePath) return null;
     
-    // Normalizar el nombre del archivo: reemplazar espacios por guiones bajos
-    let normalizedPath = String(imagePath).trim();
-    
-    // Si ya es una URL completa (empieza con http), usarla directamente
-    if (normalizedPath.startsWith('http://') || normalizedPath.startsWith('https://')) {
-      // Si la URL ya contiene la ruta completa, usarla tal cual
-      const timestamp = new Date().getTime();
-      const fullPath = normalizedPath.includes('?') 
-        ? `${normalizedPath}&t=${timestamp}` 
-        : `${normalizedPath}?t=${timestamp}`;
-      
-      console.log('Ruta de imagen (URL completa):', {
-        original: imagePath,
-        fullPath: fullPath
-      });
-      
-      return (
-        <>
-          <div className={styles.questionImage}>
-            <img
-              src={fullPath}
-              alt="Imagen de la pregunta"
-              className={styles.examImage}
-              onClick={() => {
-                setSelectedImage(fullPath);
-                setShowImageModal(true);
-              }}
-              style={{ cursor: 'pointer' }}
-              onLoad={() => console.log('✅ Imagen cargada correctamente:', fullPath)}
-              onError={(e) => {
-                console.error('❌ Error al cargar imagen (URL completa):', fullPath);
-                e.target.style.display = 'none';
-                
-                const errorMsg = document.createElement('div');
-                errorMsg.className = styles.imageErrorMessage;
-                errorMsg.textContent = 'Imagen no disponible';
-                e.target.parentNode.appendChild(errorMsg);
-              }}
-            />
-          </div>
-
-          {showImageModal && selectedImage && (
-            <div className={styles.imageModalOverlay} onClick={() => setShowImageModal(false)}>
-              <div className={styles.imageModal}>
-                <img src={selectedImage} alt="Imagen ampliada" />
-                <button className={styles.closeModal} onClick={() => setShowImageModal(false)}>×</button>
-              </div>
-            </div>
-          )}
-        </>
-      );
-    }
-    
-    // Si no es URL completa, normalizar
-    normalizedPath = normalizedPath.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
-    normalizedPath = normalizedPath.replace(/\/preguntas\//g, '/examen_fotos/');
-    
-    // CRÍTICO: Si el nombre del archivo no tiene extensión, añadir .png
-    // Los archivos en /examen_fotos tienen formato "IMG1_2020.png"
-    if (!normalizedPath.includes('.')) {
-      normalizedPath = normalizedPath + '.png';
-      console.log('📝 Añadida extensión .png al nombre del archivo:', normalizedPath);
-    }
-    
     // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
     const timestamp = new Date().getTime();
-    let fullPath;
-    
-    if (normalizedPath.startsWith('/')) {
-      // Si ya es una ruta absoluta, usar directamente
-      fullPath = `${normalizedPath}?t=${timestamp}`;
-    } else {
-      // Si es solo el nombre del archivo (con o sin extensión), añadir la ruta base
-      fullPath = `/examen_fotos/${normalizedPath}?t=${timestamp}`;
-    }
-    
-    console.log('🖼️ Ruta de imagen normalizada:', {
-      original: imagePath,
-      normalized: normalizedPath,
-      fullPath: fullPath,
-      willTryToLoad: fullPath
-    });
+    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/') 
+      ? `${imagePath}?t=${timestamp}`
+      : `/examen_fotos/${imagePath}?t=${timestamp}`;
     
     return (
       <>
@@ -300,14 +177,9 @@ const QuestionBox = ({
               setShowImageModal(true);
             }}
             style={{ cursor: 'pointer' }}
-            onLoad={() => console.log('✅ Imagen cargada correctamente:', fullPath)}
+            onLoad={() => console.log('Imagen cargada correctamente:', fullPath)}
             onError={(e) => {
-              console.error('❌ Error al cargar imagen:', {
-                fullPath: fullPath,
-                originalPath: imagePath,
-                normalizedPath: normalizedPath,
-                error: e
-              });
+              console.error('Error al cargar imagen:', fullPath);
               e.target.style.display = 'none';
               
               const errorMsg = document.createElement('div');
@@ -357,8 +229,7 @@ const QuestionBox = ({
         </h3>
 
         <div className={`${styles.questionContent} ${hasImage ? styles.withImage : ''}`}>
-          {/* Renderizar imagen si existe, independientemente de hasImage para asegurar que se muestre */}
-          {(imagePath && imagePath !== '' && imagePath !== null) && renderQuestionImage(imagePath)}
+          {hasImage && renderQuestionImage(imagePath)}
 
           <div className={styles.optionsContainer}>
             {options.map((option, index) => {
