@@ -73,22 +73,16 @@ export const finalizeExam = async (userId, examType, questions, userAnswers, sel
         option_5: q.option_5 || q.options?.[4] || '-',
         answer: q.answer || '',
         subject: q.subject || q.categoria || 'General',
-        image: q.image || q.imagen || null, // CRÍTICO: Incluir campo image
         long_answer: q.long_answer || ''
       })),
       userAnswers: userAnswers.map(answer => {
         if (answer && answer.questionData) {
-          // Buscar la pregunta original para obtener image si no está en questionData
-          const originalQuestion = questions.find(q => q._id === answer.questionId);
-          const imageField = answer.questionData.image || answer.questionData.imagen || originalQuestion?.image || originalQuestion?.imagen || null;
-          
           return {
             ...answer,
             questionData: {
               ...answer.questionData,
-              image: imageField, // CRÍTICO: Asegurar que image esté presente
               long_answer: answer.questionData.long_answer || 
-                          originalQuestion?.long_answer || ''
+                          questions.find(q => q._id === answer.questionId)?.long_answer || ''
             }
           };
         }
