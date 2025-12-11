@@ -22,7 +22,7 @@ const RESOURCES = [
     name: 'Mpox (Monkeypox) - Información y actuaciones',
     type: 'pdf',
     description: 'Mpox (Monkeypox) - Información y actuaciones',
-    driveId: 'TU_FILE_ID_AQUI', // Reemplazar con el ID real del archivo
+    driveId: '1Kkb8E9LKE23XUaQfxUNjU7ybEJ7iVNvG',
     category: 'Protocolos'
   },
   {
@@ -64,6 +64,14 @@ const RESOURCES = [
     description: 'Documento sobre verificación de tabaco 2025',
     driveId: '1tPUbrnwWDxP3ZE_iClCUdE3E9_NuFACp',
     category: 'Protocolos'
+  },
+  {
+    id: 9,
+    name: 'Peste Porcina - Resumen',
+    type: 'pdf',
+    description: 'Resumen sobre peste porcina',
+    driveId: '1w0tCuv0EbK2ssyW6qOF1gKN5YYQVAC6g',
+    category: 'Guías'
   },
   // Añade más recursos aquí según necesites
 ];
