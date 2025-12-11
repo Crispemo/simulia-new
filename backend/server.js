@@ -3570,21 +3570,8 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Primero verificar cuántos documentos hay en total en la colección
-    const totalInCollection = await ExamenFotos.countDocuments({});
-    console.log(`🔍 BACKEND - Total documentos en examen_fotos: ${totalInCollection}`);
-    
-    // Verificar cuántos tienen campo imagen
-    const withImagenField = await ExamenFotos.countDocuments({ imagen: { $exists: true } });
-    console.log(`🔍 BACKEND - Documentos con campo 'imagen': ${withImagenField}`);
-    
-    // Verificar cuántos tienen imagen no vacía
-    const withImagenNotEmpty = await ExamenFotos.countDocuments({ 
-      imagen: { $exists: true, $ne: null, $ne: '' } 
-    });
-    console.log(`🔍 BACKEND - Documentos con 'imagen' no vacío: ${withImagenNotEmpty}`);
-    
-    // Construir query base - buscar preguntas con imagen
+    // Construir query base - TODOS los documentos en examen_fotos deberían tener imagen
+    // No filtrar por imagen, solo por asignaturas si se especifican
     let query = {};
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
@@ -3592,35 +3579,12 @@ app.post('/random-fotos', async (req, res) => {
       query.subject = { $in: asignaturas };
     }
     
-    // Si hay filtro de asignaturas, verificar cuántas hay con ese filtro
-    if (Object.keys(query).length > 0) {
-      const withFilter = await ExamenFotos.countDocuments(query);
-      console.log(`🔍 BACKEND - Documentos con filtro de asignaturas: ${withFilter}`);
-    }
+    console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
     
-    // Añadir condición de imagen al query - usar query simple que funcione
-    // Si hay documentos con imagen, usar query estricto; sino, usar query permisivo
-    if (withImagenNotEmpty > 0) {
-      query.imagen = { $exists: true, $ne: null, $ne: '' };
-    } else if (withImagenField > 0) {
-      // Si hay documentos con campo imagen pero están vacíos, usar query permisivo
-      query.imagen = { $exists: true };
-      console.log('⚠️ BACKEND - Usando query permisivo (algunos documentos tienen imagen vacía)');
-    } else {
-      // Si no hay documentos con campo imagen, buscar todos (fallback)
-      delete query.imagen;
-      console.log('⚠️ BACKEND - No se encontró campo imagen, buscando todos los documentos');
-    }
-    
-    console.log(`🔍 BACKEND - Query final:`, JSON.stringify(query));
-    
-    // Obtener preguntas con imágenes
-    const sampleSize = Math.min(parseInt(count), withImagenNotEmpty || withImagenField || totalInCollection || 10);
-    console.log(`🔍 BACKEND - Tamaño de sample: ${sampleSize}`);
-    
+    // Obtener preguntas aleatorias de examen_fotos (todos deberían tener imagen)
     const questions = await ExamenFotos.aggregate([
       { $match: query },
-      { $sample: { size: sampleSize } },
+      { $sample: { size: parseInt(count) } },
       { $project: { 
         question: 1, 
         option_1: 1, 
