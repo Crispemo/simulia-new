@@ -136,7 +136,25 @@ const QuestionBox = ({
         currentQuestionData.option_3,
         currentQuestionData.option_4,
         currentQuestionData.option_5
-      ].filter(opt => opt && opt !== '-');
+      ].filter(opt => opt && opt !== '-' && opt !== null && opt !== undefined);
+  
+  // Log para diagnosticar opciones
+  useEffect(() => {
+    if (currentQuestionData) {
+      console.log('🔍 QuestionBox - Opciones de pregunta:', {
+        questionIndex: currentQuestion,
+        questionId: currentQuestionData._id,
+        hasOptionsArray: !!currentQuestionData.options,
+        option_1: currentQuestionData.option_1,
+        option_2: currentQuestionData.option_2,
+        option_3: currentQuestionData.option_3,
+        option_4: currentQuestionData.option_4,
+        option_5: currentQuestionData.option_5,
+        optionsCount: options.length,
+        options: options
+      });
+    }
+  }, [currentQuestion, currentQuestionData, options]);
 
   // Manejador para togglear el estado de duda
   const handleToggleDoubt = () => {
@@ -232,10 +250,11 @@ const QuestionBox = ({
           {hasImage && renderQuestionImage(imagePath)}
 
           <div className={styles.optionsContainer}>
-            {options.map((option, index) => {
-              // Determine button class based on selection and correctness
-              let buttonClass = '';
-              const isSelected = userAnswer === option;
+            {options && options.length > 0 ? (
+              options.map((option, index) => {
+                // Determine button class based on selection and correctness
+                let buttonClass = '';
+                const isSelected = userAnswer === option;
               
               // En modo revisión maneja la visualización diferente
               if (isReviewMode) {
@@ -313,7 +332,12 @@ const QuestionBox = ({
                   )}
                 </button>
               );
-            })}
+              })
+            ) : (
+              <div className={styles.errorMessage}>
+                No hay opciones disponibles para esta pregunta
+              </div>
+            )}
           </div>
 
           {/* Suprimido: la justificación se mostrará solo en el contenedor inferior dedicado */}
