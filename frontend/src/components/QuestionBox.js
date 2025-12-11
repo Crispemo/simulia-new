@@ -257,7 +257,7 @@ const QuestionBox = ({
         <div className={`${styles.questionContent} ${hasImage ? styles.withImage : ''}`}>
           {hasImage && renderQuestionImage(imagePath)}
 
-          <div className={styles.optionsContainer} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+          <div className={styles.optionsContainer}>
             {options && options.length > 0 ? (
               options.map((option, index) => {
                 console.log(`🔍 QuestionBox - Renderizando opción ${index + 1}:`, option);

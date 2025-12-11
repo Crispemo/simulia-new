@@ -180,20 +180,25 @@ height: auto;
 }
 
 .questionContent.withImage {
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 30px;
 }
 
 .questionImage {
   max-width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
-  align-self: center;
+  margin-bottom: 0;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  width: 45%;
 }
 
 .examImage {
   max-width: 100%;
-  max-height: 300px;
+  max-height: 500px;
+  width: 100%;
   object-fit: contain;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -217,6 +222,11 @@ height: auto;
   overflow-y: visible;
   max-height: none;
   min-height: 100px;
+}
+
+.questionContent.withImage .optionsContainer {
+  flex: 1;
+  width: 55%;
 }
 
 .optionsContainer button {
@@ -752,6 +762,22 @@ height: auto;
     padding: 13px 15px;
     font-size: 15.5px;
   }
+  
+  .questionContent.withImage {
+    gap: 20px;
+  }
+  
+  .questionImage {
+    width: 40%;
+  }
+  
+  .questionContent.withImage .optionsContainer {
+    width: 60%;
+  }
+  
+  .examImage {
+    max-height: 400px;
+  }
 }
 
 /* Responsive - Móviles */
@@ -945,11 +971,21 @@ height: auto;
   }
 
   .questionContent.withImage {
-    gap: 10px;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .questionImage {
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  .questionContent.withImage .optionsContainer {
+    width: 100%;
   }
   
   .examImage {
-    max-height: 200px;
+    max-height: 250px;
   }
 
   .examActionButtons {
