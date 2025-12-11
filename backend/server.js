@@ -3570,39 +3570,46 @@ app.post('/random-fotos', async (req, res) => {
   try {
     const { count = 10, asignaturas } = req.body;
     
-    // Construir query base - buscar preguntas con imagen (campo real en la BD)
-    let query = {};
+    // Primero verificar cuántos documentos hay en total en la colección
+    const totalInCollection = await ExamenFotos.countDocuments({});
+    console.log(`🔍 BACKEND - Total documentos en examen_fotos: ${totalInCollection}`);
     
-    // Buscar por imagen: debe existir y no ser vacío
-    query.imagen = { $exists: true, $ne: null, $ne: '' };
+    // Verificar cuántos tienen campo imagen
+    const withImagenField = await ExamenFotos.countDocuments({ imagen: { $exists: true } });
+    console.log(`🔍 BACKEND - Documentos con campo 'imagen': ${withImagenField}`);
+    
+    // Verificar cuántos tienen imagen no vacía
+    const withImagenNotEmpty = await ExamenFotos.countDocuments({ 
+      imagen: { $exists: true, $ne: null, $ne: '' } 
+    });
+    console.log(`🔍 BACKEND - Documentos con 'imagen' no vacío: ${withImagenNotEmpty}`);
+    
+    // Construir query base - buscar preguntas con imagen
+    let query = {};
     
     // Si hay asignaturas seleccionadas, filtrar por ellas
     if (asignaturas && asignaturas.length > 0) {
       query.subject = { $in: asignaturas };
     }
     
-    console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
-    
-    // Primero verificar cuántas preguntas hay disponibles
-    const totalAvailable = await ExamenFotos.countDocuments(query);
-    console.log(`🔍 BACKEND - Total de preguntas disponibles en BD: ${totalAvailable}`);
-    
-    // Si no hay preguntas disponibles, intentar query más permisivo
-    if (totalAvailable === 0) {
-      console.log('⚠️ BACKEND - No se encontraron preguntas con query estricto, intentando query más permisivo...');
-      // Query más permisivo: solo que exista el campo imagen
-      query = { imagen: { $exists: true } };
-      if (asignaturas && asignaturas.length > 0) {
-        query.subject = { $in: asignaturas };
-      }
-      const totalPermissive = await ExamenFotos.countDocuments(query);
-      console.log(`🔍 BACKEND - Total con query permisivo: ${totalPermissive}`);
+    // Si hay filtro de asignaturas, verificar cuántas hay con ese filtro
+    if (Object.keys(query).length > 0) {
+      const withFilter = await ExamenFotos.countDocuments(query);
+      console.log(`🔍 BACKEND - Documentos con filtro de asignaturas: ${withFilter}`);
     }
     
+    // Añadir condición de imagen al query
+    query.imagen = { $exists: true, $ne: null, $ne: '' };
+    
+    console.log(`🔍 BACKEND - Query final:`, JSON.stringify(query));
+    
     // Obtener preguntas con imágenes
+    const sampleSize = Math.min(parseInt(count), withImagenNotEmpty || 10);
+    console.log(`🔍 BACKEND - Tamaño de sample: ${sampleSize}`);
+    
     const questions = await ExamenFotos.aggregate([
       { $match: query },
-      { $sample: { size: Math.min(parseInt(count), totalAvailable || 100) } },
+      { $sample: { size: sampleSize } },
       { $project: { 
         question: 1, 
         option_1: 1, 
