@@ -176,7 +176,7 @@ height: auto;
   gap: 20px;
   margin-bottom: 20px;
   flex-grow: 1;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .questionContent.withImage {
@@ -209,13 +209,14 @@ height: auto;
 }
 
 .optionsContainer {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: 12px;
   width: 100%;
   margin-bottom: 20px;
-  overflow-y: auto;
-  max-height: 100%;
+  overflow-y: visible;
+  max-height: none;
+  min-height: 100px;
 }
 
 .optionsContainer button {
