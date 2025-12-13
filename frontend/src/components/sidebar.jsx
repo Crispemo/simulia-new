@@ -10,7 +10,7 @@ import {
   Timer,
   GraduationCap,
   Flame,
-  Settings,
+  CreditCard,
   Menu,
   X,
   MessageSquare,
@@ -191,8 +191,8 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
                 isCollapsed && 'justify-center'
               )}
             >
-              <Settings className="h-5 w-5" />
-              {!isCollapsed && <span>Configuración</span>}
+              <CreditCard className="h-5 w-5" />
+              {!isCollapsed && <span>Pago y suscripción</span>}
             </button>
 
             <button
@@ -303,8 +303,8 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
               onClick={handleSettingsClick}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent"
             >
-              <Settings className="h-5 w-5" />
-              <span>Configuración</span>
+              <CreditCard className="h-5 w-5" />
+              <span>Pago y suscripción</span>
             </button>
           </div>
         </div>
