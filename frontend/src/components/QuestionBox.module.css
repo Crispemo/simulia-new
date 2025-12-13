@@ -35,7 +35,8 @@ height: auto;
   min-height: 420px;
   max-height: 60vh;
   height: auto;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
 }
 
@@ -177,6 +178,7 @@ height: auto;
   margin-bottom: 20px;
   flex-grow: 1;
   overflow: visible;
+  min-height: 0;
 }
 
 .questionContent.withImage {
