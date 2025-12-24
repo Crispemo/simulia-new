@@ -73,6 +73,14 @@ const RESOURCES = [
     driveId: '1w0tCuv0EbK2ssyW6qOF1gKN5YYQVAC6g',
     category: 'Guías'
   },
+  {
+    id: 10,
+    name: 'Guia ERC 2025',
+    type: 'pdf',
+    description: 'Guía ERC 2025',
+    driveId: '1J0fN7vD-qR_GbE57DscYrx44AG42dSFK',
+    category: 'Guías'
+  },
   // Añade más recursos aquí según necesites
 ];
 
