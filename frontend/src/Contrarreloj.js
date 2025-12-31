@@ -262,6 +262,14 @@ const Contrarreloj = ({ userId }) => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  // Normaliza cualquier estructura de respuesta a un valor plano
+  const extractSelectedAnswer = (answer) => {
+    if (answer && typeof answer === 'object' && answer.selectedAnswer !== undefined) {
+      return answer.selectedAnswer;
+    }
+    return answer ?? null;
+  };
+
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion((prev) => prev + 1);
@@ -325,7 +333,7 @@ const Contrarreloj = ({ userId }) => {
         
         formattedUserAnswers.push({
           questionId: questions[i]._id || `question_${i}`,
-          selectedAnswer: currentUserAnswers[i],
+          selectedAnswer: extractSelectedAnswer(currentUserAnswers[i]),
           isCorrect: null,
           questionData: questionData
         });
@@ -569,7 +577,7 @@ const Contrarreloj = ({ userId }) => {
         
         formattedUserAnswers.push({
           questionId: questions[i]._id || `question_${i}`,
-          selectedAnswer: userAnswers[i],
+          selectedAnswer: extractSelectedAnswer(userAnswers[i]),
           isCorrect: null,
           questionData: questionData
         });
@@ -785,7 +793,7 @@ const Contrarreloj = ({ userId }) => {
             
             return {
               questionId: questions[index]._id || `question_${index}`,
-              selectedAnswer: answer,
+              selectedAnswer: extractSelectedAnswer(answer),
               isCorrect: null,
               questionData: questionData
             };
@@ -906,6 +914,18 @@ const Contrarreloj = ({ userId }) => {
     }
   }, [showStartPopup, examId]);
 
+  // Helper function to normalize correct answer to text (same logic as QuestionBox)
+  const normalizeCorrectAnswerToText = useCallback((question, value) => {
+    if (value === null || value === undefined) return null;
+    const maybeNumber = Number(value);
+    if (!Number.isNaN(maybeNumber) && maybeNumber >= 1 && maybeNumber <= 5) {
+      const optionKey = `option_${maybeNumber}`;
+      return question[optionKey] || null;
+    }
+    // Si ya viene como texto, devolver tal cual
+    return String(value);
+  }, []);
+
   // Helper function to generate status object for Pagination
   const generateItemStatus = useCallback(() => {
     const status = {};
@@ -918,18 +938,51 @@ const Contrarreloj = ({ userId }) => {
 
     // Asegurarse de que selectedAnswers sea consistente con userAnswers para evitar estados falsos
     for (let i = 0; i < questions.length; i++) {
-      // Marcar como duda solo si explícitamente está marcado en doubtMarkedQuestions
-      if (doubtMarkedQuestions[i]) {
-        status[i] = 'doubt';
+      const question = questions[i];
+      const userAnswerData = userAnswers[i];
+      
+      // Extraer la respuesta seleccionada del objeto, o usar el valor directo en formatos antiguos
+      const userAnswer = userAnswerData && typeof userAnswerData === 'object' && userAnswerData.selectedAnswer !== undefined
+        ? userAnswerData.selectedAnswer  // Nuevo formato
+        : userAnswerData;                // Formato antiguo (valor directo)
+      
+      // Si hay una respuesta del usuario, calcular si es correcta
+      if (userAnswer !== null && userAnswer !== undefined && userAnswer !== '') {
+        // Obtener la respuesta correcta de la pregunta
+        const rawCorrectAnswer = question.correctAnswer !== undefined
+          ? question.correctAnswer
+          : question.answer;
+        
+        // Normalizar la respuesta correcta a texto
+        const correctAnswerText = normalizeCorrectAnswerToText(question, rawCorrectAnswer);
+        
+        // Comparar la respuesta del usuario con la correcta
+        // Solo considerar correcta si tenemos una respuesta correcta válida
+        let isCorrect = false;
+        if (correctAnswerText !== null && correctAnswerText !== undefined) {
+          isCorrect = String(userAnswer).trim() === String(correctAnswerText).trim();
+        }
+        
+        // Si también está marcada como duda, usar un objeto con ambos estados
+        if (doubtMarkedQuestions[i]) {
+          status[i] = {
+            isCorrect: isCorrect,
+            doubt: true,
+            answered: true
+          };
+        } else {
+          // Marcar como correcta o incorrecta según corresponda
+          status[i] = isCorrect ? 'correct' : 'incorrect';
+        }
       } 
-      // Marcar como respondida solo si userAnswers tiene una respuesta válida
-      else if (userAnswers[i] !== null && userAnswers[i] !== undefined) {
-        status[i] = 'answered';
+      // Si no hay respuesta pero está marcada como duda
+      else if (doubtMarkedQuestions[i]) {
+        status[i] = 'doubt';
       }
       // Si no, no asignar estado (pregunta no respondida ni marcada)
     }
     return status;
-  }, [selectedAnswers, doubtMarkedQuestions, questions, userAnswers, showStartPopup]);
+  }, [selectedAnswers, doubtMarkedQuestions, questions, userAnswers, showStartPopup, normalizeCorrectAnswerToText]);
 
   const renderFinalizePopup = () => {
     return showFinalizePopup && (

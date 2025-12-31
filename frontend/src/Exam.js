@@ -145,15 +145,16 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   const handleSimulacroTypeSelect = (type) => {
     setSelectedSimulacroType(type);
     setShowExamTypeSelector(false);
-    // Cargar preguntas según el tipo seleccionado
-    loadQuestions();
+    // Cargar preguntas según el tipo seleccionado, pasando el tipo directamente
+    loadQuestions(type);
   };
 
   // Modificar loadQuestions para inicializar userAnswers con el formato completo
-  const loadQuestions = async () => {
+  const loadQuestions = async (simulacroTypeOverride = null) => {
     try {
       setIsLoading(true);
       setIsError(false);
+      setShowExamTypeSelector(false); // Ocultar selector si estaba visible
       
       // Asegurar que se crea un nuevo examen
       setExamId(null);
@@ -161,10 +162,13 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
       // Determinar el tipo de examen
       let currentExamType = getExamTypeFromMode(examMode);
       
+      // Usar el override si se proporciona, sino usar el estado
+      const effectiveSimulacroType = simulacroTypeOverride !== null ? simulacroTypeOverride : selectedSimulacroType;
+      
       // Si hay un tipo de simulacro seleccionado, usarlo
-      if (selectedSimulacroType === 'protocolos') {
+      if (effectiveSimulacroType === 'protocolos') {
         currentExamType = 'protocolos';
-      } else if (selectedSimulacroType === 'anteriores') {
+      } else if (effectiveSimulacroType === 'anteriores') {
         currentExamType = 'simulacro'; // Años anteriores
       }
       
@@ -211,8 +215,14 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             },
             credentials: 'include',
             body: JSON.stringify({ 
+<<<<<<< Updated upstream
               // SIEMPRE 200 preguntas sin imágenes + 10 con imágenes = 210 total
               count: 200,
+=======
+              // Para años anteriores: 190 preguntas completas (sin imágenes) + 10 con imágenes = 200 total
+              // Para protocolos: 200 preguntas completas sin imágenes
+              count: effectiveSimulacroType === 'anteriores' ? 190 : 200,
+>>>>>>> Stashed changes
               examType: currentExamType
             })
           });
@@ -238,7 +248,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
         // Obtener preguntas con fotos (solo para años anteriores, no para protocolos)
         let fotosData = [];
         // Solo cargar fotos si es simulacro de años anteriores, no si es protocolos
-        if (selectedSimulacroType === 'anteriores' || (!selectedSimulacroType && currentExamType === 'simulacro')) {
+        if (effectiveSimulacroType === 'anteriores' || (!effectiveSimulacroType && currentExamType === 'simulacro')) {
           try {
             const fotosURL = `${effectiveAPI_URL}/random-fotos`;
             const fotosResponse = await fetch(fotosURL, {
@@ -412,6 +422,11 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     } catch (error) {
       console.error('Error al cargar preguntas:', error);
       setIsError(true);
+      setIsLoading(false);
+      // Asegurarse de que el selector se muestre si es necesario
+      if (!examMode || examMode === 'simulacro') {
+        setShowExamTypeSelector(true);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -725,7 +740,10 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   };
 
   // Usar loadQuestions en el useEffect
+  // Nota: effectiveUserId y loadQuestions no están en las dependencias para evitar loops infinitos
+  // effectiveUserId viene de props y es estable, loadQuestions se define en el componente
   useEffect(() => {
+<<<<<<< Updated upstream
     // Si no hay modo específico y es simulacro, mostrar selector de tipo
     if (!examMode || examMode === 'simulacro') {
       // Si hay userId, intentar primero restaurar el progreso
@@ -787,6 +805,107 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     }
     // eslint-disable-next-line
   }, [examMode, effectiveUserId]);
+=======
+    let isMounted = true;
+    
+    const initializeExam = async () => {
+      try {
+        setIsLoading(true);
+        setIsError(false);
+        
+        // Si no hay modo específico y es simulacro, mostrar selector de tipo
+        if (!examMode || examMode === 'simulacro') {
+          // Si hay userId, intentar primero restaurar el progreso
+          if (effectiveUserId) {
+            try {
+              const progressRestored = await resumeExam();
+              
+              if (isMounted) {
+                // Verificar si se restauró progreso con preguntas
+                if (progressRestored && progressRestored.progress && 
+                    progressRestored.progress.questions && 
+                    Array.isArray(progressRestored.progress.questions) &&
+                    progressRestored.progress.questions.length > 0) {
+                  // Si se restauró con preguntas, no mostrar popup de inicio
+                  setShowStartPopup(false);
+                  setHasStarted(true);
+                  setIsLoading(false);
+                } else {
+                  // Si no se restauró progreso o no hubo preguntas, mostrar selector
+                  setShowExamTypeSelector(true);
+                  setIsLoading(false);
+                }
+              }
+            } catch (resumeError) {
+              console.error('Error al restaurar examen:', resumeError);
+              if (isMounted) {
+                setShowExamTypeSelector(true);
+                setIsLoading(false);
+              }
+            }
+          } else {
+            // Si no hay userId, mostrar selector
+            if (isMounted) {
+              setShowExamTypeSelector(true);
+              setIsLoading(false);
+            }
+          }
+        } else {
+          // Si hay modo específico, cargar directamente
+          if (effectiveUserId) {
+            try {
+              const progressRestored = await resumeExam();
+              
+              if (isMounted) {
+                // Verificar si se restauró progreso con preguntas
+                if (progressRestored && progressRestored.progress && 
+                    progressRestored.progress.questions && 
+                    Array.isArray(progressRestored.progress.questions) &&
+                    progressRestored.progress.questions.length > 0) {
+                  // Si se restauró, no mostrar popup de inicio
+                  setShowStartPopup(false);
+                  setHasStarted(true);
+                  setIsLoading(false);
+                } else {
+                  // Si no se restauró progreso o no hubo preguntas, cargar nuevas preguntas
+                  await loadQuestions();
+                }
+              }
+            } catch (resumeError) {
+              console.error('Error al restaurar examen:', resumeError);
+              if (isMounted) {
+                await loadQuestions();
+              }
+            }
+          } else {
+            // Si no hay userId, simplemente cargar nuevas preguntas
+            if (isMounted) {
+              await loadQuestions();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error al inicializar el examen:', error);
+        if (isMounted) {
+          setIsError(true);
+          setIsLoading(false);
+          // Si es simulacro, mostrar selector como fallback
+          if (!examMode || examMode === 'simulacro') {
+            setShowExamTypeSelector(true);
+          }
+        }
+      }
+    };
+    
+    initializeExam();
+    
+    return () => {
+      isMounted = false;
+    };
+    // Nota: Solo examMode en dependencias es correcto. effectiveUserId viene de props (estable) 
+    // y loadQuestions se define en el componente, por lo que no necesitan estar en las dependencias
+  }, [examMode]);
+>>>>>>> Stashed changes
   
   // Asegurarse de que el examen esté pausado al inicio
   useEffect(() => {
@@ -1550,10 +1669,78 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     addToBatch('question', { newQuestion: index });
   };
 
+<<<<<<< Updated upstream
   // Renderizar selector de tipo de simulacro si es necesario (ANTES de otras verificaciones)
   // IMPORTANTE: Verificar esto primero para evitar que la página quede en blanco
   console.log('🔍 Renderizando Exam - showExamTypeSelector:', showExamTypeSelector, 'examMode:', examMode, 'questions.length:', questions?.length || 0, 'isLoading:', isLoading);
   
+=======
+  // 6. Mejorar el manejo de errores general
+  if (isError) {
+    return (
+      <ErrorDisplay 
+        onRetry={loadQuestions}
+        onReturn={() => navigate('/dashboard')}
+      />
+    );
+  }
+
+  // Si está cargando, mostrar indicador
+  if (isLoading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        gap: '20px'
+      }}>
+        <div style={{ fontSize: '18px', fontWeight: '500' }}>Cargando examen...</div>
+        <div style={{ fontSize: '14px', color: '#666' }}>Por favor espera</div>
+      </div>
+    );
+  }
+
+  // Si no hay preguntas aún y no estamos en selector o popup, mostrar mensaje
+  if ((!questions || questions.length === 0) && !showExamTypeSelector && !showStartPopup && !isError) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        gap: '20px',
+        padding: '20px'
+      }}>
+        <div style={{ fontSize: '18px', fontWeight: '500' }}>No hay preguntas disponibles</div>
+        <button 
+          onClick={() => {
+            if (!examMode || examMode === 'simulacro') {
+              setShowExamTypeSelector(true);
+            } else {
+              loadQuestions();
+            }
+          }}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#7ea0a7',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Intentar de nuevo
+        </button>
+      </div>
+    );
+  }
+
+  // Renderizar selector de tipo de simulacro si es necesario
+>>>>>>> Stashed changes
   if (showExamTypeSelector && (!examMode || examMode === 'simulacro')) {
     console.log('✅ Mostrando selector de tipo de examen');
     return (
