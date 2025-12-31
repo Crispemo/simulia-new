@@ -215,14 +215,9 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
             },
             credentials: 'include',
             body: JSON.stringify({ 
-<<<<<<< Updated upstream
-              // SIEMPRE 200 preguntas sin imágenes + 10 con imágenes = 210 total
-              count: 200,
-=======
               // Para años anteriores: 190 preguntas completas (sin imágenes) + 10 con imágenes = 200 total
               // Para protocolos: 200 preguntas completas sin imágenes
               count: effectiveSimulacroType === 'anteriores' ? 190 : 200,
->>>>>>> Stashed changes
               examType: currentExamType
             })
           });
@@ -743,69 +738,6 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   // Nota: effectiveUserId y loadQuestions no están en las dependencias para evitar loops infinitos
   // effectiveUserId viene de props y es estable, loadQuestions se define en el componente
   useEffect(() => {
-<<<<<<< Updated upstream
-    // Si no hay modo específico y es simulacro, mostrar selector de tipo
-    if (!examMode || examMode === 'simulacro') {
-      // Si hay userId, intentar primero restaurar el progreso
-      if (effectiveUserId) {
-        resumeExam()
-          .then(progressRestored => {
-            // Si no se restauró progreso anterior, mostrar selector
-            if (!progressRestored) {
-              console.log('No hay progreso anterior, mostrando selector de tipo de examen');
-              setShowExamTypeSelector(true);
-            } else {
-              // Si se restauró, verificar si hay preguntas
-              // Si hay preguntas, no mostrar selector ni popup
-              if (progressRestored.progress && progressRestored.progress.questions && progressRestored.progress.questions.length > 0) {
-                console.log('Progreso restaurado con preguntas, ocultando selector');
-                setShowExamTypeSelector(false);
-                setShowStartPopup(false);
-                setHasStarted(true);
-              } else {
-                console.log('Progreso restaurado pero sin preguntas, mostrando selector');
-                setShowExamTypeSelector(true);
-              }
-            }
-          })
-          .catch(error => {
-            console.error('Error al intentar restaurar el examen:', error);
-            console.log('Error al restaurar, mostrando selector de tipo de examen');
-            setShowExamTypeSelector(true);
-          });
-      } else {
-        // Si no hay userId, mostrar selector
-        console.log('No hay userId, mostrando selector de tipo de examen');
-        setShowExamTypeSelector(true);
-      }
-    } else {
-      // Si hay modo específico, cargar directamente
-      console.log('Modo específico detectado, ocultando selector y cargando preguntas');
-      setShowExamTypeSelector(false); // Asegurar que el selector no se muestre
-      if (effectiveUserId) {
-        resumeExam()
-          .then(progressRestored => {
-            // Si no se restauró progreso anterior o no hubo preguntas, cargar nuevas preguntas
-            if (!progressRestored || (progressRestored.progress && (!progressRestored.progress.questions || progressRestored.progress.questions.length === 0))) {
-              loadQuestions();
-            } else {
-              // Si se restauró, no mostrar popup de inicio
-              setShowStartPopup(false);
-              setHasStarted(true);
-            }
-          })
-          .catch(error => {
-            console.error('Error al intentar restaurar el examen:', error);
-            loadQuestions();
-          });
-      } else {
-        // Si no hay userId, simplemente cargar nuevas preguntas
-        loadQuestions();
-      }
-    }
-    // eslint-disable-next-line
-  }, [examMode, effectiveUserId]);
-=======
     let isMounted = true;
     
     const initializeExam = async () => {
@@ -905,7 +837,6 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     // Nota: Solo examMode en dependencias es correcto. effectiveUserId viene de props (estable) 
     // y loadQuestions se define en el componente, por lo que no necesitan estar en las dependencias
   }, [examMode]);
->>>>>>> Stashed changes
   
   // Asegurarse de que el examen esté pausado al inicio
   useEffect(() => {
@@ -1669,12 +1600,6 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
     addToBatch('question', { newQuestion: index });
   };
 
-<<<<<<< Updated upstream
-  // Renderizar selector de tipo de simulacro si es necesario (ANTES de otras verificaciones)
-  // IMPORTANTE: Verificar esto primero para evitar que la página quede en blanco
-  console.log('🔍 Renderizando Exam - showExamTypeSelector:', showExamTypeSelector, 'examMode:', examMode, 'questions.length:', questions?.length || 0, 'isLoading:', isLoading);
-  
-=======
   // 6. Mejorar el manejo de errores general
   if (isError) {
     return (
@@ -1740,7 +1665,6 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
   }
 
   // Renderizar selector de tipo de simulacro si es necesario
->>>>>>> Stashed changes
   if (showExamTypeSelector && (!examMode || examMode === 'simulacro')) {
     console.log('✅ Mostrando selector de tipo de examen');
     return (
