@@ -31,6 +31,7 @@ import ResourcesModal from './components/ResourcesModal';
 import AllSubjectsModal from './components/AllSubjectsModal';
 import SurveyModal from './components/SurveyModal';
 import FlashcardModal from './components/FlashcardModal';
+import DeleteExamModal from './components/DeleteExamModal';
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { Button } from './components/ui/button';
@@ -52,6 +53,8 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showAllSubjectsModal, setShowAllSubjectsModal] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
   const [showFlashcardModal, setShowFlashcardModal] = useState(false);
+  const [showDeleteExamModal, setShowDeleteExamModal] = useState(false);
+  const [examToDelete, setExamToDelete] = useState(null);
   const [hasErrorsAvailable, setHasErrorsAvailable] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1827,20 +1830,28 @@ const handleErroresClick = () => {
     navigate(`/exam-in-progress/${examId}`);
   };
 
-  const handleDeleteExam = async (examId) => {
-    if (!examId) {
-      console.error('El examId no está definido.');
+  const handleDeleteExam = (exam) => {
+    if (!exam || !exam._id) {
+      console.error('El examen no está definido.');
       return;
     }
 
-    // Confirmar eliminación
-    const confirmDelete = window.confirm('¿Estás seguro de que quieres eliminar este examen? Esta acción no se puede deshacer.');
-    if (!confirmDelete) return;
+    // Guardar la información del examen a eliminar
+    setExamToDelete(exam);
+    // Mostrar el modal de confirmación
+    setShowDeleteExamModal(true);
+  };
+
+  const confirmDeleteExam = async () => {
+    if (!examToDelete || !examToDelete._id) {
+      console.error('No hay examen para eliminar.');
+      return;
+    }
 
     try {
-      console.log(`Eliminando examen con ID: ${examId}`);
+      console.log(`Eliminando examen con ID: ${examToDelete._id}`);
 
-      const response = await fetch(`${API_URL}/update-exam/${examId}`, {
+      const response = await fetch(`${API_URL}/update-exam/${examToDelete._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -1856,15 +1867,24 @@ const handleErroresClick = () => {
       }
 
       // Actualizar los datos localmente removiendo el examen eliminado
-      setExamData(prevData => prevData.filter(exam => exam._id !== examId));
-      setFilteredExams(prevData => prevData.filter(exam => exam._id !== examId));
+      setExamData(prevData => prevData.filter(exam => exam._id !== examToDelete._id));
+      setFilteredExams(prevData => prevData.filter(exam => exam._id !== examToDelete._id));
 
       toast.success('Examen eliminado correctamente');
+
+      // Cerrar el modal y limpiar el estado
+      setShowDeleteExamModal(false);
+      setExamToDelete(null);
 
     } catch (error) {
       console.error('Error al eliminar examen:', error);
       toast.error('Error al eliminar el examen');
     }
+  };
+
+  const cancelDeleteExam = () => {
+    setShowDeleteExamModal(false);
+    setExamToDelete(null);
   };
 
   // Cuando muestres el score
@@ -2641,6 +2661,14 @@ const handleErroresClick = () => {
           isOpen={showFlashcardModal}
           onClose={() => setShowFlashcardModal(false)}
           userId={userId}
+          isDarkMode={isDarkMode}
+        />
+        <DeleteExamModal
+          isOpen={showDeleteExamModal}
+          onClose={cancelDeleteExam}
+          onConfirm={confirmDeleteExam}
+          examType={examToDelete?.type}
+          examDate={examToDelete?.date}
           isDarkMode={isDarkMode}
         />
         {renderErrorPopup()}

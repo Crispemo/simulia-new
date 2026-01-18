@@ -126,7 +126,7 @@ export default function ExamHistoryTable({ exams = [], onReviewClick, onResumeCl
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onDeleteClick && onDeleteClick(exam._id)}
+                            onClick={() => onDeleteClick && onDeleteClick(exam)}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             title="Eliminar"
                           >
