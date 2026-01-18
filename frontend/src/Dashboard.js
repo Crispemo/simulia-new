@@ -1827,6 +1827,46 @@ const handleErroresClick = () => {
     navigate(`/exam-in-progress/${examId}`);
   };
 
+  const handleDeleteExam = async (examId) => {
+    if (!examId) {
+      console.error('El examId no está definido.');
+      return;
+    }
+
+    // Confirmar eliminación
+    const confirmDelete = window.confirm('¿Estás seguro de que quieres eliminar este examen? Esta acción no se puede deshacer.');
+    if (!confirmDelete) return;
+
+    try {
+      console.log(`Eliminando examen con ID: ${examId}`);
+
+      const response = await fetch(`${API_URL}/update-exam/${examId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId,
+          isDelete: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar el examen');
+      }
+
+      // Actualizar los datos localmente removiendo el examen eliminado
+      setExamData(prevData => prevData.filter(exam => exam._id !== examId));
+      setFilteredExams(prevData => prevData.filter(exam => exam._id !== examId));
+
+      toast.success('Examen eliminado correctamente');
+
+    } catch (error) {
+      console.error('Error al eliminar examen:', error);
+      toast.error('Error al eliminar el examen');
+    }
+  };
+
   // Cuando muestres el score
   const formatScore = (score) => {
     // Asegurarse de que score sea un número
@@ -2568,10 +2608,11 @@ const handleErroresClick = () => {
               </div>
 
             {/* Exam History Table */}
-            <ExamHistoryTable 
+            <ExamHistoryTable
               exams={filteredExams}
               onReviewClick={handleReviewExam}
               onResumeClick={handleResumeExam}
+              onDeleteClick={handleDeleteExam}
               getExamTypeName={getExamTypeName}
             />
           </main>

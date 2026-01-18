@@ -77,6 +77,10 @@ const examenResultadoSchema = new mongoose.Schema({
   selectedAnswers: {
     type: Object,
     default: {}
+  },
+  isDelete: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

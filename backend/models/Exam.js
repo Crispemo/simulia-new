@@ -51,7 +51,8 @@ const examSchema = new mongoose.Schema({
   },
   startTime: { type: Date, default: Date.now },
   endTime: Date,
-  date: { type: Date, default: Date.now }
+  date: { type: Date, default: Date.now },
+  isDelete: { type: Boolean, default: false }
 });
 
 // Método para calcular la puntuación según el tipo de examen

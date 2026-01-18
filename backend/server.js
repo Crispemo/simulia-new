@@ -1689,9 +1689,13 @@ app.get('/exam-history/:userId', verifyUser, async (req, res) => {
     console.log(`Solicitado historial de exámenes para usuario: ${userId}`);
     
     // Buscar exámenes en la colección ExamenResultado en lugar de en el usuario
-    const examHistory = await ExamenResultado.find({ 
+    const examHistory = await ExamenResultado.find({
       userId,
-      status: 'completed' // Solo recuperar exámenes completados
+      status: 'completed', // Solo recuperar exámenes completados
+      $or: [
+        { isDelete: { $ne: true } },
+        { isDelete: { $exists: false } }
+      ]
     }).sort({ date: -1 }); // Ordenar por fecha descendente (más reciente primero)
     
     console.log(`Enviando ${examHistory.length} exámenes para usuario ${userId}`);
@@ -3805,6 +3809,50 @@ app.post('/update-exam-history', async (req, res) => {
   }
 });
 
+// Ruta para eliminar (soft delete) un examen
+app.patch('/update-exam/:examId', verifyUser, verifySubscription, async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const userId = req.user.userId;
+
+    console.log(`Usuario ${userId} solicita eliminar examen ${examId}`);
+
+    // Buscar el examen y verificar que pertenece al usuario
+    const exam = await ExamenResultado.findOne({ _id: examId, userId });
+
+    if (!exam) {
+      console.log(`Examen ${examId} no encontrado para usuario ${userId}`);
+      return res.status(404).json({ error: 'Examen no encontrado' });
+    }
+
+    // Verificar que el examen no esté ya eliminado
+    if (exam.isDelete) {
+      console.log(`Examen ${examId} ya está eliminado`);
+      return res.status(400).json({ error: 'El examen ya está eliminado' });
+    }
+
+    // Realizar soft delete
+    await ExamenResultado.updateOne(
+      { _id: examId, userId },
+      { $set: { isDelete: true } }
+    );
+
+    console.log(`Examen ${examId} eliminado correctamente por usuario ${userId}`);
+
+    res.json({
+      success: true,
+      message: 'Examen eliminado correctamente'
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar examen:', error);
+    res.status(500).json({
+      error: 'Error al eliminar el examen',
+      message: error.message
+    });
+  }
+});
+
 // Eliminada ruta de depuración /debug-user/:userId
 
 // Ruta para obtener exámenes en progreso de un usuario
@@ -3829,7 +3877,11 @@ app.get('/exams-in-progress/:userId', async (req, res) => {
     // Buscar exámenes en progreso directamente en la colección ExamenResultado
     const examsInProgress = await ExamenResultado.find({
       userId,
-      status: 'in_progress'
+      status: 'in_progress',
+      $or: [
+        { isDelete: { $ne: true } },
+        { isDelete: { $exists: false } }
+      ]
     });
     
     console.log(`Se encontraron ${examsInProgress.length} exámenes en progreso para ${userId}`);
@@ -3865,9 +3917,13 @@ app.get('/all-exams/:userId', verifyUser, async (req, res) => {
     
     console.log(`Solicitando todos los exámenes para usuario: ${userId}`);
     
-    // Buscar todos los exámenes en la colección ExamenResultado
-    const exams = await ExamenResultado.find({ 
-      userId
+    // Buscar todos los exámenes en la colección ExamenResultado (excluyendo eliminados)
+    const exams = await ExamenResultado.find({
+      userId,
+      $or: [
+        { isDelete: { $ne: true } },
+        { isDelete: { $exists: false } }
+      ]
     }).sort({ date: -1 }); // Ordenar por fecha descendente (más reciente primero)
     
     console.log(`Enviando ${exams.length} exámenes para usuario ${userId}`);
@@ -3895,7 +3951,12 @@ app.get('/admin/all-exams', async (req, res) => {
     const userId = req.query.userId; // Filtro opcional por userId
     
     // Construir query
-    const query = {};
+    const query = {
+      $or: [
+        { isDelete: { $ne: true } },
+        { isDelete: { $exists: false } }
+      ]
+    };
     if (userId) {
       query.userId = userId;
     }

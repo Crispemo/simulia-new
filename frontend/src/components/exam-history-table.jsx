@@ -2,9 +2,9 @@ import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { Eye, Play } from 'lucide-react'
+import { Eye, Play, Trash2 } from 'lucide-react'
 
-export default function ExamHistoryTable({ exams = [], onReviewClick, onResumeClick, getExamTypeName }) {
+export default function ExamHistoryTable({ exams = [], onReviewClick, onResumeClick, onDeleteClick, getExamTypeName }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(0)
   const examsPerPage = 6
@@ -113,15 +113,26 @@ export default function ExamHistoryTable({ exams = [], onReviewClick, onResumeCl
                         {score.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 text-center">
-                        {exam.status === 'completed' ? (
-                          <Button variant="ghost" size="sm" onClick={() => onReviewClick(exam._id)}>
-                            <Eye className="h-4 w-4" />
+                        <div className="flex items-center justify-center gap-2">
+                          {exam.status === 'completed' ? (
+                            <Button variant="ghost" size="sm" onClick={() => onReviewClick(exam._id)} title="Revisar">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button variant="ghost" size="sm" onClick={() => onResumeClick && onResumeClick(exam._id)} title="Continuar">
+                              <Play className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDeleteClick && onDeleteClick(exam._id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
-                        ) : (
-                          <Button variant="ghost" size="sm" onClick={() => onResumeClick && onResumeClick(exam._id)}>
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   )
