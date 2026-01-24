@@ -32,16 +32,11 @@ const getCorrectPlanFromStripe = async (stripeId) => {
 
     // Obtener la primera suscripción activa
     const subscription = subscriptions.data[0];
-    const priceId = subscription.items.data[0]?.price?.id;
-
-    // Mapear priceId a plan
-    const PRICE_TO_PLAN = {
-      'price_1RhSP0DtruRDObwZDrUOa8WG': 'mensual', // €9.99/mes
-      'price_1RhSLnDtruRDObwZyPGdzKmI': 'anual'    // €39.99/año
-    };
-
-    const plan = PRICE_TO_PLAN[priceId];
-    console.log(`📊 Cliente ${stripeId}: priceId=${priceId}, plan=${plan}`);
+    const item = subscription.items.data[0];
+    const priceId = item?.price?.id;
+    const interval = item?.price?.recurring?.interval;
+    const plan = interval === 'month' ? 'mensual' : interval === 'year' ? 'anual' : null;
+    console.log(`📊 Cliente ${stripeId}: interval=${interval}, priceId=${priceId}, plan=${plan}`);
     
     return plan;
   } catch (error) {

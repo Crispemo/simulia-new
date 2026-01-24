@@ -16,13 +16,11 @@ const connectDB = async () => {
   }
 };
 
-// Función para determinar el plan basado en el precio de Stripe
-const getPlanFromPriceId = (priceId) => {
-  const priceMapping = {
-    'price_1RhSP0DtruRDObwZDrUOa8WG': 'mensual', // €9.99/mes
-    'price_1RhSLnDtruRDObwZyPGdzKmI': 'anual'    // €39.99/año
-  };
-  return priceMapping[priceId] || 'mensual'; // Default a mensual si no se encuentra
+// Determinar el plan a partir del intervalo de cobro (más robusto que depender de priceIds hardcodeados)
+const getPlanFromRecurringInterval = (interval) => {
+  if (interval === 'month') return 'mensual';
+  if (interval === 'year') return 'anual';
+  return null;
 };
 
 // Función para sincronizar usuarios desde Stripe a MongoDB
@@ -71,8 +69,8 @@ const syncUsersFromStripe = async () => {
     const subscriptionMap = new Map();
     subscriptions.forEach(sub => {
       const customerId = sub.customer;
-      const priceId = sub.items.data[0]?.price?.id;
-      const plan = getPlanFromPriceId(priceId);
+    const interval = sub.items.data[0]?.price?.recurring?.interval;
+    const plan = getPlanFromRecurringInterval(interval);
       
       subscriptionMap.set(customerId, {
         plan,

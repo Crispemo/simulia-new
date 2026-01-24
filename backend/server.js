@@ -2900,32 +2900,44 @@ app.post('/create-payment-intent', async (req, res) => {
     return res.status(400).json({ error: 'Todos los campos son obligatorios' });
   }
 
-  const validPlans = { mensual: 999, anual: 3999 };
+  const validPlans = { mensual: 1199, anual: 5999 };
   if (!validPlans[plan] || validPlans[plan] !== amount) {
     return res.status(400).json({ error: 'Plan o monto inválido' });
   }
 
   try {
-    // Mapear planes a precios de Stripe
-    const priceMapping = {
-      mensual: 'price_1RhSP0DtruRDObwZDrUOa8WG', // €9.99/mes
-      anual: 'price_1RhSLnDtruRDObwZyPGdzKmI'    // €39.99/año
+    // Cobrar usando price_data para no depender de IDs de Price hardcodeados
+    // (válido en modo subscription con recurring.interval)
+    const planConfig = {
+      mensual: {
+        interval: 'month',
+        productName: 'Simulia - Mensual (Explora sin presión)'
+      },
+      anual: {
+        interval: 'year',
+        productName: 'Simulia - Anual (Voy a por la plaza)'
+      }
     };
-    
-    const priceId = priceMapping[plan];
-    if (!priceId) {
-      return res.status(400).json({ error: 'Plan no válido' });
-    }
+
+    const cfg = planConfig[plan];
+    if (!cfg) return res.status(400).json({ error: 'Plan no válido' });
+    const unitAmount = validPlans[plan];
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
-        price: priceId,
+        price_data: {
+          currency: 'eur',
+          unit_amount: unitAmount,
+          recurring: { interval: cfg.interval },
+          product_data: { name: cfg.productName }
+        },
         quantity: 1,
       }],
       mode: 'subscription',
       subscription_data: {
-        trial_period_days: 7
+        trial_period_days: 7,
+        metadata: { userId, plan, email, userName: userName || userId }
       },
       allow_promotion_codes: true,
       success_url: `${FRONTEND_URL}/success?userId=${userId}&plan=${plan}`,
@@ -3090,16 +3102,15 @@ app.post('/stripe-webhook', async (req, res) => {
             
             if (subscriptions.data.length > 0) {
               const subscription = subscriptions.data[0];
-              const priceId = subscription.items.data[0]?.price?.id;
-              
-              // Mapear priceId a plan
-              const PRICE_TO_PLAN = {
-                'price_1RhSP0DtruRDObwZDrUOa8WG': 'mensual', // €9.99/mes
-                'price_1RhSLnDtruRDObwZyPGdzKmI': 'anual'    // €39.99/año
-              };
-              
-              finalPlan = PRICE_TO_PLAN[priceId];
-              console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (priceId: ${priceId})`);
+              const item = subscription.items.data[0];
+              const priceId = item?.price?.id;
+              const interval = item?.price?.recurring?.interval;
+
+              // Deducir plan por intervalo para no depender de priceIds hardcodeados
+              if (interval === 'month') finalPlan = 'mensual';
+              if (interval === 'year') finalPlan = 'anual';
+
+              console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (interval: ${interval}, priceId: ${priceId})`);
             }
           } catch (subError) {
             console.error('💳 STRIPE WEBHOOK: Error obteniendo suscripción:', subError.message);
@@ -3207,16 +3218,9 @@ app.post('/stripe-webhook', async (req, res) => {
           let planFromInvoice = undefined;
           try {
             const line = Array.isArray(invoice.lines?.data) ? invoice.lines.data[0] : undefined;
-            const priceId = line?.price?.id;
             const interval = line?.price?.recurring?.interval;
-            if (priceId) {
-              // Mapa simple de priceId a plan
-              const PRICE_TO_PLAN = {
-                'price_1RhSP0DtruRDObwZDrUOa8WG': 'mensual', // €9.99/mes
-                'price_1RhSLnDtruRDObwZyPGdzKmI': 'anual'    // €39.99/año
-              };
-              planFromInvoice = PRICE_TO_PLAN[priceId];
-            }
+            if (interval === 'month') planFromInvoice = 'mensual';
+            if (interval === 'year') planFromInvoice = 'anual';
           } catch (_) {}
 
           // Construir un identificador efectivo

@@ -20,8 +20,8 @@ const CheckoutForm = () => {
 
   // Simulación de planes para seleccionar
   const plans = [
-      { type: 'mensual', amount: 999, label: 'Plan Explora sin presión (9.99 €/mes)' },
-  { type: 'anual', amount: 3999, label: 'Plan Voy a por la plaza (39.99 €/año)' },
+      { type: 'mensual', amount: 1199, label: 'Plan Explora sin presión (11,99 €/mes)' },
+  { type: 'anual', amount: 5999, label: 'Plan Voy a por la plaza (59,99 €/año • equivale a 4,99 €/mes)' },
   ];
   
   useEffect(() => {

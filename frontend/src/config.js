@@ -45,8 +45,8 @@ const STRIPE_CONFIG = {
 
 // Planes de suscripción
 const SUBSCRIPTION_PLANS = {
-  mensual: { price: 999, name: 'Explora sin presión', duration: '1 mes' },
-  anual: { price: 3999, name: 'Voy a por la plaza', duration: '12 meses' }
+  mensual: { price: 1199, name: 'Explora sin presión', duration: '1 mes' },
+  anual: { price: 5999, name: 'Voy a por la plaza', duration: '12 meses' }
 };
 
 // Exportar configuración

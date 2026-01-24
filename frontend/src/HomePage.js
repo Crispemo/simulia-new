@@ -709,7 +709,7 @@ function HomePage() {
             <div>
               <h3 className="text-2xl font-bold mb-2 text-secondary">Explora sin presión</h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">9.99 €</span>
+                <span className="text-5xl font-bold text-primary">11,99 €</span>
                 <span className="text-muted-foreground text-lg">/mes</span>
               </div>
             </div>
@@ -748,18 +748,18 @@ function HomePage() {
                   Más popular • Ahorra
                 </span>
                 <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg">
-                  50%
+                  Ahorra 84 €
                 </span>
               </div>
             </div>
             <div className="mt-2 md:mt-0">
               <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">39.99 €</span>
+                <span className="text-5xl font-bold text-primary">59,99 €</span>
                 <span className="text-muted-foreground text-lg">/año</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
-                <span className="line-through">79.99 €</span> • Solo 3.33 €/mes
+                <span className="line-through">143,88 €</span> • Equivale a 4,99 €/mes
               </div>
             </div>
 
@@ -775,7 +775,7 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Ahorra más de 40 € al año</span>
+                  <span className="text-secondary">Ahorra 84 € al año (vs 11,99 € × 12)</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
