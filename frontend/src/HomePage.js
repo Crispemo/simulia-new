@@ -745,10 +745,7 @@ function HomePage() {
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <div className="flex flex-col items-center gap-1">
                 <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
-                  Más popular • Ahorra
-                </span>
-                <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg">
-                  Ahorra 84 €
+                  Más popular • Ahorra 84 €
                 </span>
               </div>
             </div>
