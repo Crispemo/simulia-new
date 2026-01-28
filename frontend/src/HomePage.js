@@ -734,7 +734,7 @@ function HomePage() {
             </ul>
 
             <button
-              onClick={() => window.location.href = 'https://buy.stripe.com/28E14n2ck6LC1lvbmC6Zy0e'}
+              onClick={() => window.location.href = 'https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g'}
               className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all bg-transparent py-3 rounded-full font-semibold shadow-md hover:shadow-lg"
             > 
               Comenzar prueba gratuita
@@ -782,7 +782,7 @@ function HomePage() {
             </div>
 
             <button
-              onClick={() => window.location.href = 'https://buy.stripe.com/8x214neZ69XO6FPfCS6Zy0d'}
+              onClick={() => window.location.href = 'https://buy.stripe.com/4gM5kD8AIb1S0hreyO6Zy0f'}
               className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold animate-pulse-subtle"
             >
               Comenzar prueba gratuita
