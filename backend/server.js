@@ -620,14 +620,109 @@ app.post('/users/check-subscription', async (req, res) => {
       await user.save();
     }
 
+    // 1) Preferir verificación en Stripe si existe stripeId (Customer ID cus_...)
+    // Esto evita depender del email (antes el usuario podía escribir el email que quisiera).
+    if (user.stripeId) {
+      try {
+        const subs = await stripe.subscriptions.list({
+          customer: user.stripeId,
+          status: 'all',
+          limit: 5,
+        });
+
+        const candidates = Array.isArray(subs?.data) ? subs.data : [];
+        const activeSub = candidates.find(s => ['active', 'trialing'].includes(s.status));
+
+        if (activeSub) {
+          const interval = activeSub?.items?.data?.[0]?.price?.recurring?.interval;
+          let planFromStripe = null;
+          if (interval === 'month') planFromStripe = 'mensual';
+          if (interval === 'year') planFromStripe = 'anual';
+
+          const expirationDate = activeSub?.current_period_end
+            ? new Date(activeSub.current_period_end * 1000)
+            : null;
+
+          // Sincronizar en Mongo (solo si pudimos deducir plan)
+          if (planFromStripe) {
+            user.plan = planFromStripe;
+          }
+          if (expirationDate) {
+            user.expirationDate = expirationDate;
+          }
+          // Mantener email normalizado (si existe)
+          if (user.email) user.email = String(user.email).toLowerCase();
+          await user.save();
+
+          console.log(`Usuario ${user.userId} suscripción ACTIVA via Stripe`, {
+            stripeId: user.stripeId,
+            subscriptionId: activeSub.id,
+            status: activeSub.status,
+            plan: user.plan,
+            expirationDate: user.expirationDate || null,
+          });
+
+          return res.json({
+            hasSubscription: true,
+            subscriptionActive: true,
+            plan: user.plan,
+            expirationDate: user.expirationDate || null,
+            isExpired: false,
+            source: 'stripe',
+            user: { userId: user.userId, email: user.email, userName: user.userName },
+          });
+        }
+
+        // Si no hay suscripción activa/trialing en Stripe, considerarlo NO activo
+        // (sin borrar plan a ciegas; solo limpiar si ya está vencido o si quieres forzar, aquí lo dejamos conservador)
+        const now = new Date();
+        const hasExpiration = !!user.expirationDate;
+        const isExpired = hasExpiration ? user.expirationDate <= now : false;
+
+        console.log(`Usuario ${user.userId} sin suscripción activa en Stripe`, {
+          stripeId: user.stripeId,
+          subscriptionsFound: candidates.length,
+          localPlan: user.plan || null,
+          localExpirationDate: user.expirationDate || null,
+          isExpired,
+        });
+
+        return res.json({
+          hasSubscription: false,
+          subscriptionActive: false,
+          plan: user.plan,
+          expirationDate: user.expirationDate || null,
+          isExpired,
+          source: 'stripe',
+          user: { userId: user.userId, email: user.email, userName: user.userName },
+        });
+      } catch (stripeErr) {
+        console.error('Error verificando suscripción en Stripe (fallback a Mongo):', stripeErr.message);
+        // Si Stripe falla, seguimos con la verificación local para no bloquear al usuario por un fallo temporal.
+      }
+    }
+
+    // 2) Fallback: verificación local (Mongo)
     const activePlans = new Set(['mensual', 'anual']);
-    const hasSubscription = user.plan && activePlans.has(user.plan);
-    console.log(`Usuario ${user.userId} tiene suscripción: ${hasSubscription}, plan: ${user.plan || 'null'}`);
+    const hasValidPlan = !!(user.plan && activePlans.has(user.plan));
+    const now = new Date();
+    const hasExpiration = !!user.expirationDate;
+    const isExpired = hasExpiration ? user.expirationDate <= now : false;
+    // Activa si tiene plan válido y (no hay expiración registrada o no está expirado)
+    const hasSubscription = Boolean(hasValidPlan && (!hasExpiration || !isExpired));
+
+    console.log(`Usuario ${user.userId} tiene suscripción (Mongo): ${hasSubscription}, plan: ${user.plan || 'null'}`, {
+      expirationDate: user.expirationDate || null,
+      isExpired,
+    });
     
     res.json({ 
       hasSubscription,
       subscriptionActive: hasSubscription,
       plan: user.plan,
+      expirationDate: user.expirationDate || null,
+      isExpired,
+      source: 'mongo',
       user: { userId: user.userId, email: user.email, userName: user.userName }
     });
   } catch (error) {
@@ -680,34 +775,15 @@ app.post('/users/register-user', async (req, res) => {
       
       // Actualizar usuario existente
       existingUser.email = email || existingUser.email;
-      if (plan) {
-        existingUser.plan = plan;
-      }
       
       await existingUser.save();
       console.log(`✅ REGISTRO USUARIO: Usuario ${userId} actualizado con éxito`);
       
-      // IMPORTANTE: Enviar webhook incluso para usuarios existentes que cambian de plan
-      console.log('🔄 REGISTRO USUARIO: Usuario existente - Enviando webhook por cambio de plan');
-      const webhookResult = await sendWebhookToN8N({
-        email: existingUser.email,
-        nombre: existingUser.userId,
-        plan: existingUser.plan,
-        userId: existingUser.userId,
-        fechaRegistro: new Date().toISOString(),
-        reason: 'plan_upgrade'
-      });
-      
-      console.log('🔄 REGISTRO USUARIO: Resultado webhook n8n:', webhookResult.success ? 'enviado' : 'falló');
-      if (!webhookResult.success) {
-        console.error('🔄 REGISTRO USUARIO: Error en webhook:', webhookResult.error);
-      }
-      
       return res.json({ 
         message: 'Usuario actualizado con éxito.',
         status: 'updated',
-        webhookSent: webhookResult.success,
-        reason: 'existing_user_plan_upgrade'
+        webhookSent: false,
+        reason: 'user_updated_no_plan_change'
       });
     } else {
       console.log(`🆕 REGISTRO USUARIO: Creando nuevo usuario: ${userId}, plan: ${plan}`);
@@ -716,7 +792,7 @@ app.post('/users/register-user', async (req, res) => {
       const newUser = new User({
         userId,
         email: email || userId,
-        plan: plan || null, // Solo asignar plan si es válido, sino null
+        plan: null, // El plan se activa solo vía webhook de Stripe
         examHistory: [], // Inicializar array vacío para examHistory
         failedQuestions: [] // Inicializar array vacío para preguntas falladas
       });
@@ -724,32 +800,11 @@ app.post('/users/register-user', async (req, res) => {
       await newUser.save();
       console.log(`✅ REGISTRO USUARIO: Usuario ${userId} registrado con éxito`);
       
-      // Solo enviar webhook si el plan es válido (mensual o anual)
-      let webhookResult = { success: false };
-      if (newUser.plan && ['mensual', 'anual'].includes(newUser.plan)) {
-        console.log('🆕 REGISTRO USUARIO: Enviando webhook de bienvenida a n8n');
-        webhookResult = await sendWebhookToN8N({
-          email: newUser.email,
-          nombre: newUser.userId,
-          plan: newUser.plan,
-          userId: newUser.userId,
-          fechaRegistro: new Date().toISOString(),
-          reason: 'new_user_welcome'
-        });
-        
-        console.log('🆕 REGISTRO USUARIO: Resultado webhook n8n:', webhookResult.success ? 'enviado' : 'falló');
-        if (!webhookResult.success) {
-          console.error('🆕 REGISTRO USUARIO: Error en webhook:', webhookResult.error);
-        }
-      } else {
-        console.log('⚠️ REGISTRO USUARIO: No se envía webhook - plan inválido o null:', newUser.plan);
-      }
-      
       return res.json({ 
         message: 'Usuario registrado con éxito.', 
         status: 'created',
-        webhookSent: webhookResult.success,
-        reason: 'new_user_welcome'
+        webhookSent: false,
+        reason: 'user_created_no_plan'
       });
     }
   } catch (error) {
@@ -2892,6 +2947,25 @@ app.post('/validate-and-save-exam-in-progress', async (req, res) => {
   }
 });
 
+// Función helper para convertir cualquier email a gmail
+function normalizeEmailToGmail(email) {
+  if (!email) return email;
+  
+  // Extraer la parte local del email (antes del @)
+  const emailParts = email.toLowerCase().trim().split('@');
+  if (emailParts.length !== 2) return email;
+  
+  const [localPart] = emailParts;
+  
+  // Si ya es gmail, retornarlo tal cual
+  if (emailParts[1] === 'gmail.com') {
+    return email;
+  }
+  
+  // Convertir a gmail manteniendo la parte local
+  return `${localPart}@gmail.com`;
+}
+
 // Payment Routes
 app.post('/create-payment-intent', async (req, res) => {
   const { userId, email, plan, amount, userName } = req.body;
@@ -2906,6 +2980,10 @@ app.post('/create-payment-intent', async (req, res) => {
   }
 
   try {
+    // Normalizar email a gmail
+    const normalizedEmail = normalizeEmailToGmail(email);
+    console.log(`📧 Email normalizado: ${email} → ${normalizedEmail}`);
+    
     // Cobrar usando price_data para no depender de IDs de Price hardcodeados
     // (válido en modo subscription con recurring.interval)
     const planConfig = {
@@ -2925,6 +3003,7 @@ app.post('/create-payment-intent', async (req, res) => {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer_email: normalizedEmail, // Rellenar automáticamente el email
       line_items: [{
         price_data: {
           currency: 'eur',
@@ -2937,10 +3016,11 @@ app.post('/create-payment-intent', async (req, res) => {
       mode: 'subscription',
       subscription_data: {
         trial_period_days: 7,
-        metadata: { userId, plan, email, userName: userName || userId }
+        metadata: { userId, plan, email: normalizedEmail, userName: userName || userId }
       },
       allow_promotion_codes: true,
-      success_url: `${FRONTEND_URL}/success?userId=${userId}&plan=${plan}`,
+      // Incluir session_id para poder confirmar el pago al volver
+      success_url: `${FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}&userId=${userId}`,
       cancel_url: `${FRONTEND_URL}/cancel`,
       client_reference_id: userId,
       custom_fields: [
@@ -2951,37 +3031,197 @@ app.post('/create-payment-intent', async (req, res) => {
           optional: false
         }
       ],
-      metadata: { userId, plan, email, userName: userName || userId } // Incluir nombre en metadatos
+      metadata: { userId, plan, email: normalizedEmail, userName: userName || userId } // Incluir nombre en metadatos
     });
 
-    // Actualizar el usuario directamente sin esperar el webhook, incluyendo el email
-    console.log(`🏦 PAYMENT INTENT: Guardando usuario ${userId} con plan ${plan} y email ${email}`);
-    const savedUser = await User.findOneAndUpdate(
+    // IMPORTANTE:
+    // NO activar plan aquí. Solo guardar/crear el usuario "básico".
+    // El plan se activa únicamente cuando Stripe lo confirme vía webhook (checkout.session.completed).
+    console.log(`🏦 CHECKOUT SESSION: Guardando usuario ${userId} (SIN activar plan) | email ${normalizedEmail}`);
+    await User.findOneAndUpdate(
       { userId },
-      { 
-        plan,
-        email, // Asegurar que el email se guarde
-        $setOnInsert: { // Solo establecer estos campos si es un nuevo usuario
+      {
+        email: normalizedEmail,
+        userName: userName || userId,
+        $setOnInsert: {
           examHistory: [],
           failedQuestions: []
         }
       },
-      { 
-        upsert: true,
-        new: true // Retornar el documento actualizado
-      }
+      { upsert: true, new: true }
     );
-
-    console.log(`🏦 PAYMENT INTENT: Usuario ${userId} guardado correctamente:`, {
-      userId: savedUser.userId,
-      email: savedUser.email,
-      plan: savedUser.plan,
-      created: savedUser.createdAt || 'existing'
-    });
 
     res.json({ checkoutUrl: session.url });
   } catch (error) {
     console.error('Error al crear sesión de pago:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Confirmación del checkout al volver desde Stripe (fallback al webhook)
+// Útil especialmente en local/dev donde Stripe no puede pegarle al webhook.
+app.post('/stripe/confirm-checkout', async (req, res) => {
+  const { sessionId, userId } = req.body || {};
+
+  if (!sessionId) return res.status(400).json({ error: 'sessionId es obligatorio' });
+  if (!userId) return res.status(400).json({ error: 'userId es obligatorio' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['customer_details']
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Checkout session no encontrada' });
+    }
+
+    // Seguridad: asegurar que esta session pertenece al usuario
+    // (nosotros seteamos client_reference_id=userId al crear la sesión)
+    const sessionUserId =
+      (session.client_reference_id && String(session.client_reference_id)) ||
+      (session.metadata && session.metadata.userId) ||
+      null;
+
+    if (!sessionUserId || String(sessionUserId) !== String(userId)) {
+      return res.status(403).json({
+        error: 'La sesión no pertenece a este usuario',
+        sessionUserId: sessionUserId || null
+      });
+    }
+
+    // Stripe marca la sesión como "complete" cuando finaliza el checkout
+    if (session.status !== 'complete') {
+      return res.status(409).json({
+        error: 'Checkout no completado',
+        status: session.status
+      });
+    }
+
+    if (session.mode !== 'subscription' || !session.subscription) {
+      return res.status(409).json({
+        error: 'La sesión no corresponde a una suscripción',
+        mode: session.mode
+      });
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+      expand: ['items.data.price']
+    });
+
+    // Seguridad extra: validar metadata en la suscripción (si existe)
+    const subMetaUserId = subscription?.metadata?.userId;
+    if (subMetaUserId && String(subMetaUserId) !== String(userId)) {
+      return res.status(403).json({
+        error: 'La suscripción no pertenece a este usuario',
+        subscriptionUserId: String(subMetaUserId)
+      });
+    }
+
+    // Para trial, puede ser trialing; si pagó, active.
+    const subStatus = subscription?.status;
+    if (!['active', 'trialing'].includes(subStatus)) {
+      return res.status(409).json({
+        error: 'Suscripción no activa',
+        status: subStatus
+      });
+    }
+
+    const interval = subscription?.items?.data?.[0]?.price?.recurring?.interval;
+    let finalPlan = null;
+    if (interval === 'month') finalPlan = 'mensual';
+    if (interval === 'year') finalPlan = 'anual';
+
+    if (!finalPlan) {
+      return res.status(500).json({
+        error: 'No se pudo determinar el plan desde la suscripción',
+        interval
+      });
+    }
+
+    const emailFromStripe =
+      session?.customer_details?.email ||
+      session?.customer_email ||
+      session?.metadata?.email ||
+      undefined;
+
+    const normalizedEmail = normalizeEmailToGmail(emailFromStripe || '');
+    const expirationDate = subscription?.current_period_end
+      ? new Date(subscription.current_period_end * 1000)
+      : undefined;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { userId },
+      {
+        plan: finalPlan,
+        email: normalizedEmail || emailFromStripe || userId,
+        stripeId: session.customer || undefined,
+        expirationDate: expirationDate || undefined,
+        $setOnInsert: { examHistory: [], failedQuestions: [] }
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.json({
+      activated: true,
+      plan: updatedUser.plan,
+      userId: updatedUser.userId,
+      expirationDate: updatedUser.expirationDate
+    });
+  } catch (error) {
+    console.error('Error confirmando checkout:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint para crear link de billing portal dinámico
+app.post('/create-billing-portal', async (req, res) => {
+  const { userId, email } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId es obligatorio' });
+  }
+
+  try {
+    // Buscar el usuario en la base de datos
+    let user = await User.findOne({ userId });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Normalizar email a gmail
+    const userEmail = email || user.email;
+    const normalizedEmail = normalizeEmailToGmail(userEmail);
+    
+    // Buscar el customer de Stripe por email o stripeId
+    let customerId = user.stripeId;
+    
+    if (!customerId) {
+      // Buscar customer en Stripe por email
+      const customers = await stripe.customers.list({
+        email: normalizedEmail,
+        limit: 1
+      });
+      
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        // Guardar el stripeId en el usuario
+        user.stripeId = customerId;
+        await user.save();
+      } else {
+        return res.status(404).json({ error: 'No se encontró un cliente de Stripe asociado. Por favor, realiza un pago primero.' });
+      }
+    }
+
+    // Crear sesión del billing portal
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${FRONTEND_URL}/dashboard`,
+    });
+
+    res.json({ url: portalSession.url });
+  } catch (error) {
+    console.error('Error al crear sesión de billing portal:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -3067,7 +3307,7 @@ app.post('/stripe-webhook', async (req, res) => {
         const fallbackUserId = userIdFromMeta || session.client_reference_id || (session.customer && String(session.customer)) || undefined;
         const userId = fallbackUserId;
         const plan = planFromMeta;
-        const email = fallbackEmail;
+        const email = normalizeEmailToGmail(fallbackEmail);
         const userName = nameFromCustomField || nameFromMeta || userId;
         
         console.log(`💳 STRIPE WEBHOOK: Datos completos recibidos:`, {
@@ -3147,7 +3387,7 @@ app.post('/stripe-webhook', async (req, res) => {
         const webhookData = {
           email: email || effectiveUserId,
           nombre: userName || effectiveUserId, // Usar nombre real si está disponible
-          plan: plan,
+          plan: finalPlan,
           userId: effectiveUserId,
           stripeId: session.customer || undefined,
           fechaRegistro: new Date().toISOString(),
