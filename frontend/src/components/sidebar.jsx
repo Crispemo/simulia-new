@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import TicketModal from './TicketModal'
+import { API_URL } from '../config'
+import axios from 'axios'
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: PanelLeft, path: '/dashboard' },
@@ -56,8 +58,31 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
     setIsMobileOpen(false)
   }
 
-  const handleSettingsClick = () => {
-    window.location.href = "https://billing.stripe.com/p/login/28o3fr7yb4GQ5sk288"
+  const handleSettingsClick = async () => {
+    if (!currentUser || !userId) {
+      console.error('Usuario no autenticado');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/create-billing-portal`, {
+        userId: userId,
+        email: currentUser.email
+      });
+
+      if (response.data && response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        console.error('No se recibió URL del billing portal');
+      }
+    } catch (error) {
+      console.error('Error al crear sesión de billing portal:', error);
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        alert('Error al acceder al portal de facturación. Por favor, intenta de nuevo.');
+      }
+    }
   }
 
   const handleCommunityClick = () => {

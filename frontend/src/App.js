@@ -21,6 +21,8 @@ import TerminosCondiciones from './pages/TerminosCondiciones';
 import Blog from './components/Blog';
 import BlogPost from './components/BlogPost';
 import ExamInProgress from './ExamInProgress';
+import SuccessPage from './Success';
+import CancelPage from './Cancel';
 import CookieConsent from "react-cookie-consent";
 import Scales from './scales';
 import './scales.css';
@@ -53,6 +55,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/success" element={<SuccessPage />} />
+      <Route path="/cancel" element={<CancelPage />} />
       <Route path="/dashboard" element={<Dashboard toggleDarkMode={toggleDarkMode} isDarkMode={isDarkMode} currentUser={currentUser}/>} />
       <Route path="/review/:examId" element={<ReviewExam userId={currentUser?.uid}/>} />
       <Route path="/exam-in-progress/:examId" element={<ExamInProgress toggleDarkMode={toggleDarkMode} isDarkMode={isDarkMode} userId={currentUser?.uid}/>} />

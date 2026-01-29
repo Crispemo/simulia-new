@@ -620,111 +620,97 @@ app.post('/users/check-subscription', async (req, res) => {
       await user.save();
     }
 
-    // 1) Preferir verificación en Stripe si existe stripeId (Customer ID cus_...)
-    // Esto evita depender del email (antes el usuario podía escribir el email que quisiera).
-    if (user.stripeId) {
-      try {
-        const subs = await stripe.subscriptions.list({
-          customer: user.stripeId,
-          status: 'all',
-          limit: 5,
-        });
+    // Verificación siempre vía Stripe (stripeId). Sin stripeId no se considera suscripción válida.
+    if (!user.stripeId) {
+      console.log(`Usuario ${user.userId} sin stripeId: suscripción no válida (solo se acepta verificación Stripe).`);
+      return res.json({
+        hasSubscription: false,
+        subscriptionActive: false,
+        plan: user.plan || null,
+        expirationDate: user.expirationDate || null,
+        isExpired: true,
+        source: 'stripe',
+        user: { userId: user.userId, email: user.email, userName: user.userName },
+      });
+    }
 
-        const candidates = Array.isArray(subs?.data) ? subs.data : [];
-        const activeSub = candidates.find(s => ['active', 'trialing'].includes(s.status));
+    try {
+      const subs = await stripe.subscriptions.list({
+        customer: user.stripeId,
+        status: 'all',
+        limit: 5,
+      });
 
-        if (activeSub) {
-          const interval = activeSub?.items?.data?.[0]?.price?.recurring?.interval;
-          let planFromStripe = null;
-          if (interval === 'month') planFromStripe = 'mensual';
-          if (interval === 'year') planFromStripe = 'anual';
+      const candidates = Array.isArray(subs?.data) ? subs.data : [];
+      const activeSub = candidates.find(s => ['active', 'trialing'].includes(s.status));
 
-          const expirationDate = activeSub?.current_period_end
-            ? new Date(activeSub.current_period_end * 1000)
-            : null;
+      if (activeSub) {
+        const interval = activeSub?.items?.data?.[0]?.price?.recurring?.interval;
+        let planFromStripe = null;
+        if (interval === 'month') planFromStripe = 'mensual';
+        if (interval === 'year') planFromStripe = 'anual';
 
-          // Sincronizar en Mongo (solo si pudimos deducir plan)
-          if (planFromStripe) {
-            user.plan = planFromStripe;
-          }
-          if (expirationDate) {
-            user.expirationDate = expirationDate;
-          }
-          // Mantener email normalizado (si existe)
-          if (user.email) user.email = String(user.email).toLowerCase();
-          await user.save();
+        const expirationDate = activeSub?.current_period_end
+          ? new Date(activeSub.current_period_end * 1000)
+          : null;
 
-          console.log(`Usuario ${user.userId} suscripción ACTIVA via Stripe`, {
-            stripeId: user.stripeId,
-            subscriptionId: activeSub.id,
-            status: activeSub.status,
-            plan: user.plan,
-            expirationDate: user.expirationDate || null,
-          });
+        if (planFromStripe) user.plan = planFromStripe;
+        if (expirationDate) user.expirationDate = expirationDate;
+        if (user.email) user.email = String(user.email).toLowerCase();
+        await user.save();
 
-          return res.json({
-            hasSubscription: true,
-            subscriptionActive: true,
-            plan: user.plan,
-            expirationDate: user.expirationDate || null,
-            isExpired: false,
-            source: 'stripe',
-            user: { userId: user.userId, email: user.email, userName: user.userName },
-          });
-        }
-
-        // Si no hay suscripción activa/trialing en Stripe, considerarlo NO activo
-        // (sin borrar plan a ciegas; solo limpiar si ya está vencido o si quieres forzar, aquí lo dejamos conservador)
-        const now = new Date();
-        const hasExpiration = !!user.expirationDate;
-        const isExpired = hasExpiration ? user.expirationDate <= now : false;
-
-        console.log(`Usuario ${user.userId} sin suscripción activa en Stripe`, {
-          stripeId: user.stripeId,
-          subscriptionsFound: candidates.length,
-          localPlan: user.plan || null,
-          localExpirationDate: user.expirationDate || null,
-          isExpired,
+        console.log(`Usuario ${user.userId} suscripción ACTIVA via Stripe`, {
+          subscriptionId: activeSub.id,
+          status: activeSub.status,
+          plan: user.plan,
+          expirationDate: user.expirationDate || null,
         });
 
         return res.json({
-          hasSubscription: false,
-          subscriptionActive: false,
+          hasSubscription: true,
+          subscriptionActive: true,
           plan: user.plan,
           expirationDate: user.expirationDate || null,
-          isExpired,
+          isExpired: false,
           source: 'stripe',
           user: { userId: user.userId, email: user.email, userName: user.userName },
         });
-      } catch (stripeErr) {
-        console.error('Error verificando suscripción en Stripe (fallback a Mongo):', stripeErr.message);
-        // Si Stripe falla, seguimos con la verificación local para no bloquear al usuario por un fallo temporal.
       }
+
+      const now = new Date();
+      const hasExpiration = !!user.expirationDate;
+      const isExpired = hasExpiration ? user.expirationDate <= now : false;
+
+      console.log(`Usuario ${user.userId} sin suscripción activa en Stripe`, {
+        subscriptionsFound: candidates.length,
+        localPlan: user.plan || null,
+        localExpirationDate: user.expirationDate || null,
+        isExpired,
+      });
+
+      return res.json({
+        hasSubscription: false,
+        subscriptionActive: false,
+        plan: user.plan,
+        expirationDate: user.expirationDate || null,
+        isExpired,
+        source: 'stripe',
+        user: { userId: user.userId, email: user.email, userName: user.userName },
+      });
+    } catch (stripeErr) {
+      console.error('Error verificando suscripción en Stripe:', stripeErr.message);
+      // No confiar en Mongo si Stripe falla: la verificación es siempre con Stripe.
+      return res.json({
+        hasSubscription: false,
+        subscriptionActive: false,
+        plan: user.plan,
+        expirationDate: user.expirationDate || null,
+        isExpired: true,
+        source: 'stripe',
+        subscriptionUnverifiable: true,
+        user: { userId: user.userId, email: user.email, userName: user.userName },
+      });
     }
-
-    // 2) Fallback: verificación local (Mongo)
-    const activePlans = new Set(['mensual', 'anual']);
-    const hasValidPlan = !!(user.plan && activePlans.has(user.plan));
-    const now = new Date();
-    const hasExpiration = !!user.expirationDate;
-    const isExpired = hasExpiration ? user.expirationDate <= now : false;
-    // Activa si tiene plan válido y (no hay expiración registrada o no está expirado)
-    const hasSubscription = Boolean(hasValidPlan && (!hasExpiration || !isExpired));
-
-    console.log(`Usuario ${user.userId} tiene suscripción (Mongo): ${hasSubscription}, plan: ${user.plan || 'null'}`, {
-      expirationDate: user.expirationDate || null,
-      isExpired,
-    });
-    
-    res.json({ 
-      hasSubscription,
-      subscriptionActive: hasSubscription,
-      plan: user.plan,
-      expirationDate: user.expirationDate || null,
-      isExpired,
-      source: 'mongo',
-      user: { userId: user.userId, email: user.email, userName: user.userName }
-    });
   } catch (error) {
     console.error('Error al verificar suscripción:', error);
     res.status(500).json({ error: 'Error interno del servidor.' });

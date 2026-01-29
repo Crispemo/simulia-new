@@ -4,10 +4,9 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  height: auto;
+height: auto;
   padding: 20px 0;
   box-sizing: border-box;
-  gap: 10px;
 }
 
 /* Tema claro por defecto */
@@ -28,7 +27,6 @@
 
 .questionBox {
   padding: 24px;
-  padding-bottom: 24px;
   margin-bottom: 20px;
   width: 100%;
   flex-grow: 1;
@@ -42,21 +40,6 @@
   position: relative;
 }
 
-/* Asegurar que los botones queden al final sin flotar */
-.questionBox > .questionContent {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.questionBox > .bottomNav {
-  flex-shrink: 0;
-}
-
-.questionBox > .examActionButtons {
-  flex-shrink: 0;
-}
-
-
 /* Navegación inferior anterior/siguiente */
 .bottomNav {
   display: flex;
@@ -64,7 +47,6 @@
   align-items: center;
   gap: 10px;
   margin-top: 8px;
-  flex-shrink: 0;
 }
 
 .navBtn {
@@ -115,7 +97,7 @@
 .questionNumberBadge {
   position: absolute;
   top: 24px;
-  left: 24pxd;
+  left: 24px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -193,15 +175,11 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-bottom: 0;
+  margin-bottom: 20px;
   flex-grow: 1;
-  flex-shrink: 1;
   overflow: visible;
   min-height: 0;
-  padding-bottom: 0;
 }
-
-/* En responsive, los botones ahora están fuera del scroll */
 
 .questionContent.withImage {
   flex-direction: row;
@@ -242,8 +220,7 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin-bottom: 20px;
   overflow-y: visible;
   max-height: none;
   min-height: 100px;
@@ -530,11 +507,8 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-top: 20px;
   width: 100%;
-  flex-shrink: 0;
-  padding: 10px 15px;
 }
 
 .customImpugnarBtn, .customDoubtBtn {
@@ -817,7 +791,10 @@
   
   .questionBox {
     padding: 15px;
-    padding-bottom: 15px;
+    /* En móvil evitamos scroll interno: así los botones no tapan las opciones */
+    max-height: none;
+    overflow-y: visible;
+    min-height: auto;
   }
 
   .questionNumberBadge {
@@ -836,8 +813,6 @@
   
   .optionsContainer {
     gap: 10px;
-    margin-bottom: 0;
-    padding-bottom: 0;
   }
   
   .optionsContainer button {
@@ -892,16 +867,6 @@
     flex-wrap: wrap;
     width: 100%;
     gap: 8px;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding: 10px 15px;
-    background-color: #ffffff;
-    border-top: 1px solid #e0e4e8;
-  }
-  
-  .darkTheme .examActionButtons {
-    background-color: transparent;
-    border-top-color: #3a3a3a;
   }
   
   .customImpugnarBtn, .customDoubtBtn {
@@ -944,7 +909,6 @@
   
   .questionBox {
     padding: 12px;
-    padding-bottom: 12px;
   }
 
   .questionNumberBadge {
@@ -964,8 +928,6 @@
   
   .optionsContainer {
     gap: 8px;
-    margin-bottom: 0;
-    padding-bottom: 0;
   }
   
   .optionsContainer button {
@@ -1034,16 +996,6 @@
 
   .examActionButtons {
     gap: 6px;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding: 10px 12px;
-    background-color: #ffffff;
-    border-top: 1px solid #e0e4e8;
-  }
-  
-  .darkTheme .examActionButtons {
-    background-color: transparent;
-    border-top-color: #3a3a3a;
   }
   
   .customImpugnarBtn, .customDoubtBtn {
@@ -1069,7 +1021,6 @@
 @media (max-width: 400px) {
   .questionBox {
     padding: 10px;
-    padding-bottom: 10px;
   }
 
   .questionNumberBadge {
