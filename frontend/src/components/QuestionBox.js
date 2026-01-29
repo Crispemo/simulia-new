@@ -375,35 +375,28 @@ const QuestionBox = ({
             </button>
           </div>
         )}
-
-        {/* Botones de acción */}
-        <div className={styles.examActionButtons}>
-          {/* Ocultar botones de acción en modo revisión o mostrar versión adaptada */}
-          {!isReviewMode ? (
-            <>
-              <button
-                id="impugnar-button"
-                onClick={() => onImpugnar(currentQuestion)}
-                className={styles.customImpugnarBtn}
-              >
-                Impugnar
-              </button>
-
-              <button
-                id="doubt-button"
-                className={`${styles.customDoubtBtn} ${markedAsDoubt[currentQuestion] ? styles.doubtMarked : ''}`}
-                onClick={handleToggleDoubt}
-              >
-                {markedAsDoubt[currentQuestion] ? 'Dudosa' : 'Marcar duda'}
-              </button>
-            </>
-          ) : (
-            <div className={styles.reviewInfo}>
-   
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Botones de acción FUERA del contenedor con scroll */}
+      {!isReviewMode && (
+        <div className={styles.examActionButtons}>
+          <button
+            id="impugnar-button"
+            onClick={() => onImpugnar(currentQuestion)}
+            className={styles.customImpugnarBtn}
+          >
+            Impugnar
+          </button>
+
+          <button
+            id="doubt-button"
+            className={`${styles.customDoubtBtn} ${markedAsDoubt[currentQuestion] ? styles.doubtMarked : ''}`}
+            onClick={handleToggleDoubt}
+          >
+            {markedAsDoubt[currentQuestion] ? 'Dudosa' : 'Marcar duda'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
