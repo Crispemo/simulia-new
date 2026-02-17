@@ -468,21 +468,20 @@ function HomePage() {
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8 text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
-              Domina el EIR con simulacros que replican el examen y se adaptan a ti
+            Entrena el EIR como si ya estuvieras dentro del examen.
             </h1>
             <p className="text-lg sm:text-xl text-foreground leading-relaxed">
-              Entrena como si ya estuvieras en el examen. Elige entre 6 formas de practicar. Todo desde cualquier
-              dispositivo, sin límites.
+            Más de 15.000 preguntas para que puedas hacer hasta 70 simulacros distintos antes del examen. Sin repetir. Sin improvisar..
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
-                { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real" },
-                { icon: "🔄", title: "Repetición errores", desc: "Aprende de tus fallos" },
-                { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión" },
-                { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica" },
-                { icon: "✏️", title: "Examen personalizado", desc: "Adapta el contenido a ti" },
-                { icon: "📋", title: "Protocolos clínicos", desc: "Casos prácticos actualizados" },
+                { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
+                { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
+                { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
+                { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
+                { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
+                { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -531,19 +530,19 @@ function HomePage() {
         <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">+7.000</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">+15.000</div>
               <div className="text-base text-foreground font-medium">preguntas EIR</div>
-              <div className="text-sm text-muted-foreground">Clasificadas por asignaturas y años de examen.</div>
+              <div className="text-sm text-muted-foreground">Clasificadas por asignaturas y años de examen</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">6</div>
-              <div className="text-base text-foreground font-medium">modos de práctica</div>
-              <div className="text-sm text-muted-foreground">Oficial, errores, contrarreloj, quiz, personalizado y protocolos.</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">+70</div>
+              <div className="text-base text-foreground font-medium">simulacros distintos</div>
+              <div className="text-sm text-muted-foreground">Podrás practicar sin repetir preguntas</div>
             </div>
             <div className="space-y-2">
               <div className="text-4xl lg:text-5xl font-bold text-primary">∞</div>
               <div className="text-base text-foreground font-medium">repeticiones de tus fallos</div>
-              <div className="text-sm text-muted-foreground">Practica tus errores sin límite gracias al banco de errores.</div>
+              <div className="text-sm text-muted-foreground">Practica tus errores sin límite gracias al banco de errores</div>
             </div>
           </div>
         </div>
