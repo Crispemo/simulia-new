@@ -471,8 +471,7 @@ function HomePage() {
             Entrena el EIR como si ya estuvieras dentro del examen.
             </h1>
             <p className="text-lg sm:text-xl text-foreground leading-relaxed">
-            Más de 15.000 preguntas para que puedas hacer hasta 70 simulacros distintos antes del examen. Sin repetir. Sin improvisar..
-            </p>
+            Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
