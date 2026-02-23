@@ -618,7 +618,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   };
 
   function calculateTimeLeft() {
-    const targetDate = new Date('2026-01-24T00:00:00');
+    const targetDate = new Date('2027-01-23T00:00:00');
     const now = new Date();
     const difference = targetDate - now;
 
