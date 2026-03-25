@@ -17,6 +17,7 @@ function HomePage() {
   const [preguntas, setPreguntas] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showHeroVideo, setShowHeroVideo] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -77,6 +78,9 @@ function HomePage() {
       setShowPopup(true);
     }
   };
+
+  const HERO_VIDEO_YT_ID = '4x5YkhD5TJU';
+  const HERO_VIDEO_THUMB_URL = `https://img.youtube.com/vi/${HERO_VIDEO_YT_ID}/hqdefault.jpg`;
   
   const handleLoginClick = async () => {
     try {
@@ -493,69 +497,117 @@ function HomePage() {
       </section>
 
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
-        <div className="max-w-5xl mx-auto space-y-8 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
-            Entrena el EIR como si ya estuvieras dentro del examen.
-            </h1>
-            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
-              <span className="text-lg">⏳</span>
-              <span>
-                Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
-              </span>
-            </div>
-            <p className="text-lg sm:text-xl text-foreground leading-relaxed">
-            Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.            </p>
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div className="space-y-6 text-center lg:text-left">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
+                Entrena el EIR como si ya estuvieras dentro del examen.
+              </h1>
+              <div className="inline-flex items-center justify-center lg:justify-start gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
+                <span className="text-lg">⏳</span>
+                <span>
+                  Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
+                </span>
+              </div>
+              <p className="text-lg sm:text-xl text-foreground leading-relaxed">
+                Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
+              </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {[
-                { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
-                { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
-                { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
-                { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
-                { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
-                { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
-                  title={item.desc}
-                >
-                  <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                  <span className="text-sm font-semibold text-secondary">{item.title}</span>
-                  <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
-                    {item.desc}
-                  </span>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
+                <div className="flex-1 sm:flex-initial max-w-md w-full">
+                  <button
+                    className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle"
+                    onClick={() => {
+                      const pricingSection = document.querySelector('#planes');
+                      pricingSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    aria-label="Comenzar prueba gratuita"
+                  >
+                    Haz tu primer simulacro gratis
+                    <span className="text-xl">→</span>
+                  </button>
                 </div>
-              ))}
+                <div className="flex-1 sm:flex-initial max-w-md w-full flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => setShowDemoModal(true)}
+                    className="w-full border-2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all text-base"
+                    aria-label="Ver Simulia en acción"
+                  >
+                    Ver Simulia en acción
+                  </button>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Haz un mini simulacro de prueba antes de registrarte
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
-              <div className="flex-1 sm:flex-initial max-w-md w-full">
-                <button
-                  className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle"
-                  onClick={() => {
-                    const pricingSection = document.querySelector('#planes');
-                    pricingSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  aria-label="Comenzar prueba gratuita"
-                >
-                  Haz tu primer simulacro gratis
-                  <span className="text-xl">→</span>
-                </button>
-              </div>
-              <div className="flex-1 sm:flex-initial max-w-md w-full flex flex-col items-center gap-2">
-                <button
-                  onClick={() => setShowDemoModal(true)}
-                  className="w-full border-2 border-primary text-primary hover:bg-primary/5 px-8 py-4 rounded-full font-semibold shadow-md hover:shadow-lg transition-all text-base"
-                  aria-label="Ver Simulia en acción"
-                >
-                  Ver Simulia en acción
-                </button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Haz un mini simulacro de prueba antes de registrarte
-                </p>
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-md">
+                {!showHeroVideo ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowHeroVideo(true)}
+                    className="relative w-full overflow-hidden rounded-2xl border border-border bg-card shadow-md hover:shadow-lg transition-all"
+                    aria-label="Ver video de Simulia en acción"
+                  >
+                    <img
+                      src={HERO_VIDEO_THUMB_URL}
+                      alt="Video de Simulia"
+                      className="w-full h-[260px] object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center">
+                          <span className="text-2xl">▶</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold px-4 text-center">
+                          Ver Simulia en acción (sin sonido hasta click)
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="relative w-full overflow-hidden rounded-2xl border border-border bg-card shadow-md">
+                    <div className="w-full aspect-video relative">
+                      <iframe
+                        className="absolute inset-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${HERO_VIDEO_YT_ID}?autoplay=1&mute=1&rel=0`}
+                        title="Simulia - Video"
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {[
+              { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
+              { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
+              { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
+              { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
+              { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
+              { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
+                title={item.desc}
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                <span className="text-sm font-semibold text-secondary">{item.title}</span>
+                <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
+                  {item.desc}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -695,30 +747,24 @@ function HomePage() {
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-scroll">
               {[
-                { label: "Estadísticas que te orientan", text: "Detecta en qué fallas y prioriza lo que más te frena. Más claridad, menos dudas.", image: "/estadisticas-eir.png" },
-                { label: "Analiza tus errores", text: "Revisa tus fallos y conviértelos en un plan de mejora concreto para la siguiente semana.", image: "/analisis-errores-eir.png" },
-                { label: "Práctica realista", text: "Entrena con simulacros con tiempo, imágenes y formato similar al examen EIR.", image: "/simulacro-condiciones-reales-eir.png" },
-                { label: "Exámenes sin repetición", text: "Practica con una ruta de estudio que evita el \"aprender de memoria\" y te obliga a dominar.", image: "/practica-ilimitada-eir.png" },
-                { label: "Protocolos clínicos útiles", text: "Accede a guías y protocolos en línea para reforzar justo donde aparecen preguntas.", image: "/examen-protocolos-eir.png" },
-                { label: "Dashboard completo", text: "Ten todo tu progreso a mano: exámenes, errores, rachas y decisiones de estudio.", image: "/Dashboard-EIR-Simulia.png" },
+                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
+                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
+                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
               ].concat([
-                { label: "Estadísticas que te orientan", text: "Detecta en qué fallas y prioriza lo que más te frena. Más claridad, menos dudas.", image: "/estadisticas-eir.png" },
-                { label: "Analiza tus errores", text: "Revisa tus fallos y conviértelos en un plan de mejora concreto para la siguiente semana.", image: "/analisis-errores-eir.png" },
-                { label: "Práctica realista", text: "Entrena con simulacros con tiempo, imágenes y formato similar al examen EIR.", image: "/simulacro-condiciones-reales-eir.png" },
-                { label: "Exámenes sin repetición", text: "Practica con una ruta de estudio que evita el \"aprender de memoria\" y te obliga a dominar.", image: "/practica-ilimitada-eir.png" },
-                { label: "Protocolos clínicos útiles", text: "Accede a guías y protocolos en línea para reforzar justo donde aparecen preguntas.", image: "/examen-protocolos-eir.png" },
-                { label: "Dashboard completo", text: "Ten todo tu progreso a mano: exámenes, errores, rachas y decisiones de estudio.", image: "/Dashboard-EIR-Simulia.png" },
+                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
+                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
+                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
               ]).map((testimonial, idx) => (
                 <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
                   <div className="p-6 space-y-4">
-                    <img
-                      src={testimonial.image}
-                      alt={testimonial.label}
-                      className="w-full h-28 object-cover rounded-lg border border-border"
-                      loading="lazy"
-                    />
                     <p className="text-muted-foreground italic leading-relaxed">"{testimonial.text}"</p>
-                    <p className="font-semibold text-secondary">{testimonial.label}</p>
+                    <p className="font-semibold text-secondary">{testimonial.name}</p>
                   </div>
                 </div>
               ))}
@@ -754,15 +800,15 @@ function HomePage() {
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Flexibilidad total, cancela cuando quieras</span>
+                <span className="text-secondary">Flexibilidad total: cancela cuando quieras</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">7 días gratis para probar</span>
+                <span className="text-secondary">7 días gratis para probar sin compromiso</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Acceso a simulacros y modos de práctica</span>
+                <span className="text-secondary">Simulacros y modos de práctica (con tiempo e imágenes)</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
@@ -770,16 +816,16 @@ function HomePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) - no incluida en mensual nueva desde hoy</span>
+                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) - no incluida en mensuales nuevas desde hoy</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Comunidad completa - no incluida en mensual nueva desde hoy</span>
+                <span className="text-secondary">Comunidad completa - no incluida en mensuales nuevas desde hoy</span>
               </li>
             </ul>
 
             <p className="text-xs text-muted-foreground mt-1">
-              Para suscripciones mensuales nuevas: Recursos y Comunidad quedan incluidos en el plan Anual.
+              Importante: si ya eres mensual, mantienes el acceso a Recursos y Comunidad. Para mensuales nuevas desde hoy, Recursos y Comunidad pasan a Anual.
             </p>
 
             <button
@@ -821,11 +867,11 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Biblioteca de Recursos (guías/plantillas)</span>
+                  <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) y materiales</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Comunidad completa</span>
+                  <span className="text-secondary">Comunidad completa (dudas, presentaciones y recursos)</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -833,7 +879,7 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica</span>
+                  <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica durante todo el año</span>
                 </li>
               </ul>
             </div>
