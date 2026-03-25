@@ -498,20 +498,45 @@ function HomePage() {
 
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <div className="space-y-6 text-center lg:text-left">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
-                Entrena el EIR como si ya estuvieras dentro del examen.
-              </h1>
-              <div className="inline-flex items-center justify-center lg:justify-start gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
-                <span className="text-lg">⏳</span>
-                <span>
-                  Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
-                </span>
+          <div className="space-y-6 text-center">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
+              Entrena el EIR como si ya estuvieras dentro del examen.
+            </h1>
+            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
+              <span className="text-lg">⏳</span>
+              <span>
+                Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
+              </span>
+            </div>
+            <p className="text-lg sm:text-xl text-foreground leading-relaxed">
+              Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-10 items-start">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {[
+                  { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
+                  { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
+                  { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
+                  { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
+                  { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
+                  { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
+                    title={item.desc}
+                  >
+                    <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                    <span className="text-sm font-semibold text-secondary">{item.title}</span>
+                    <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
+                      {item.desc}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <p className="text-lg sm:text-xl text-foreground leading-relaxed">
-                Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
-              </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                 <div className="flex-1 sm:flex-initial max-w-md w-full">
@@ -584,29 +609,6 @@ function HomePage() {
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {[
-              { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
-              { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
-              { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
-              { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
-              { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
-              { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
-                title={item.desc}
-              >
-                <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                <span className="text-sm font-semibold text-secondary">{item.title}</span>
-                <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
-                  {item.desc}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
