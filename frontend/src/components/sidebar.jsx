@@ -18,11 +18,13 @@ import {
   Users,
   AlertCircle,
   Heart,
+  Lock,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import TicketModal from './TicketModal'
 import { API_URL } from '../config'
 import axios from 'axios'
+import { toast } from 'react-hot-toast'
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: PanelLeft, path: '/dashboard' },
@@ -34,7 +36,17 @@ const menuItems = [
   { id: 'personalizado', label: 'Personalizado', icon: Flame, path: '/examenEleccion' },
 ]
 
-export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, toggleDarkMode, onTutorialClick, onResourcesClick, onSurveyClick }) {
+export default function Sidebar({
+  isCollapsed,
+  toggleCollapsed,
+  isDarkMode,
+  toggleDarkMode,
+  onTutorialClick,
+  onResourcesClick,
+  onSurveyClick,
+  isResourcesLocked = false,
+  isCommunityLocked = false,
+}) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
   const navigate = useNavigate()
@@ -50,6 +62,11 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
   }
 
   const handleResourcesClick = () => {
+    if (isResourcesLocked) {
+      toast.error('Recursos y Comunidad completos incluidos en el plan Anual.')
+      setIsMobileOpen(false)
+      return
+    }
     if (onResourcesClick) {
       onResourcesClick()
     } else {
@@ -86,6 +103,11 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
   }
 
   const handleCommunityClick = () => {
+    if (isCommunityLocked) {
+      toast.error('Comunidad bloqueada para suscripciones mensuales nuevas. Incluida en el plan Anual.')
+      setIsMobileOpen(false)
+      return
+    }
     window.open('https://t.me/+GqghWP8AchIzOGNk', '_blank', 'noopener,noreferrer')
     setIsMobileOpen(false)
   }
@@ -181,22 +203,28 @@ export default function Sidebar({ isCollapsed, toggleCollapsed, isDarkMode, togg
             )}
             <button
               onClick={handleResourcesClick}
+              disabled={isResourcesLocked}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
-                isCollapsed && 'justify-center'
+                isCollapsed && 'justify-center',
+                isResourcesLocked && 'opacity-50 cursor-not-allowed'
               )}
             >
               <FolderOpen className="h-5 w-5" />
+              {isResourcesLocked && <Lock className="h-4 w-4 text-destructive" />}
               {!isCollapsed && <span>Recursos</span>}
             </button>
             <button
               onClick={handleCommunityClick}
+              disabled={isCommunityLocked}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
-                isCollapsed && 'justify-center'
+                isCollapsed && 'justify-center',
+                isCommunityLocked && 'opacity-50 cursor-not-allowed'
               )}
             >
               <Users className="h-5 w-5" />
+              {isCommunityLocked && <Lock className="h-4 w-4 text-destructive" />}
               {!isCollapsed && <span>Comunidad</span>}
             </button>
             <button

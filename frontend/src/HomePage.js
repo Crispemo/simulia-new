@@ -141,6 +141,33 @@ function HomePage() {
     setTimeout(() => setShowPopup(false), 8000);
   };
 
+  function calculateTimeLeft() {
+    const targetDate = new Date('2027-01-23T00:00:00');
+    const now = new Date();
+    const difference = targetDate - now;
+
+    let timeLeft = {};
+    if (difference > 0) {
+      timeLeft = {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+      };
+    }
+    return timeLeft;
+  }
+
+  const [eirTimeLeft, setEirTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setEirTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const handlePlanSelection = async (plan, amount) => {
     try {
       // Verificar si el usuario está autenticado
@@ -470,6 +497,12 @@ function HomePage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
             Entrena el EIR como si ya estuvieras dentro del examen.
             </h1>
+            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
+              <span className="text-lg">⏳</span>
+              <span>
+                Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
+              </span>
+            </div>
             <p className="text-lg sm:text-xl text-foreground leading-relaxed">
             Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.            </p>
 
@@ -662,24 +695,30 @@ function HomePage() {
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-scroll">
               {[
-                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
-                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
-                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+                { label: "Estadísticas que te orientan", text: "Detecta en qué fallas y prioriza lo que más te frena. Más claridad, menos dudas.", image: "/estadisticas-eir.png" },
+                { label: "Analiza tus errores", text: "Revisa tus fallos y conviértelos en un plan de mejora concreto para la siguiente semana.", image: "/analisis-errores-eir.png" },
+                { label: "Práctica realista", text: "Entrena con simulacros con tiempo, imágenes y formato similar al examen EIR.", image: "/simulacro-condiciones-reales-eir.png" },
+                { label: "Exámenes sin repetición", text: "Practica con una ruta de estudio que evita el \"aprender de memoria\" y te obliga a dominar.", image: "/practica-ilimitada-eir.png" },
+                { label: "Protocolos clínicos útiles", text: "Accede a guías y protocolos en línea para reforzar justo donde aparecen preguntas.", image: "/examen-protocolos-eir.png" },
+                { label: "Dashboard completo", text: "Ten todo tu progreso a mano: exámenes, errores, rachas y decisiones de estudio.", image: "/Dashboard-EIR-Simulia.png" },
               ].concat([
-                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
-                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
-                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+                { label: "Estadísticas que te orientan", text: "Detecta en qué fallas y prioriza lo que más te frena. Más claridad, menos dudas.", image: "/estadisticas-eir.png" },
+                { label: "Analiza tus errores", text: "Revisa tus fallos y conviértelos en un plan de mejora concreto para la siguiente semana.", image: "/analisis-errores-eir.png" },
+                { label: "Práctica realista", text: "Entrena con simulacros con tiempo, imágenes y formato similar al examen EIR.", image: "/simulacro-condiciones-reales-eir.png" },
+                { label: "Exámenes sin repetición", text: "Practica con una ruta de estudio que evita el \"aprender de memoria\" y te obliga a dominar.", image: "/practica-ilimitada-eir.png" },
+                { label: "Protocolos clínicos útiles", text: "Accede a guías y protocolos en línea para reforzar justo donde aparecen preguntas.", image: "/examen-protocolos-eir.png" },
+                { label: "Dashboard completo", text: "Ten todo tu progreso a mano: exámenes, errores, rachas y decisiones de estudio.", image: "/Dashboard-EIR-Simulia.png" },
               ]).map((testimonial, idx) => (
                 <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
                   <div className="p-6 space-y-4">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.label}
+                      className="w-full h-28 object-cover rounded-lg border border-border"
+                      loading="lazy"
+                    />
                     <p className="text-muted-foreground italic leading-relaxed">"{testimonial.text}"</p>
-                    <p className="font-semibold text-secondary">{testimonial.name}</p>
+                    <p className="font-semibold text-secondary">{testimonial.label}</p>
                   </div>
                 </div>
               ))}
@@ -723,13 +762,25 @@ function HomePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Acceso completo a todas las funciones</span>
+                <span className="text-secondary">Acceso a simulacros y modos de práctica</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Actualizaciones y nuevas preguntas incluidas</span>
+                <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-destructive text-xl mt-0.5">✗</span>
+                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) - no incluida en mensual nueva desde hoy</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-destructive text-xl mt-0.5">✗</span>
+                <span className="text-secondary">Comunidad completa - no incluida en mensual nueva desde hoy</span>
               </li>
             </ul>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Para suscripciones mensuales nuevas: Recursos y Comunidad quedan incluidos en el plan Anual.
+            </p>
 
             <button
               onClick={() => handlePlanSelection('mensual', 1199)}
@@ -770,11 +821,19 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Biblioteca de Recursos (guías/plantillas)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Comunidad completa</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
                   <span className="text-secondary">Ahorra 84 € al año (vs 11,99 € × 12)</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Actualizaciones y nuevas preguntas incluidas</span>
+                  <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica</span>
                 </li>
               </ul>
             </div>

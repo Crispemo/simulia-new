@@ -55,6 +55,10 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [showFlashcardModal, setShowFlashcardModal] = useState(false);
   const [showDeleteExamModal, setShowDeleteExamModal] = useState(false);
   const [examToDelete, setExamToDelete] = useState(null);
+  // Política de acceso: bloquea Recursos y/o Comunidad para nuevas altas mensuales.
+  // Por defecto mantenemos "sin bloqueo" hasta confirmar con backend.
+  const [resourcesLocked, setResourcesLocked] = useState(false);
+  const [communityLocked, setCommunityLocked] = useState(false);
   const [hasErrorsAvailable, setHasErrorsAvailable] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -67,6 +71,43 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const sidebarRef = useRef(null);
   const { currentUser: authUser, logout } = useAuth();
   const userId = currentUser?.uid || authUser?.uid;
+
+  // Obtener flags de acceso desde backend (sin romper el comportamiento actual si el backend
+  // aún no devolviera estos campos).
+  useEffect(() => {
+    const fetchSubscriptionPolicy = async () => {
+      if (!userId || !authUser?.email) return;
+      try {
+        const response = await fetch(`${API_URL}/users/check-subscription`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId,
+            email: authUser.email,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const resourcesAllowed = data?.resourcesAccessAllowed ?? true;
+        const communityAllowed = data?.communityAccessAllowed ?? true;
+        setResourcesLocked(resourcesAllowed === false);
+        setCommunityLocked(communityAllowed === false);
+      } catch (err) {
+        console.error('Error al cargar política de acceso:', err);
+        // Stand-by: si falla, no bloqueamos por seguridad.
+        setResourcesLocked(false);
+        setCommunityLocked(false);
+      }
+    };
+
+    fetchSubscriptionPolicy();
+  }, [userId, authUser?.email]);
+
   const [errorsBySubject, setErrorsBySubject] = useState([]);
   const [unansweredQuestions, setUnansweredQuestions] = useState([]);
   // Estado para guardar datos de preguntas sin responder
@@ -2357,7 +2398,12 @@ const handleErroresClick = () => {
           isDarkMode={isDarkMode}
           toggleDarkMode={handleToggleDarkMode}
           onTutorialClick={openTutorialModal}
-          onResourcesClick={() => setShowResourcesModal(true)}
+          isResourcesLocked={resourcesLocked}
+          isCommunityLocked={communityLocked}
+          onResourcesClick={() => {
+            if (resourcesLocked) return;
+            setShowResourcesModal(true);
+          }}
           onSurveyClick={() => setShowSurveyModal(true)}
         />
         

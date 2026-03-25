@@ -620,6 +620,13 @@ app.post('/users/check-subscription', async (req, res) => {
       await user.save();
     }
 
+    // Política de acceso (stand-by para revertir).
+    // - true: nuevas suscripciones mensuales (desde hoy) tendrán bloqueado Recursos y Comunidad.
+    // - false: se mantiene el comportamiento actual para mensual (sin bloqueos).
+    const PLAN_GATING_TRIAL_ENABLED = true; // Cambia a false para revertir rápidamente.
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
     // Verificación siempre vía Stripe (stripeId). Sin stripeId no se considera suscripción válida.
     if (!user.stripeId) {
       console.log(`Usuario ${user.userId} sin stripeId: suscripción no válida (solo se acepta verificación Stripe).`);
@@ -630,6 +637,8 @@ app.post('/users/check-subscription', async (req, res) => {
         expirationDate: user.expirationDate || null,
         isExpired: true,
         source: 'stripe',
+        resourcesAccessAllowed: false,
+        communityAccessAllowed: false,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     }
@@ -659,6 +668,19 @@ app.post('/users/check-subscription', async (req, res) => {
         if (user.email) user.email = String(user.email).toLowerCase();
         await user.save();
 
+        const planNow = user.plan;
+        const isAnnual = planNow === 'anual';
+        const isMonthly = planNow === 'mensual';
+        const isNewMonthlySinceToday =
+          PLAN_GATING_TRIAL_ENABLED &&
+          isMonthly &&
+          user.createdAt &&
+          user.createdAt >= todayStart;
+
+        // Mensual legacy: acceso permitido.
+        // Mensual new (desde hoy): Recursos + Comunidad bloqueados.
+        const accessAllowedForPremiumSections = isAnnual || !isNewMonthlySinceToday;
+
         console.log(`Usuario ${user.userId} suscripción ACTIVA via Stripe`, {
           subscriptionId: activeSub.id,
           status: activeSub.status,
@@ -673,6 +695,8 @@ app.post('/users/check-subscription', async (req, res) => {
           expirationDate: user.expirationDate || null,
           isExpired: false,
           source: 'stripe',
+          resourcesAccessAllowed: accessAllowedForPremiumSections,
+          communityAccessAllowed: accessAllowedForPremiumSections,
           user: { userId: user.userId, email: user.email, userName: user.userName },
         });
       }
@@ -695,6 +719,8 @@ app.post('/users/check-subscription', async (req, res) => {
         expirationDate: user.expirationDate || null,
         isExpired,
         source: 'stripe',
+        resourcesAccessAllowed: false,
+        communityAccessAllowed: false,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     } catch (stripeErr) {
@@ -708,6 +734,8 @@ app.post('/users/check-subscription', async (req, res) => {
         isExpired: true,
         source: 'stripe',
         subscriptionUnverifiable: true,
+        resourcesAccessAllowed: false,
+        communityAccessAllowed: false,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     }
