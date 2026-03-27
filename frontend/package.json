@@ -44,6 +44,7 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
+    "bulid": "npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
