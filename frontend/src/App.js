@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import HomePage from './HomePage';
 import Dashboard from './Dashboard';
 import CheckoutForm from './CheckoutForm';
@@ -55,6 +55,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/escala" element={<Navigate to="/encuesta" replace />} />
+      <Route path="/encuesta" element={<Navigate to="/dashboard?survey=1" replace />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/cancel" element={<CancelPage />} />
       <Route path="/dashboard" element={<Dashboard toggleDarkMode={toggleDarkMode} isDarkMode={isDarkMode} currentUser={currentUser}/>} />
@@ -73,6 +75,7 @@ function AppRoutes() {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:postId" element={<BlogPost />} />
       <Route path="/scales" element={<Scales userId={currentUser?.id} />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
