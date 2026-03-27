@@ -1,0 +1,52 @@
+{
+  "rewrites": [
+    {
+      "source": "/encuesta",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/escala",
+      "destination": "/api/gone"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://www.simulia.es/",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "simulia.es"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://www.simulia.es/$1",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "simulia.es"
+        }
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Forwarded-Host",
+          "value": "www.simulia.es"
+        }
+      ]
+    }
+  ]
+}
+

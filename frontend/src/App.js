@@ -55,8 +55,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/escala" element={<Navigate to="/encuesta" replace />} />
-      <Route path="/encuesta" element={<Navigate to="/dashboard?survey=1" replace />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/cancel" element={<CancelPage />} />
       <Route path="/dashboard" element={<Dashboard toggleDarkMode={toggleDarkMode} isDarkMode={isDarkMode} currentUser={currentUser}/>} />
