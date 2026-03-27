@@ -11,16 +11,6 @@
   ],
   "redirects": [
     {
-      "source": "/encuesta",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/escala",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/",
       "destination": "https://www.simulia.es/",
       "permanent": true,
