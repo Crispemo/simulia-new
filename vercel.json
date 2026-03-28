@@ -3,17 +3,13 @@
   "outputDirectory": "build",
   "installCommand": "npm install",
   "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "redirects": [
-    {
-      "source": "/encuesta",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/escala",
-      "destination": "/",
-      "permanent": false
-    },
     {
       "source": "/",
       "destination": "https://www.simulia.es/",
@@ -35,12 +31,6 @@
           "value": "simulia.es"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
     }
   ],
   "headers": [

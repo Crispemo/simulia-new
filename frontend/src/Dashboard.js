@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GoogleLogin, googleLogout, GoogleOAuthProvider } from '@react-oauth/google'; 
 import { FaMoon, FaSun, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'; 
 import './Dashboard.css';
@@ -41,7 +41,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   // Feature flags
   const RECURRENCE_ENABLED = true; // Activa la funcionalidad de racha/recurrencia
   const navigate = useNavigate();
-  const location = useLocation();
   const [examData, setExamData] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -72,14 +71,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const sidebarRef = useRef(null);
   const { currentUser: authUser, logout } = useAuth();
   const userId = currentUser?.uid || authUser?.uid;
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('survey') === '1') {
-      setShowSurveyModal(true);
-      navigate('/dashboard', { replace: true });
-    }
-  }, [location.search, navigate]);
 
   // Obtener flags de acceso desde backend (sin romper el comportamiento actual si el backend
   // aún no devolviera estos campos).

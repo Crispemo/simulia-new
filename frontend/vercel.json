@@ -1,14 +1,6 @@
 {
   "rewrites": [
     {
-      "source": "/encuesta",
-      "destination": "/api/gone"
-    },
-    {
-      "source": "/escala",
-      "destination": "/api/gone"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
