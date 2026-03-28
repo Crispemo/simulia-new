@@ -80,7 +80,7 @@ function HomePage() {
     }
   };
 
-  const HERO_VIDEO_YT_ID = '4x5YkhD5TJU';
+  const HERO_VIDEO_YT_ID = 'SLUNZ_rzmNo';
   const HERO_VIDEO_THUMB_URL = `https://img.youtube.com/vi/${HERO_VIDEO_YT_ID}/hqdefault.jpg`;
 
   useEffect(() => {
