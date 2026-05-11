@@ -1021,6 +1021,68 @@ app.post('/random-questions', async (req, res) => {
       }
     }
 
+    // Preguntas de escalas desde la colección preguntas_escalas
+    if (examType === 'escalas') {
+      try {
+        if (!mongoose.connection.readyState) {
+          return res.status(500).json({ error: 'Error de conexión a la base de datos' });
+        }
+
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        const collectionNames = collections.map(c => c.name);
+
+        if (!collectionNames.includes('preguntas_escalas')) {
+          return res.status(404).json({
+            error: 'Colección no encontrada',
+            message: 'La colección preguntas_escalas no existe en la base de datos',
+            availableCollections: collectionNames
+          });
+        }
+
+        const requestedCount = parseInt(req.body.count || numPreguntas || 30);
+
+        const totalCount = await mongoose.connection.db
+          .collection('preguntas_escalas')
+          .countDocuments();
+
+        if (totalCount === 0) {
+          return res.status(404).json({ error: 'La colección preguntas_escalas está vacía' });
+        }
+
+        const preguntasEscalas = await mongoose.connection.db
+          .collection('preguntas_escalas')
+          .aggregate([{ $sample: { size: Math.min(requestedCount, totalCount) } }])
+          .toArray();
+
+        if (preguntasEscalas.length === 0) {
+          return res.status(404).json({ error: 'No se encontraron preguntas de escalas' });
+        }
+
+        const processedQuestions = preguntasEscalas.map(q => ({
+          _id: q._id,
+          question: q.question || '',
+          option_1: q.option_1 || '',
+          option_2: q.option_2 || '',
+          option_3: q.option_3 || '',
+          option_4: q.option_4 || '',
+          option_5: q.option_5 || '',
+          answer: q.answer || '',
+          subject: q.subject || 'General',
+          long_answer: q.long_answer || '',
+          image: q.image || null
+        }));
+
+        console.log(`Enviando ${processedQuestions.length} preguntas de escalas`);
+        return res.json(processedQuestions);
+      } catch (error) {
+        console.error('Error al obtener preguntas de escalas:', error);
+        return res.status(500).json({
+          error: 'Error al obtener preguntas de escalas',
+          message: error.message
+        });
+      }
+    }
+
     // Continuar con el código existente para otros tipos de exámenes
     // Construir query base con subject específicos
     const baseQuery = asignaturas && asignaturas.length > 0 

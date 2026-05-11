@@ -10,6 +10,7 @@ import {
   Timer,
   GraduationCap,
   Flame,
+  Scale,
   CreditCard,
   Menu,
   X,
@@ -32,6 +33,7 @@ const menuItems = [
   { id: 'quizz', label: 'Quizz', icon: Clock, path: '/Quizz' },
   { id: 'errores', label: 'Repite Errores', icon: Target, path: '/errores' },
   { id: 'protocolos', label: 'Protocolario', icon: GraduationCap, path: '/protocolos' },
+  { id: 'escalas', label: 'Escalas', icon: Scale, path: '/scales' },
   { id: 'contrarreloj', label: 'Contrarreloj', icon: Timer, path: '/Contrarreloj' },
   { id: 'personalizado', label: 'Personalizado', icon: Flame, path: '/examenEleccion' },
 ]

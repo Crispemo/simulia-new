@@ -65,6 +65,7 @@ function AppRoutes() {
       <Route path="/errores" element={<Errores userId={currentUser?.uid}/>} />
       <Route path="/exam" element={<Exam toggleDarkMode={toggleDarkMode} isDarkMode={isDarkMode} userId={currentUser?.uid}/>} />
       <Route path="/protocolos" element={<Protocolos userId={currentUser?.uid} />} />
+      <Route path="/escalas" element={<Protocolos userId={currentUser?.uid} />} />
       <Route path="/examenEleccion" element={<AEleccion userId={currentUser?.uid} />} />
       <Route path="/examInProgress" element={<ExamInProgress userId={currentUser?.uid} />} />
       <Route path="/aviso-legal" element={<AvisoLegal />} />

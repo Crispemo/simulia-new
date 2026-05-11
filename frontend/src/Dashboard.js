@@ -156,6 +156,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     'errores': { questions: 30, timeInSeconds: 1800, name: 'Repaso de Errores' },
     'contrarreloj': { questions: 30, timeInSeconds: 900, name: 'Contrarreloj' },
     'protocolos': { questions: 30, timeInSeconds: 1800, name: 'Protocolos' },
+    'escalas': { questions: 30, timeInSeconds: 1800, name: 'Escalas' },
     'aeleccion': { questions: 'variable', timeInSeconds: 'variable', name: 'Examen Personalizado' }
   };
 
@@ -888,6 +889,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
                 const timeBonus = Math.max(0, (840 - exam.timeUsed) / 60);
                 return baseScore + timeBonus;
               case 'protocolos':
+              case 'escalas':
               case 'aeleccion':
                 return exam.correct - (exam.incorrect * 0.33);
               default:
@@ -1278,6 +1280,7 @@ const handleErroresClick = () => {
         'errores': 'Repite tus errores',
         'aeleccion': 'Diseña tu examen',
         'protocolos': 'Protocolario',
+        'escalas': 'Escalas',
         'personalizado': 'Personalizado'
       };
       return typeMap[type] || type;

@@ -532,6 +532,7 @@ function HomePage() {
                   { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
                   { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
                   { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
+                  { icon: "⚖️", title: "Escalas clínicas", desc: "Practica con las principales escalas de valoración enfermera que pueden aparecer en el EIR" },
                 ].map((item, idx) => (
                   <div
                     key={idx}
@@ -849,17 +850,13 @@ function HomePage() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) - no incluida en mensuales nuevas desde hoy</span>
+                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas)</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Comunidad completa - no incluida en mensuales nuevas desde hoy</span>
+                <span className="text-secondary">Comunidad completa </span>
               </li>
             </ul>
-
-            <p className="text-xs text-muted-foreground mt-1">
-              Importante: si ya eres mensual, mantienes el acceso a Recursos y Comunidad. Para mensuales nuevas desde hoy, Recursos y Comunidad pasan a Anual.
-            </p>
 
             <button
               onClick={() => handlePlanSelection('mensual', 1199)}

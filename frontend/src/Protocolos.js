@@ -45,14 +45,20 @@ const createDebounce = (func, wait) => {
 const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  // Soporte para modo escalas: scales.js navega aquí con location.state
+  const examTypeFromState = location.state?.examType || 'protocolos';
+  const numPreguntasFromState = location.state?.numQuestions || 30;
+  const tiempoTotal = numPreguntasFromState * 60;
+  const localStorageKey = examTypeFromState === 'escalas' ? 'escalasState' : 'protocolosState';
+
   // Usar siempre test_user_1 para pruebas
   const testUserId = userId || 'test_user_1';
-  
+
   // Estados principales
   const [questions, setQuestions] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(1800); // 30min
-  const [totalTime, setTotalTime] = useState(1800); // Tiempo total para calcular tiempo usado
+  const [timeLeft, setTimeLeft] = useState(tiempoTotal);
+  const [totalTime, setTotalTime] = useState(tiempoTotal);
   const [paused, setPaused] = useState(true); // Siempre iniciar pausado
   const [hasStarted, setHasStarted] = useState(false); // Nuevo estado para controlar si el examen ha comenzado
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -65,7 +71,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
   const [showFinalizePopup, setShowFinalizePopup] = useState(false);
   const [isDisputing, setIsDisputing] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
-  const [examType] = useState('protocolos');
+  const [examType] = useState(examTypeFromState);
   const [examId, setExamId] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,8 +110,8 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
             'Accept': 'application/json'
           },
           body: JSON.stringify({
-            numPreguntas: 30,
-            examType: 'protocolos'
+            numPreguntas: numPreguntasFromState,
+            examType: examTypeFromState
           })
         });
         
@@ -115,25 +121,16 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
         
         const data = await response.json();
         
-        console.log(`Recibidas ${data.length} preguntas de protocolos`);
-        
-        // Verificar que tenemos exactamente 30 preguntas
-        if (data.length !== 30) {
-          console.warn(`Se esperaban 30 preguntas pero se recibieron ${data.length}`);
-          
-          // Si hay más de 30, solo tomamos las primeras 30
-          if (data.length > 30) {
-            console.log('Limitando a 30 preguntas');
-            setQuestions(data.slice(0, 30));
-          } else {
-            setQuestions(data);
-          }
+        console.log(`Recibidas ${data.length} preguntas`);
+
+        if (data.length > numPreguntasFromState) {
+          setQuestions(data.slice(0, numPreguntasFromState));
         } else {
           setQuestions(data);
         }
         
         // Inicializar userAnswers con objetos completos para todas las preguntas
-        const initialUserAnswers = Array(Math.min(data.length, 30)).fill(null);
+        const initialUserAnswers = Array(Math.min(data.length, numPreguntasFromState)).fill(null);
         setUserAnswers(initialUserAnswers);
         
         // Inicializar markedAsDoubt como objeto vacío para un examen nuevo
@@ -284,7 +281,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
         userId: testUserId,
         examId: examId || null,
         examData: {
-          type: 'protocolos',
+          type: examType,
           questions: questions,
           userAnswers: formattedUserAnswers,
           selectedAnswers: selectedAnswers,
@@ -309,7 +306,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
       }
       
       // Guardar localmente siempre como respaldo
-      localStorage.setItem('protocolosState', JSON.stringify(dataToSend));
+      localStorage.setItem(localStorageKey, JSON.stringify(dataToSend));
       
       console.log('Enviando datos al servidor:', JSON.stringify(dataToSend).substring(0, 200) + '...');
       
@@ -409,7 +406,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
         userId: testUserId,
         examId: examIdToValidate,
         examData: {
-          type: 'protocolos',
+          type: examType,
           questions: questions,
           userAnswers: formattedUserAnswers,
           selectedAnswers: selectedAnswers,
@@ -575,7 +572,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
           userId: testUserId,
           examId: examId || null,
           examData: {
-            type: 'protocolos',
+            type: examType,
             questions: questions,
             userAnswers: formattedUserAnswers,
             selectedAnswers,
@@ -588,8 +585,8 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
             totalQuestions: questions.length
           }
         };
-        
-        localStorage.setItem('protocolosState', JSON.stringify(examData));
+
+        localStorage.setItem(localStorageKey, JSON.stringify(examData));
         
         // Realizar una solicitud síncrona (deprecated pero necesario para este caso)
         const xhr = new XMLHttpRequest();
@@ -801,7 +798,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
 
       const result = await finalizeExam(
         testUserId,
-        'protocolos',
+        examType,
         questions,
         formattedUserAnswers,
         selectedAnswers,
@@ -816,7 +813,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
       }
 
       // Mostrar notificación de éxito
-      setSuccessMessage('¡Examen de protocolos finalizado con éxito!');
+      setSuccessMessage(examType === 'escalas' ? '¡Examen de escalas finalizado con éxito!' : '¡Examen de protocolos finalizado con éxito!');
       setShowSuccessNotification(true);
 
       // Esperar 2 segundos antes de redirigir
@@ -1108,16 +1105,31 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
 
   // Renderizar popup de inicio si es necesario
   if (showStartPopup) {
+    const minutos = Math.floor(tiempoTotal / 60);
     return (
       <div className="popup-overlay">
         <div className="popup">
-          <h2><strong>¡Comienza tu examen de Protocolos!</strong></h2>
-          <p>
-            Este examen consta de <strong>30 preguntas</strong> y dispones de 
-            <strong> 30 minutos</strong> para completarlo. Estas preguntas son extraídas 
-            del <strong>Ministerio de Sanidad</strong>. Administra bien tu tiempo y recuerda 
-            que puedes revisar y ajustar tus respuestas antes de finalizar.
-          </p>
+          {examType === 'escalas' ? (
+            <>
+              <h2><strong>¡Comienza tu examen de Escalas!</strong></h2>
+              <p>
+                Este examen consta de <strong>{numPreguntasFromState} preguntas</strong> y dispones de{' '}
+                <strong>{minutos} minutos</strong> para completarlo. Estas preguntas son extraídas de{' '}
+                <strong>escalas</strong>. Administra bien tu tiempo y recuerda que puedes revisar y ajustar
+                tus respuestas antes de finalizar.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2><strong>¡Comienza tu examen de Protocolos!</strong></h2>
+              <p>
+                Este examen consta de <strong>30 preguntas</strong> y dispones de{' '}
+                <strong>30 minutos</strong> para completarlo. Estas preguntas son extraídas{' '}
+                del <strong>Ministerio de Sanidad</strong>. Administra bien tu tiempo y recuerda
+                que puedes revisar y ajustar tus respuestas antes de finalizar.
+              </p>
+            </>
+          )}
           <button onClick={handleStartExam} className="control-btn">Estoy list@</button>
         </div>
       </div>
