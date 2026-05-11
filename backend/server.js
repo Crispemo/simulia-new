@@ -1058,19 +1058,35 @@ app.post('/random-questions', async (req, res) => {
           return res.status(404).json({ error: 'No se encontraron preguntas de escalas' });
         }
 
-        const processedQuestions = preguntasEscalas.map(q => ({
+        const letterToOption = { A: 'option_1', B: 'option_2', C: 'option_3', D: 'option_4', E: 'option_5' };
+
+        const processedQuestions = preguntasEscalas.map(q => {
+          const opt1 = q.Respuesta_1 || q.option_1 || '';
+          const opt2 = q.Respuesta_2 || q.option_2 || '';
+          const opt3 = q.Respuesta_3 || q.option_3 || '';
+          const opt4 = q.Respuesta_4 || q.option_4 || '';
+          const opt5 = q.Respuesta_5 || q.option_5 || '';
+
+          const rawAnswer = q.Respuesta_Correcta || q.answer || '';
+          const opts = { option_1: opt1, option_2: opt2, option_3: opt3, option_4: opt4, option_5: opt5 };
+          const answerText = letterToOption[rawAnswer.trim().toUpperCase()]
+            ? opts[letterToOption[rawAnswer.trim().toUpperCase()]]
+            : rawAnswer;
+
+          return {
           _id: q._id,
-          question: q.question || '',
-          option_1: q.option_1 || '',
-          option_2: q.option_2 || '',
-          option_3: q.option_3 || '',
-          option_4: q.option_4 || '',
-          option_5: q.option_5 || '',
-          answer: q.answer || '',
-          subject: q.subject || 'General',
-          long_answer: q.long_answer || '',
+          question: q.Pregunta || q.question || '',
+          option_1: opt1,
+          option_2: opt2,
+          option_3: opt3,
+          option_4: opt4,
+          option_5: opt5,
+          answer: answerText,
+          subject: q.Tema_Asignatura || q.subject || 'General',
+          long_answer: q.Justificacion || q.long_answer || '',
           image: q.image || null
-        }));
+          };
+        });
 
         console.log(`Enviando ${processedQuestions.length} preguntas de escalas`);
         return res.json(processedQuestions);
