@@ -3,6 +3,7 @@ import { X, FileText, Download, ExternalLink, FileSpreadsheet, BookOpen, ArrowLe
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import { dashboardArticles } from './articlesData';
+import TipoTestInfographic from './TipoTestInfographic';
 
 // Configuración de recursos disponibles (PDFs de Google Drive)
 const RESOURCES = [
@@ -237,6 +238,7 @@ export default function ResourcesModal({ isOpen, onClose, isDarkMode }) {
                 style={{ width: '100%', maxHeight: '220px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1.5rem' }}
               />
             )}
+            {openArticle.id === 1 && <TipoTestInfographic />}
             <div style={{ fontSize: '0.95rem', color: 'inherit' }}>
               {openArticle.content.map((block, idx) => renderBlock(block, idx))}
             </div>
