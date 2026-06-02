@@ -3,7 +3,6 @@ export const dashboardArticles = [
     id: 1,
     title: "Metodología tipo test: todas las claves para dominar el EIR",
     description: "Estrategias y técnicas basadas en evidencia para responder preguntas tipo test: puntuación, eliminación, gestión del tiempo y control mental.",
-    image: "/clave.png",
     category: "Estrategia",
     readingTime: 8,
     content: [
