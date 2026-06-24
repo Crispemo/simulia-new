@@ -50,6 +50,46 @@ const BlogPost = () => {
       <Helmet>
         <title>{post.title} | Blog Simulia EIR</title>
         <meta name="description" content={post.excerpt} />
+        <link rel="canonical" href={`https://www.simulia.es/blog/${post.slug}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={`https://www.simulia.es/blog/${post.slug}`} />
+        <meta property="og:title" content={`${post.title} | Blog Simulia EIR`} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:image" content={`https://www.simulia.es${post.image}`} />
+        <meta property="og:site_name" content="Simulia" />
+        <meta property="og:locale" content="es_ES" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={`https://www.simulia.es/blog/${post.slug}`} />
+        <meta name="twitter:title" content={`${post.title} | Blog Simulia EIR`} />
+        <meta name="twitter:description" content={post.excerpt} />
+        <meta name="twitter:image" content={`https://www.simulia.es${post.image}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": post.title,
+            "description": post.excerpt,
+            "image": `https://www.simulia.es${post.image}`,
+            "datePublished": post.dateISO || "2025-01-12",
+            "dateModified": post.dateISO || "2025-01-12",
+            "author": {
+              "@type": "Organization",
+              "name": "Simulia"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Simulia",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://www.simulia.es/Logo_oscuro.png"
+              }
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": `https://www.simulia.es/blog/${post.slug}`
+            }
+          })}
+        </script>
       </Helmet>
 
       {/* Flecha volver atrás */}

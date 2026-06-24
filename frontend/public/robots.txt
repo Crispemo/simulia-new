@@ -1,3 +1,19 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /exam
+Disallow: /exam-in-progress
+Disallow: /examInProgress
+Disallow: /examenEleccion
+Disallow: /review
+Disallow: /quizz
+Disallow: /contrarreloj
+Disallow: /errores
+Disallow: /protocolos
+Disallow: /escalas
+Disallow: /scales
+Disallow: /success
+Disallow: /cancel
+
 Sitemap: https://www.simulia.es/sitemap.xml

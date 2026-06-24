@@ -306,7 +306,7 @@ function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
         <title>Simulia - Plataforma de Preparación EIR | Simulacros y Exámenes</title>
-        <meta name="description" content="Plataforma especializada en preparación para el examen EIR. Simulacros, exámenes, protocolos y análisis de errores para enfermeros. Prepárate de forma eficaz con nuestra plataforma especializada." />
+        <meta name="description" content="Prepara el EIR con simulacros reales, análisis de errores por IA y +15.000 preguntas. Practica sin límite desde cualquier dispositivo." />
         <meta name="robots" content="index, follow" />
         <meta name="keywords" content="EIR, examen EIR, preparación EIR, simulacros EIR, protocolos EIR, enfermería, oposiciones enfermería, Simulia, análisis errores EIR" />
         <meta name="author" content="Simulia" />
@@ -351,66 +351,50 @@ function HomePage() {
               "mainEntity": [
                 {
                   "@type": "Question",
-                  "name": "¿Por qué practicar con simulacros EIR mejora tus resultados reales?",
+                  "name": "¿Puedo cancelar Simulia si no me convence en los primeros días?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Practicar con simulacros realistas te entrena bajo presión, mejora tu memoria y te prepara para enfrentarte al examen EIR con seguridad y estrategia."
+                    "text": "Sí. Tienes 7 días de prueba gratuita y puedes cancelar en cualquier momento sin dar explicaciones. Sin permanencia, sin letra pequeña."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "¿Cuántas preguntas incluye Simulia y con qué frecuencia se actualizan?",
+                  "name": "¿Sirve Simulia si todavía no he visto todo el temario del EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Dispones de más de 5000 preguntas EIR y cada semana se incorporan nuevas. Así estudias con material actualizado, útil y alineado con los exámenes reales."
+                    "text": "Totalmente. Puedes practicar por asignaturas y temas concretos, así que no necesitas haber estudiado todo para empezar. Practicar desde el principio te ayuda a asentar lo que vas aprendiendo."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "¿Qué tipo de análisis obtengo después de cada simulacro?",
+                  "name": "¿Qué diferencia hay entre Simulia y una academia EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Recibirás estadísticas detalladas de tu rendimiento, podrás revisar cada error y entender por qué fallaste. Así conviertes tus errores en tus mejores aliados."
+                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 4,99 €/mes."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "¿Puedo centrarme en las asignaturas que más me cuestan?",
+                  "name": "¿Las preguntas de Simulia son como las del examen real del EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Sí, puedes practicar por asignaturas específicas para reforzar justo donde lo necesitas. Tú eliges el enfoque de estudio según tu evolución."
+                    "text": "Sí. Todas las preguntas están basadas en exámenes oficiales del Ministerio de Sanidad y protocolos actualizados. Los simulacros replican el formato exacto: 200 preguntas + 10 de reserva en 4 horas, con imágenes clínicas."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "¿Simulia es compatible con móviles, tablets y ordenadores?",
+                  "name": "¿Puedo usar Simulia desde el móvil?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Totalmente. Accede desde cualquier dispositivo y estudia donde quieras, cuando quieras, sin perder tu progreso."
+                    "text": "Sí, funciona en móvil, tablet y ordenador. Tu progreso se sincroniza entre dispositivos, así que puedes hacer un test rápido en el bus y un simulacro completo en casa."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "¿En qué se diferencia Simulia de otras plataformas EIR?",
+                  "name": "¿Cuántas preguntas tiene Simulia y se actualizan?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Aquí no hay clases ni profesores: la diferencia está en que entrenas de forma constante y autónoma con simulacros realistas, sin distracciones."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "¿Cómo me ayuda Simulia a conseguir mi plaza en el EIR?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Te prepara con la misma presión y estructura del examen real. Cuanto más practicas, más confianza y dominio tienes el día clave."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "¿Las preguntas están alineadas con los exámenes oficiales del EIR?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Sí. Todas las preguntas están inspiradas en exámenes anteriores y protocolos actualizados del Ministerio de Sanidad."
+                    "text": "Más de 15.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir."
                   }
                 }
               ]
@@ -522,32 +506,8 @@ function HomePage() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[
-                  { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes" },
-                  { icon: "🔄", title: "Repetición errores", desc: "Repite todos los errores que cometiste en el simulacro hasta dominarlos" },
-                  { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta de cara al EIR" },
-                  { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica que se adaptan a lo que necesitas" },
-                  { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
-                  { icon: "📋", title: "Protocolos clínicos", desc: "Protocolos, guías clínicas y novedades emtidas por el ministerio que son susceptibles de ser preguntas en el EIR" },
-                  { icon: "⚖️", title: "Escalas clínicas", desc: "Practica con las principales escalas de valoración enfermera que pueden aparecer en el EIR" },
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-card hover:bg-accent/5 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md relative"
-                    title={item.desc}
-                  >
-                    <span className="text-2xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                    <span className="text-sm font-semibold text-secondary">{item.title}</span>
-                    <span className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-secondary text-white text-xs rounded-lg opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 whitespace-nowrap z-10">
-                      {item.desc}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                 <div className="flex-1 sm:flex-initial max-w-md w-full">
                   <button
@@ -658,7 +618,7 @@ function HomePage() {
               <div className="text-sm text-muted-foreground">Podrás practicar sin repetir preguntas</div>
             </div>
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">∞</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">Sin límite</div>
               <div className="text-base text-foreground font-medium">repeticiones de tus fallos</div>
               <div className="text-sm text-muted-foreground">Practica tus errores sin límite gracias al banco de errores</div>
             </div>
@@ -711,7 +671,7 @@ function HomePage() {
           <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <div className="space-y-2 flex-1">
                 <h3 className="text-xl font-bold text-secondary">Estadísticas que te hacen avanzar</h3>
@@ -766,6 +726,80 @@ function HomePage() {
         </div>
       </section>
 
+      <section id="modalidades" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+        <div className="max-w-3xl mx-auto text-center space-y-4 mb-10">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
+            7 modos de entrenamiento para cada momento
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Elige cómo quieres practicar según el tiempo que tengas y lo que necesites reforzar
+          </p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {[
+            { icon: "📝", title: "Simulacro oficial EIR", desc: "Réplica exacta del examen real incluyendo preguntas con imágenes", highlight: true },
+            { icon: "🔄", title: "Repetición de errores", desc: "Repite todos los errores que cometiste hasta dominarlos" },
+            { icon: "⏱️", title: "Contrarreloj", desc: "Entrena bajo presión y mejora tu velocidad de respuesta" },
+            { icon: "🔍", title: "Quiz 50 preguntas", desc: "Sesiones rápidas de práctica adaptadas a ti" },
+            { icon: "✏️", title: "Examen personalizado", desc: "Tu examen, tu manera de estudiar. Practica solo lo que necesites" },
+            { icon: "📋", title: "Protocolos clínicos", desc: "Guías clínicas y novedades del ministerio susceptibles de ser preguntas EIR" },
+            { icon: "⚖️", title: "Escalas clínicas", desc: "Practica con las principales escalas de valoración enfermera" },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all cursor-pointer group shadow-sm hover:shadow-md ${
+                item.highlight
+                  ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                  : 'border-border bg-card hover:border-primary/50'
+              }`}
+              title={item.desc}
+            >
+              <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+              <span className="text-sm font-semibold text-secondary">{item.title}</span>
+              {item.highlight && (
+                <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">Empieza aquí</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-16 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center space-y-4 mb-10">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
+                ¿Esto realmente ayuda a aprobar?
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Lo que marca la diferencia no es solo el contenido, sino cómo practicas
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+                <div className="text-4xl font-bold text-primary">+15.000</div>
+                <p className="text-secondary font-semibold">preguntas basadas en exámenes oficiales</p>
+                <p className="text-sm text-muted-foreground">Todas inspiradas en convocatorias reales del Ministerio de Sanidad y protocolos actualizados</p>
+              </div>
+              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+                <div className="text-4xl font-bold text-primary">7 modos</div>
+                <p className="text-secondary font-semibold">de práctica para cada momento</p>
+                <p className="text-sm text-muted-foreground">Desde simulacros completos de 4h hasta quiz rápidos de 50 preguntas en el bus</p>
+              </div>
+              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+                <div className="text-4xl font-bold text-primary">IA</div>
+                <p className="text-secondary font-semibold">que analiza tus errores por ti</p>
+                <p className="text-sm text-muted-foreground">Feedback personalizado después de cada simulacro para que sepas exactamente qué reforzar</p>
+              </div>
+            </div>
+            <div className="mt-8 bg-card border-2 border-primary/20 rounded-xl p-6">
+              <p className="text-center text-secondary leading-relaxed">
+                Según datos del Ministerio de Sanidad, el EIR tiene una tasa de aprobados del ~85%. Los estudiantes que practican con simulacros desde el inicio desarrollan mejor gestión del tiempo, resistencia mental y estrategia de examen, los tres factores que más influyen en el resultado final.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -781,24 +815,27 @@ function HomePage() {
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-scroll">
               {[
-                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
-                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
-                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando." },
+                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela." },
+                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto." },
               ].concat([
-                { name: "María", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando 😅" },
-                { name: "Carlos", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. ¡El tiempo vuela!" },
-                { name: "Ana", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto" },
+                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando." },
+                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela." },
+                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
+                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
+                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
+                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto." },
               ]).map((testimonial, idx) => (
                 <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
                   <div className="p-6 space-y-4">
                     <p className="text-muted-foreground italic leading-relaxed">"{testimonial.text}"</p>
-                    <p className="font-semibold text-secondary">{testimonial.name}</p>
+                    <div>
+                      <p className="font-semibold text-secondary">{testimonial.name}</p>
+                      <p className="text-xs text-muted-foreground">{testimonial.context}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -860,8 +897,8 @@ function HomePage() {
 
             <button
               onClick={() => handlePlanSelection('mensual', 1199)}
-              className="w-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all bg-transparent py-3 rounded-full font-semibold shadow-md hover:shadow-lg"
-            > 
+              className="w-full bg-primary/10 border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all py-3 rounded-full font-bold shadow-md hover:shadow-lg"
+            >
               Comenzar prueba gratuita
             </button>
           </div>
@@ -933,12 +970,12 @@ function HomePage() {
 
           <div className="space-y-4">
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
-              <details className="py-4">
+              <details className="py-4" open>
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Por qué practicar con simulacros EIR mejora tus resultados reales?
+                  ¿Puedo cancelar si no me convence en los primeros días?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Practicar con simulacros realistas te entrena bajo presión, mejora tu memoria y te prepara para enfrentarte al examen EIR con seguridad y estrategia.
+                  Sí. Tienes 7 días de prueba gratuita y puedes cancelar en cualquier momento sin dar explicaciones. Sin permanencia, sin letra pequeña.
                 </p>
               </details>
             </div>
@@ -946,10 +983,10 @@ function HomePage() {
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Cuántas preguntas incluye Simulia y con qué frecuencia se actualizan?
+                  ¿Sirve si todavía no he visto todo el temario?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Dispones de más de 5000 preguntas EIR y cada semana se incorporan nuevas. Así estudias con material actualizado, útil y alineado con los exámenes reales.
+                  Totalmente. Puedes practicar por asignaturas y temas concretos, así que no necesitas haber estudiado todo para empezar. De hecho, practicar desde el principio te ayuda a asentar lo que vas aprendiendo.
                 </p>
               </details>
             </div>
@@ -957,10 +994,10 @@ function HomePage() {
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Qué tipo de análisis obtengo después de cada simulacro?
+                  ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Recibirás estadísticas detalladas de tu rendimiento, podrás revisar cada error y entender por qué fallaste. Así conviertes tus errores en tus mejores aliados.
+                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 4,99 €/mes.
                 </p>
               </details>
             </div>
@@ -968,10 +1005,10 @@ function HomePage() {
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Puedo centrarme en las asignaturas que más me cuestan?
+                  ¿Las preguntas son como las del examen real?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Sí, puedes practicar por asignaturas específicas para reforzar justo donde lo necesitas. Tú eliges el enfoque de estudio según tu evolución.
+                  Sí. Todas las preguntas están basadas en exámenes oficiales del Ministerio de Sanidad y protocolos actualizados. Los simulacros replican el formato exacto: 200 preguntas + 10 de reserva en 4 horas, con imágenes clínicas.
                 </p>
               </details>
             </div>
@@ -979,10 +1016,10 @@ function HomePage() {
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Simulia es compatible con móviles, tablets y ordenadores?
+                  ¿Puedo usarla desde el móvil?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Totalmente. Accede desde cualquier dispositivo y estudia donde quieras, cuando quieras, sin perder tu progreso.
+                  Sí, funciona en móvil, tablet y ordenador. Tu progreso se sincroniza entre dispositivos, así que puedes hacer un test rápido en el bus y un simulacro completo en casa.
                 </p>
               </details>
             </div>
@@ -990,10 +1027,10 @@ function HomePage() {
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
-                  ¿Las preguntas están alineadas con los exámenes oficiales del EIR?
+                  ¿Cuántas preguntas hay y se actualizan?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Sí. Todas las preguntas están inspiradas en exámenes anteriores y protocolos actualizados del Ministerio de Sanidad.
+                  Más de 15.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir.
                 </p>
               </details>
             </div>
@@ -1035,6 +1072,12 @@ function HomePage() {
                   className="text-secondary-foreground/70 hover:text-primary transition-colors"
                 >
                   Términos y condiciones
+                </a>
+                <a
+                  href="/cookies"
+                  className="text-secondary-foreground/70 hover:text-primary transition-colors"
+                >
+                  Política de cookies
                 </a>
               </div>
             </div>

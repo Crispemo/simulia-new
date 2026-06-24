@@ -18,6 +18,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AvisoLegal from './pages/AvisoLegal';
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 import TerminosCondiciones from './pages/TerminosCondiciones';
+import PoliticaCookies from './pages/PoliticaCookies';
 import Blog from './components/Blog';
 import BlogPost from './components/BlogPost';
 import ExamInProgress from './ExamInProgress';
@@ -71,6 +72,7 @@ function AppRoutes() {
       <Route path="/aviso-legal" element={<AvisoLegal />} />
       <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
       <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
+      <Route path="/cookies" element={<PoliticaCookies />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:postId" element={<BlogPost />} />
       <Route path="/scales" element={<Scales userId={currentUser?.id} />} />
@@ -79,7 +81,41 @@ function AppRoutes() {
   );
 }
 
+function loadAnalytics() {
+  if (window._analyticsLoaded) return;
+  window._analyticsLoaded = true;
+
+  // Google Analytics 4
+  const gtagScript = document.createElement('script');
+  gtagScript.async = true;
+  gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-111W589W3H';
+  document.head.appendChild(gtagScript);
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){window.dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-111W589W3H');
+
+  // Meta Pixel
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  window.fbq('init', '1582659899396296');
+  window.fbq('track', 'PageView');
+}
+
 function App() {
+  React.useEffect(() => {
+    const consent = document.cookie.split('; ').find(row => row.startsWith('CookieConsent='));
+    if (consent && consent.split('=')[1] === 'true') {
+      loadAnalytics();
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <LogoProvider>
@@ -89,11 +125,16 @@ function App() {
             <CookieConsent
               location="bottom"
               buttonText="Aceptar"
-              style={{ background: "#3f5056", color: "#fff" }}
-              buttonStyle={{ background: "#7da0a7", color: "#fff", fontWeight: "bold" }}
+              declineButtonText="Rechazar"
+              enableDeclineButton
+              onAccept={loadAnalytics}
+              style={{ background: "#3f5056", color: "#fff", alignItems: "center" }}
+              buttonStyle={{ background: "#7da0a7", color: "#fff", fontWeight: "bold", borderRadius: "9999px", padding: "8px 24px" }}
+              declineButtonStyle={{ background: "transparent", border: "1px solid #fff", color: "#fff", borderRadius: "9999px", padding: "8px 24px" }}
               expires={365}
             >
-              Esta web usa cookies propias y de terceros para mejorar tu experiencia. Al continuar, aceptas su uso.
+              Usamos cookies propias y de terceros para analítica y publicidad.{' '}
+              <a href="/cookies" style={{ color: "#7da0a7", textDecoration: "underline" }}>Más información</a>
             </CookieConsent>
           </div>
         </Router>

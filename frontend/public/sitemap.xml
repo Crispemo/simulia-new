@@ -5,38 +5,122 @@
                 https://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <url>
     <loc>https://www.simulia.es/</loc>
-    <lastmod>2024-03-20</lastmod>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.00</priority>
   </url>
   <url>
-    <loc>https://www.simulia.es/#simulacros-eir</loc>
-    <lastmod>2024-03-20</lastmod>
+    <loc>https://www.simulia.es/blog</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.simulia.es/#planes</loc>
-    <lastmod>2024-03-20</lastmod>
+    <loc>https://www.simulia.es/blog/especialidades-eir</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.simulia.es/#contacto</loc>
-    <lastmod>2024-03-20</lastmod>
+    <loc>https://www.simulia.es/blog/que-es-el-eir</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.50</priority>
+    <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://www.simulia.es/dashboard</loc>
-    <lastmod>2024-03-20</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://www.simulia.es/blog/como-preparar-el-eir-con-simulia</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.70</priority>
   </url>
   <url>
-    <loc>https://www.simulia.es/login</loc>
-    <lastmod>2024-03-20</lastmod>
+    <loc>https://www.simulia.es/blog/errores-comunes-eir</loc>
+    <lastmod>2026-06-24</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/merece-la-pena-hacer-el-eir</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/salario-enfermeria-espana</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/trabajar-enfermera-sin-especialidad</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/plazas-eir-especialidad-comunidad</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/calendario-convocatoria-eir</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/academia-eir-vs-preparacion-cuenta</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/elegir-academia-eir</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/manuales-eir-gratis-pdf</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/plan-estudio-eir</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/blog/banco-preguntas-eir</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/cookies</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>yearly</changefreq>
     <priority>0.30</priority>
   </url>
-</urlset> 
+  <url>
+    <loc>https://www.simulia.es/aviso-legal</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/politica-privacidad</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+  <url>
+    <loc>https://www.simulia.es/terminos-condiciones</loc>
+    <lastmod>2026-06-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+</urlset>
