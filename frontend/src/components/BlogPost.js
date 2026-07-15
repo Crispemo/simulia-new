@@ -70,8 +70,8 @@ const BlogPost = () => {
             "headline": post.title,
             "description": post.excerpt,
             "image": `https://www.simulia.es${post.image}`,
-            "datePublished": post.dateISO || "2025-01-12",
-            "dateModified": post.dateISO || "2025-01-12",
+            "datePublished": post.dateISO,
+            "dateModified": post.dateISO,
             "author": {
               "@type": "Organization",
               "name": "Simulia"
@@ -90,6 +90,19 @@ const BlogPost = () => {
             }
           })}
         </script>
+        {post.faqs && (
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": post.faqs.map(faq => ({
+                "@type": "Question",
+                "name": faq.q,
+                "acceptedAnswer": { "@type": "Answer", "text": faq.a }
+              }))
+            })}
+          </script>
+        )}
       </Helmet>
 
       {/* Flecha volver atrás */}
@@ -99,7 +112,7 @@ const BlogPost = () => {
 
       {/* Imagen de portada */}
       <div className="blog-post-cover">
-        <img src={post.image} alt={post.title} />
+        <img src={post.image} alt={post.title} onError={e => { e.target.onerror = null; e.target.src = '/blog/Preparar_EIR.png'; }} />
       </div>
 
       {/* Título y meta info */}
@@ -160,8 +173,8 @@ const BlogPost = () => {
           }
           if (block.type === 'h3') return <h3 key={idx}>{block.text}</h3>;
           if (block.type === 'p') return <p key={idx} dangerouslySetInnerHTML={{__html: block.text}}></p>;
-          if (block.type === 'ul') return <ul key={idx}>{block.items.map((item, i) => <li key={i}>{item}</li>)}</ul>;
-          if (block.type === 'ol') return <ol key={idx}>{block.items.map((item, i) => <li key={i}>{item}</li>)}</ol>;
+          if (block.type === 'ul') return <ul key={idx}>{block.items.map((item, i) => <li key={i} dangerouslySetInnerHTML={{__html: item}} />)}</ul>;
+          if (block.type === 'ol') return <ol key={idx}>{block.items.map((item, i) => <li key={i} dangerouslySetInnerHTML={{__html: item}} />)}</ol>;
           if (block.type === 'img') return (
             <div className="blog-img-block" key={idx}>
               <img src={block.src} alt={block.alt || ''} />

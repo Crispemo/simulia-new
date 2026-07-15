@@ -7,6 +7,7 @@ export const blogPosts = [
     image: "/blog/Preparar_EIR.png",
     category: "Preparación",
     date: "12 de enero 2025",
+    dateISO: "2025-01-12",
     readingTime: 4,
     content: [
       {
@@ -162,6 +163,7 @@ export const blogPosts = [
     excerpt: "Descubre las 7 especialidades EIR, sus diferencias, salidas laborales y la evolución de plazas en los últimos años. Elige tu camino con información real y actualizada.",
     image: "/blog/Especialidad_EIR.png",
     category: "Especialidades",
+    dateISO: "2025-01-28",
     date: "28 de enero 2025",
     readingTime: 6,
     content: [
@@ -339,6 +341,7 @@ export const blogPosts = [
     image: "/blog/Que_es_EIR.png",
     category: "Guía Básica",
     date: "7 de febrero 2025",
+    dateISO: "2025-02-07",
     readingTime: 4,
     content: [
       {
@@ -537,6 +540,28 @@ export const blogPosts = [
         type: 'p',
         text: "Descubre <a href='/blog/como-preparar-el-eir-con-simulia'>cómo preparar el EIR paso a paso</a> y los <a href='/blog/errores-comunes-eir'>errores más comunes que debes evitar</a> durante tu preparación."
       },
+    ],
+    faqs: [
+      {
+        q: "¿Qué significa EIR?",
+        a: "EIR son las siglas de Enfermero Interno Residente. Es una prueba oficial organizada por el Ministerio de Sanidad de España que permite a las enfermeras especializarse en un área clínica a través de un sistema de residencia remunerada de dos años."
+      },
+      {
+        q: "¿Cuántas preguntas tiene el examen EIR?",
+        a: "El examen EIR consta de 200 preguntas tipo test con 4 opciones de respuesta. La duración es de 4 horas. La puntuación es +3 puntos por respuesta correcta y -1 punto por respuesta incorrecta."
+      },
+      {
+        q: "¿Cuánto dura la residencia EIR?",
+        a: "La residencia EIR tiene una duración de 2 años, durante los cuales el residente percibe un salario mensual de entre 1.200 € y 1.500 € según la comunidad autónoma."
+      },
+      {
+        q: "¿Cuáles son los requisitos para presentarse al EIR?",
+        a: "Para presentarte al EIR necesitas el título de Grado o Diplomatura en Enfermería, estar colegiado en el Colegio Oficial de Enfermería correspondiente y no tener limitaciones legales para el ejercicio de la profesión."
+      },
+      {
+        q: "¿Cuántas especialidades EIR existen en España?",
+        a: "Existen 7 especialidades EIR oficiales reconocidas por el Sistema Nacional de Salud: Obstétrico-Ginecológica (Matrona), Salud Mental, Pediátrica, Comunitaria, Geriátrica, del Trabajo y Familiar y Comunitaria."
+      }
     ]
   },
   {
@@ -546,6 +571,7 @@ export const blogPosts = [
     excerpt: "Evita los fallos más frecuentes al estudiar el EIR y aprende a preparar la oposición con estrategia, simulacros y equilibrio mental.",
     image: "/blog/Errores_EIR.png",
     category: "Consejos",
+    dateISO: "2025-02-02",
     date: "2 de febrero 2025",
     readingTime: 6,
     content: [
@@ -800,6 +826,7 @@ export const blogPosts = [
     image: "/blog/Merece_pena_EIR.png",
     category: "Orientación",
     date: "junio 2026",
+    dateISO: "2026-06-01",
     readingTime: 6,
     content: [
       {
@@ -901,6 +928,7 @@ export const blogPosts = [
     excerpt: "Comparativa actualizada del salario de enfermería en España por comunidad autónoma, con y sin especialidad EIR. Descubre cuánto puedes ganar.",
     image: "/blog/Salario_enfermeria.png",
     category: "Orientación",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [
@@ -958,6 +986,7 @@ export const blogPosts = [
     excerpt: "¿Se puede trabajar bien como enfermera sin hacer el EIR? Descubre las opciones laborales reales, áreas donde puedes ejercer y cuándo merece la pena especializarse.",
     image: "/blog/Enfermera_sin_especialidad.png",
     category: "Orientación",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [
@@ -1015,6 +1044,7 @@ export const blogPosts = [
     excerpt: "Datos actualizados de plazas EIR ofertadas por especialidad y comunidad autónoma. Evolución 2020-2025 y análisis de tendencias.",
     image: "/blog/Plazas_EIR_comunidad.png",
     category: "Convocatoria",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 6,
     content: [
@@ -1083,6 +1113,7 @@ export const blogPosts = [
     excerpt: "Cronología completa del proceso EIR mes a mes: inscripción, examen, resultados, elección de plaza y fechas clave que no puedes perderte.",
     image: "/blog/Calendario_EIR.png",
     category: "Convocatoria",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [
@@ -1134,6 +1165,7 @@ export const blogPosts = [
     excerpt: "Compara las ventajas e inconvenientes de preparar el EIR en una academia, por tu cuenta o con un modelo híbrido. Análisis honesto con tabla comparativa.",
     image: "/blog/academia-eir-vs-cuenta.png",
     category: "Preparación",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 6,
     content: [
@@ -1184,6 +1216,7 @@ export const blogPosts = [
     excerpt: "Criterios objetivos para comparar academias EIR: precio, metodología, tasa de aprobados, materiales, flexibilidad y señales de alerta.",
     image: "/blog/elegir-academia-eir.png",
     category: "Preparación",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [
@@ -1230,6 +1263,7 @@ export const blogPosts = [
     excerpt: "Guía honesta sobre los manuales EIR gratuitos en PDF: dónde encontrarlos, qué puedes esperar de ellos y cómo complementarlos con práctica real.",
     image: "/blog/manuales-eir-gratis-pdf.png",
     category: "Preparación",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [
@@ -1272,6 +1306,7 @@ export const blogPosts = [
     excerpt: "Plan de estudio EIR en 4 fases con distribución mensual, horas semanales y adaptaciones para quienes trabajan.",
     image: "/blog/plan-estudio-eir.png",
     category: "Práctica",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 7,
     content: [
@@ -1342,6 +1377,7 @@ export const blogPosts = [
     excerpt: "Qué son los bancos de preguntas EIR, dónde encontrar las preguntas oficiales de convocatorias anteriores y cómo usarlas de forma eficaz.",
     image: "/blog/banco-preguntas-eir.png",
     category: "Práctica",
+    dateISO: "2026-06-01",
     date: "junio 2026",
     readingTime: 5,
     content: [

@@ -10,6 +10,27 @@ const Blog = () => {
       <Helmet>
         <title>Blog Simulia | Recursos y consejos para el EIR</title>
         <meta name="description" content="Encuentra los mejores consejos, guías y estrategias para preparar tu examen EIR. Artículos actualizados sobre enfermería y preparación de oposiciones." />
+        <link rel="canonical" href="https://www.simulia.es/blog" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.simulia.es/blog" />
+        <meta property="og:title" content="Blog Simulia | Recursos y consejos para el EIR" />
+        <meta property="og:description" content="Encuentra los mejores consejos, guías y estrategias para preparar tu examen EIR. Artículos actualizados sobre enfermería y preparación de oposiciones." />
+        <meta property="og:image" content="https://www.simulia.es/blog/Preparar_EIR.png" />
+        <meta property="og:site_name" content="Simulia" />
+        <meta property="og:locale" content="es_ES" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://www.simulia.es/blog" />
+        <meta name="twitter:title" content="Blog Simulia | Recursos y consejos para el EIR" />
+        <meta name="twitter:description" content="Encuentra los mejores consejos, guías y estrategias para preparar tu examen EIR. Artículos actualizados sobre enfermería y preparación de oposiciones." />
+        <meta name="twitter:image" content="https://www.simulia.es/blog/Preparar_EIR.png" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "Blog Simulia EIR",
+          "url": "https://www.simulia.es/blog",
+          "description": "Recursos, guías y estrategias para preparar el examen EIR de enfermería.",
+          "publisher": { "@type": "Organization", "name": "Simulia", "url": "https://www.simulia.es" }
+        })}</script>
       </Helmet>
 
       <header className="blog-header">
@@ -21,7 +42,7 @@ const Blog = () => {
         {blogPosts.map(post => (
           <article key={post.id} className="blog-card">
             <div className="blog-card-image">
-              <img src={post.image} alt={post.title} />
+              <img src={post.image} alt={post.title} onError={e => { e.target.onerror = null; e.target.src = '/blog/Preparar_EIR.png'; }} />
               <span className="blog-category">{post.category}</span>
             </div>
             <div className="blog-card-content">
