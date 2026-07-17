@@ -44,7 +44,7 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "postbuild": "react-snap",
+    "prerender": "react-snap",
     "bulid": "npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
