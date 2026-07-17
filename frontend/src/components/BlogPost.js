@@ -30,6 +30,13 @@ const BlogPost = () => {
     return <div className="blog-post-container"><h1>Artículo no encontrado</h1></div>;
   }
 
+  // Artículos relacionados: prioriza la misma categoría, completa con los más recientes
+  const sameCategory = blogPosts.filter(p => p.slug !== post.slug && p.category === post.category);
+  const others = blogPosts
+    .filter(p => p.slug !== post.slug && p.category !== post.category)
+    .sort((a, b) => new Date(b.dateISO) - new Date(a.dateISO));
+  const relatedPosts = [...sameCategory, ...others].slice(0, 3);
+
   let h2Count = 0;
 
   // CTA handler
@@ -204,6 +211,24 @@ const BlogPost = () => {
           return null;
         })}
       </div>
+
+      {/* Artículos relacionados */}
+      {relatedPosts.length > 0 && (
+        <div className="blog-related-posts">
+          <h2>Sigue leyendo</h2>
+          <div className="blog-related-grid">
+            {relatedPosts.map(rp => (
+              <Link to={`/blog/${rp.slug}`} className="blog-related-card" key={rp.slug}>
+                <img src={rp.image} alt={rp.title} onError={e => { e.target.onerror = null; e.target.src = '/blog/Preparar_EIR.png'; }} />
+                <div className="blog-related-card-body">
+                  <span className="blog-related-card-category">{rp.category}</span>
+                  <h3>{rp.title}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CTA final */}
       <div className="blog-final-cta">

@@ -305,23 +305,23 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
-        <title>Simulia - Plataforma de Preparación EIR | Simulacros y Exámenes</title>
+        <title>Simulia – Simulacros EIR con IA | Prepara tu plaza</title>
         <meta name="description" content="Prepara el EIR con simulacros reales, análisis de errores por IA y +15.000 preguntas. Practica sin límite desde cualquier dispositivo." />
         <meta name="robots" content="index, follow" />
         <meta name="keywords" content="EIR, examen EIR, preparación EIR, simulacros EIR, protocolos EIR, enfermería, oposiciones enfermería, Simulia, análisis errores EIR" />
         <meta name="author" content="Simulia" />
-        
+
         <meta property="og:type" content="website" />
         <meta property="og:title" content="Simulia - Plataforma de Preparación EIR" />
         <meta property="og:description" content="Plataforma especializada en preparación para el examen EIR. Simulacros, exámenes, protocolos y análisis de errores para enfermeros. Prepárate de forma eficaz." />
-        <meta property="og:image" content="https://www.simulia.es/Logo_oscuro.png" />
+        <meta property="og:image" content="https://www.simulia.es/Dashboard-EIR-Simulia.png" />
         <meta property="og:url" content="https://www.simulia.es" />
         <meta property="og:site_name" content="Simulia" />
-        
+
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:title" content="Simulia - Plataforma de Preparación EIR" />
         <meta property="twitter:description" content="Plataforma especializada en preparación para el examen EIR. Simulacros, exámenes, protocolos y análisis de errores para enfermeros." />
-        <meta property="twitter:image" content="https://www.simulia.es/Logo_oscuro.png" />
+        <meta property="twitter:image" content="https://www.simulia.es/Dashboard-EIR-Simulia.png" />
         <meta property="twitter:url" content="https://www.simulia.es" />
         <html lang="es" />
         <script type="application/ld+json">
@@ -334,11 +334,12 @@ function HomePage() {
         "operatingSystem": "All",
         "url": "https://www.simulia.es",
         "description": "Simulacros EIR en línea para enfermería con análisis por IA",
-        "screenshot": "https://www.simulia.es/img/dashboard.png",
+        "screenshot": "https://www.simulia.es/Dashboard-EIR-Simulia.png",
         "offers": {
           "@type": "Offer",
-          "price": "7.99",
-          "priceCurrency": "EUR"
+          "price": "4.99",
+          "priceCurrency": "EUR",
+          "description": "Plan anual (59,99 €/año, equivalente a 4,99 €/mes)"
         }
       }
     `}
@@ -844,6 +845,25 @@ function HomePage() {
         </div>
       </section>
 
+      <section id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+        <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
+          <img
+            src="/foto_cris_peris.JPG"
+            alt="Cristina Peris, fundadora de Simulia"
+            className="w-32 h-32 rounded-full object-cover object-top shadow-md flex-shrink-0"
+          />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">Quién hay detrás de Simulia</p>
+            <h2 className="text-2xl font-bold text-secondary mb-3">Cristina Peris, enfermera y fundadora</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Simulia no lo ha hecho una empresa genérica de oposiciones: lo he construido yo, enfermera,
+              porque quería la herramienta que a mí me habría gustado tener al preparar el EIR. Cada
+              simulacro, cada pregunta y cada mejora sale de entender de primera mano por lo que estás pasando.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-6 mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
@@ -1058,6 +1078,12 @@ function HomePage() {
                 © {new Date().getFullYear()} Simulia – Todos los derechos reservados
               </p>
               <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <a href="/simulacro" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                  Simulacro EIR
+                </a>
+                <a href="/precios" className="text-secondary-foreground/70 hover:text-primary transition-colors">
+                  Precios
+                </a>
                 <a href="/aviso-legal" className="text-secondary-foreground/70 hover:text-primary transition-colors">
                   Aviso legal
                 </a>

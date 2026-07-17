@@ -16,6 +16,8 @@ import AEleccion from './Aeleccion';
 import { LogoProvider } from './context/LogoContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AvisoLegal from './pages/AvisoLegal';
+import Precios from './pages/Precios';
+import Simulacro from './pages/Simulacro';
 import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
 import TerminosCondiciones from './pages/TerminosCondiciones';
 import PoliticaCookies from './pages/PoliticaCookies';
@@ -69,6 +71,8 @@ function AppRoutes() {
       <Route path="/escalas" element={<Protocolos userId={currentUser?.uid} />} />
       <Route path="/examenEleccion" element={<AEleccion userId={currentUser?.uid} />} />
       <Route path="/examInProgress" element={<ExamInProgress userId={currentUser?.uid} />} />
+      <Route path="/precios" element={<Precios />} />
+      <Route path="/simulacro" element={<Simulacro />} />
       <Route path="/aviso-legal" element={<AvisoLegal />} />
       <Route path="/politica-privacidad" element={<PoliticaPrivacidad />} />
       <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />

@@ -1503,6 +1503,65 @@ app.get('/exam-review/:examId', async (req, res) => {
   }
 });
 
+// Busca preguntas completas por _id en las 4 fuentes de preguntas existentes
+// (ExamenCompleto, ExamenFotos, ExamenProtocolos y la colección preguntas_escalas).
+// Centralizado aquí porque varios endpoints de "errores"/"sin contestar"/"flashcards"
+// necesitan reconstruir la pregunta original a partir de un questionId guardado,
+// y antes solo buscaban en 2 de las 4 fuentes, perdiendo preguntas de Protocolos/Escalas.
+const letterToOptionKey = { A: 'option_1', B: 'option_2', C: 'option_3', D: 'option_4', E: 'option_5' };
+
+function normalizeEscalaQuestion(q) {
+  const opt1 = q.Respuesta_1 || q.option_1 || '';
+  const opt2 = q.Respuesta_2 || q.option_2 || '';
+  const opt3 = q.Respuesta_3 || q.option_3 || '';
+  const opt4 = q.Respuesta_4 || q.option_4 || '';
+  const opt5 = q.Respuesta_5 || q.option_5 || '';
+
+  const rawAnswer = (q.Respuesta_Correcta || q.answer || '').toString();
+  const opts = { option_1: opt1, option_2: opt2, option_3: opt3, option_4: opt4, option_5: opt5 };
+  const answerKey = letterToOptionKey[rawAnswer.trim().toUpperCase()];
+  const answer = answerKey ? opts[answerKey] : rawAnswer;
+
+  const normalized = {
+    _id: q._id,
+    question: q.Pregunta || q.question || '',
+    option_1: opt1,
+    option_2: opt2,
+    option_3: opt3,
+    option_4: opt4,
+    option_5: opt5,
+    answer,
+    subject: q.Tema_Asignatura || q.subject || 'General',
+    long_answer: q.Justificacion || q.long_answer || '',
+    image: q.image || null
+  };
+  // toObject() para comportarse igual que los documentos de Mongoose en el resto del código
+  Object.defineProperty(normalized, 'toObject', {
+    value: () => ({ ...normalized }),
+    enumerable: false
+  });
+  return normalized;
+}
+
+async function findQuestionsByIds(ids) {
+  const objectIds = ids
+    .filter(id => id)
+    .map(id => (id instanceof mongoose.Types.ObjectId ? id : new mongoose.Types.ObjectId(id)));
+
+  if (objectIds.length === 0) return [];
+
+  const [textQuestions, imageQuestions, protocolQuestions, escalaQuestionsRaw] = await Promise.all([
+    ExamenCompleto.find({ '_id': { $in: objectIds } }),
+    ExamenFotos.find({ '_id': { $in: objectIds } }),
+    ExamenProtocolos.find({ '_id': { $in: objectIds } }),
+    mongoose.connection.db.collection('preguntas_escalas').find({ '_id': { $in: objectIds } }).toArray()
+  ]);
+
+  const escalaQuestions = escalaQuestionsRaw.map(normalizeEscalaQuestion);
+
+  return [...textQuestions, ...imageQuestions, ...protocolQuestions, ...escalaQuestions];
+}
+
 // Ruta para obtener preguntas falladas para el modo "Repite tus errores"
 app.get('/failed-questions/:userId', async (req, res) => {
   try {
@@ -1519,12 +1578,11 @@ app.get('/failed-questions/:userId', async (req, res) => {
       .map(q => q.questionId);
     
     // Get full question data
-    const textQuestions = await ExamenCompleto.find({ '_id': { $in: failedQuestionIds } });
-    const imageQuestions = await ExamenFotos.find({ '_id': { $in: failedQuestionIds } });
-    
+    const allQuestions = await findQuestionsByIds(failedQuestionIds);
+
     // Create a map for sorting questions in the same order as failedQuestionIds
     const questionMap = {};
-    [...textQuestions, ...imageQuestions].forEach(q => {
+    allQuestions.forEach(q => {
       questionMap[q._id.toString()] = q;
     });
     
@@ -1613,17 +1671,14 @@ app.get('/practice-unanswered/:userId', async (req, res) => {
     }
     
     console.log(`Buscando ${questionIds.length} preguntas en las colecciones para práctica`);
-    
+
     // Obtener preguntas de las colecciones
-    const [textQuestions, imageQuestions] = await Promise.all([
-      ExamenCompleto.find({ '_id': { $in: questionIds } }),
-      ExamenFotos.find({ '_id': { $in: questionIds } })
-    ]);
-    
-    console.log(`Encontradas ${textQuestions.length} preguntas de texto y ${imageQuestions.length} con imagen para práctica`);
-    
+    const foundQuestions = await findQuestionsByIds(questionIds);
+
+    console.log(`Encontradas ${foundQuestions.length} preguntas para práctica`);
+
     // Combinar los resultados y añadir metadata
-    const allQuestions = [...textQuestions, ...imageQuestions].map(q => {
+    const allQuestions = foundQuestions.map(q => {
       const questionId = q._id.toString();
       const metadata = unansweredMap[questionId] || {};
       
@@ -1908,14 +1963,11 @@ app.get('/unanswered-questions/:userId', async (req, res) => {
     
     // Obtener datos completos de preguntas desde las colecciones originales si es necesario
     // (solo si la información en unansweredDocs.questionData no es suficiente)
-    const [textQuestions, imageQuestions] = await Promise.all([
-      ExamenCompleto.find({ '_id': { $in: questionIds } }),
-      ExamenFotos.find({ '_id': { $in: questionIds } })
-    ]);
-    
+    const fullQuestions = await findQuestionsByIds(questionIds);
+
     // Crear un mapa para facilitar la búsqueda de preguntas completas
     const fullQuestionsMap = {};
-    [...textQuestions, ...imageQuestions].forEach(q => {
+    fullQuestions.forEach(q => {
       fullQuestionsMap[q._id.toString()] = q;
     });
     
@@ -3109,6 +3161,9 @@ app.post('/create-payment-intent', async (req, res) => {
       subscription_data: {
         trial_period_days: 7,
         metadata: { userId, plan, email: normalizedEmail, userName: userName || userId }
+      },
+      consent_collection: {
+        terms_of_service: 'required'
       },
       allow_promotion_codes: true,
       // Incluir session_id para poder confirmar el pago al volver
@@ -4840,15 +4895,11 @@ app.post('/flashcards/convert-errors', async (req, res) => {
       .map(id => new mongoose.Types.ObjectId(id));
     
     // Para preguntas falladas, necesitamos buscar en las colecciones porque solo tienen questionId
-    // Solo buscar en ExamenCompleto y ExamenFotos (NO ExamenProtocolos)
-    const [textQuestions, imageQuestions] = await Promise.all([
-      ExamenCompleto.find({ '_id': { $in: failedQuestionIds } }),
-      ExamenFotos.find({ '_id': { $in: failedQuestionIds } })
-    ]);
-    
+    const failedQuestionsFound = await findQuestionsByIds(failedQuestionIds);
+
     // Crear mapa de preguntas falladas
     const failedQuestionsMap = {};
-    [...textQuestions, ...imageQuestions].forEach(q => {
+    failedQuestionsFound.forEach(q => {
       failedQuestionsMap[q._id.toString()] = q;
     });
     
@@ -4918,7 +4969,7 @@ app.post('/flashcards/convert-errors', async (req, res) => {
       });
     }
     
-    console.log(`Total preguntas encontradas para convertir: ${allQuestions.length} (${textQuestions.length + imageQuestions.length} falladas desde colecciones, ${allUnansweredDocs.length} sin contestar desde questionData)`);
+    console.log(`Total preguntas encontradas para convertir: ${allQuestions.length} (${failedQuestionsFound.length} falladas desde colecciones, ${allUnansweredDocs.length} sin contestar desde questionData)`);
     
     let converted = 0;
     let skipped = 0;
@@ -5042,12 +5093,9 @@ app.get('/flashcards/daily/:userId', async (req, res) => {
         .filter(id => id)
         .map(id => new mongoose.Types.ObjectId(id));
       
-      const [textQuestions, imageQuestions] = await Promise.all([
-        ExamenCompleto.find({ '_id': { $in: failedQuestionIds } }),
-        ExamenFotos.find({ '_id': { $in: failedQuestionIds } })
-      ]);
-      
-      [...textQuestions, ...imageQuestions].forEach(q => {
+      const failedQuestionsFound = await findQuestionsByIds(failedQuestionIds);
+
+      failedQuestionsFound.forEach(q => {
         const questionObj = q.toObject ? q.toObject() : q;
         // Añadir URL de imagen si existe
         if (questionObj.image) {

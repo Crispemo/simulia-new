@@ -458,15 +458,11 @@ export const blogPosts = [
       },
       {
         type: 'h2',
-        text: "Las 7 especialidades EIR disponibles"
+        text: "¿Qué especialidad elegir tras aprobar el EIR?"
       },
       {
         type: 'p',
-        text: "Una vez aprobado el examen, puedes elegir entre 7 especialidades oficiales: Obstétrico-Ginecológica (Matrona), Salud Mental, Pediátrica, Comunitaria, Geriátrica, Trabajo y Familiar y Comunitaria. Cada una tiene sus propias salidas laborales, duración y evolución de plazas."
-      },
-      {
-        type: 'p',
-        text: "Te lo explicamos todo con datos actualizados y tablas comparativas en nuestra <a href='/blog/especialidades-eir'>guía completa de especialidades EIR</a>."
+        text: "Una vez aprobado el examen, eliges especialidad según tu nota y las plazas disponibles ese año. Cada una tiene sus propias salidas laborales, duración y evolución de plazas: te lo explicamos todo con datos actualizados y tablas comparativas en nuestra <a href='/blog/especialidades-eir'>guía completa de las 7 especialidades EIR</a>."
       },
       {
         type: 'h2',
@@ -1206,7 +1202,7 @@ export const blogPosts = [
       { type: 'h2', text: "¿Cómo decidir qué opción es para ti?" },
       { type: 'p', text: "Hazte estas preguntas antes de elegir: ¿Tengo presupuesto para una academia? ¿Soy capaz de mantener un plan de estudio sin que nadie me lo imponga? ¿Necesito clases teóricas o ya domino los contenidos de la carrera y solo me falta practicar? Si tu problema principal es la falta de práctica con exámenes reales, una plataforma de simulacros puede ser más eficiente que una academia completa." },
       { type: 'p', text: "También es importante evitar ciertos <a href='/blog/errores-comunes-eir'>errores comunes al preparar el EIR</a>, independientemente del método que elijas. Y si quieres organizar tu preparación de forma eficiente, consulta nuestro <a href='/blog/plan-estudio-eir'>plan de estudio EIR mes a mes</a>." },
-      { type: 'p', text: "Sea cual sea tu decisión, lo importante es empezar. <a href='/'>En Simulia puedes probar gratis durante 7 días</a> y comprobar si el modelo híbrido es lo que necesitas." }
+      { type: 'p', text: "Sea cual sea tu decisión, lo importante es empezar. Consulta los <a href='/precios'>planes y precios de Simulia</a> y prueba gratis durante 7 días para comprobar si el modelo híbrido es lo que necesitas." }
     ]
   },
   {
@@ -1411,7 +1407,7 @@ export const blogPosts = [
       { type: 'h2', text: "Cómo organiza Simulia las preguntas EIR" },
       { type: 'p', text: "Simulia reúne más de 15.000 preguntas de convocatorias oficiales, organizadas por año, asignatura y nivel de dificultad. Cada pregunta incluye una explicación detallada de la respuesta correcta, y el sistema registra automáticamente tus aciertos, fallos y preguntas sin responder para generar estadísticas de rendimiento en tiempo real." },
       { type: 'p', text: "Además, el sistema de repaso inteligente selecciona automáticamente las preguntas que más necesitas repasar según tu historial de errores. Intégralo en tu <a href='/blog/plan-estudio-eir'>plan de estudio mensual</a> para sacarle el máximo partido." },
-      { type: 'p', text: "¿Lista para empezar a practicar con preguntas reales? <a href='/'>Entra en Simulia</a>, activa tu prueba gratuita de 7 días y descubre cómo la práctica inteligente marca la diferencia en tu preparación EIR." }
+      { type: 'p', text: "¿Lista para empezar a practicar con preguntas reales? Haz tu <a href='/simulacro'>simulacro EIR con el formato oficial exacto</a>, activa tu prueba gratuita de 7 días y descubre cómo la práctica inteligente marca la diferencia en tu preparación EIR." }
     ]
   }
 ];
