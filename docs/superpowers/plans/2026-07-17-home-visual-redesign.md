@@ -4,9 +4,9 @@
 
 **Goal:** Modernizar visualmente `frontend/src/HomePage.js` (tipografía, color, espaciado, sombras, motion) sin cambiar ni una palabra de copy, ni el orden/estructura de secciones, ni ninguna lógica de negocio.
 
-**Architecture:** Cambios puramente de presentación: (1) nueva fuente Inter cargada globalmente, (2) tokens de color/sombra/radio refinados en `index.css` y `tailwind.config.js`, (3) reclases Tailwind en los elementos existentes de `HomePage.js` sección por sección, (4) ajuste fino de la configuración de AOS ya presente. Ningún componente nuevo, ninguna prop nueva, ningún string de texto nuevo o modificado.
+**Architecture:** Cambios puramente de presentación: (1) nueva fuente Inter cargada globalmente, (2) tokens de color/sombra/radio refinados en `index.css` y `tailwind.config.js`, (3) reclases Tailwind en los elementos existentes de `HomePage.js` sección por sección, (4) ajuste fino de la configuración de AOS ya presente, (5) un componente nuevo y autocontenido (`HeroShowcase`) para el carrusel de mockups flotante del hero. Salvo ese componente, ningún string de texto existente se toca.
 
-**Nota sobre desviación respecto al spec original:** el spec (`docs/superpowers/specs/2026-07-17-home-visual-redesign-design.md`) describía un mockup del hero que rota entre 3 vistas del producto (IA/dashboard/examen). Tras la instrucción explícita del usuario de "no cambiar nada, solo estético/dinámico", este plan **no** construye ese carrusel — sería un componente nuevo con contenido nuevo, más allá de un reskin. El hero conserva su bloque de vídeo actual, solo restilizado (Task 4). Si más adelante se quiere el carrusel de mockups, es trabajo de producto/contenido nuevo y merece su propio spec.
+**Nota sobre el carrusel del Hero:** el spec (`docs/superpowers/specs/2026-07-17-home-visual-redesign-design.md`) describía un mockup del hero que rota entre 3 vistas del producto (IA/dashboard/examen). El usuario pidió explícitamente incluirlo (Task 5), como card flotante decorativa superpuesta al bloque de vídeo existente — el vídeo no se elimina ni pierde funcionalidad. Es el único punto del plan que introduce texto nuevo (3 etiquetas cortas + 3 descripciones breves, ver Task 5), reutilizando vocabulario ya presente en la página (análisis de errores, progreso, simulacro cronometrado).
 
 **Tech Stack:** React (CRA), Tailwind CSS, AOS (ya instalado).
 
@@ -24,7 +24,7 @@ Antes de tocar nada, se genera un snapshot del texto visible de la Home para pod
 - [ ] **Step 1: Extraer todo el texto entre comillas relevante de HomePage.js**
 
 Run: `grep -oE '>[^<{}]{3,}<' frontend/src/HomePage.js | sort > /tmp/home-copy-before.txt && wc -l /tmp/home-copy-before.txt`
-Expected: un número de líneas > 0 (referencia para comparar al final del plan, en la Task 8).
+Expected: un número de líneas > 0 (referencia para comparar al final del plan, en la Task 9).
 
 - [ ] **Step 2: No hay commit en este paso** (es solo una captura de referencia local, no se toca el repo).
 
@@ -299,7 +299,7 @@ por:
                     className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] text-white px-8 py-4 rounded-full font-bold shadow-soft hover:shadow-soft-lg transition-all duration-300 text-base flex items-center justify-center gap-2"
 ```
 
-(Se retira `animate-pulse-subtle` del CTA principal del hero porque un botón que pulsa constantemente no encaja con el tono "sutil y elegante" acordado; el énfasis pasa a un hover más marcado. Ver Task 6 para el resto de usos de `animate-pulse-subtle`.)
+(Se retira `animate-pulse-subtle` del CTA principal del hero porque un botón que pulsa constantemente no encaja con el tono "sutil y elegante" acordado; el énfasis pasa a un hover más marcado. Ver Task 7 para el resto de usos de `animate-pulse-subtle`.)
 
 - [ ] **Step 5: Verificar visualmente**
 
@@ -315,7 +315,144 @@ git commit -m "Restiliza el Hero: tipografía más grande, sombras suaves, hover
 
 ---
 
-### Task 5: Restilizar secciones de stats, modalidades y funcionalidades
+### Task 5: Añadir el carrusel de mockups flotante en el Hero
+
+**Files:**
+- Create: `frontend/src/components/HeroShowcase.jsx`
+- Modify: `frontend/src/index.css` (nuevo keyframe de fade-in)
+- Modify: `frontend/src/HomePage.js:561-563` (import + inserción en el hero)
+
+- [ ] **Step 1: Crear el componente `HeroShowcase`**
+
+Crear `frontend/src/components/HeroShowcase.jsx` con este contenido:
+
+```jsx
+import React, { useEffect, useState } from 'react';
+
+const VIEWS = [
+  { key: 'ia', label: 'Análisis IA', icon: '🤖', caption: 'Identifica qué fallaste y por qué' },
+  { key: 'progreso', label: 'Progreso', icon: '📊', caption: 'Tu evolución semana a semana' },
+  { key: 'examen', label: 'Examen en vivo', icon: '📝', caption: 'Simulacro cronometrado' },
+];
+
+function HeroShowcase() {
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActive((i) => (i + 1) % VIEWS.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const view = VIEWS[active];
+
+  return (
+    <div
+      className="absolute -top-6 -left-6 z-10 w-44 sm:w-52 rounded-2xl bg-card border border-border shadow-soft-lg p-4 hidden sm:block"
+      aria-hidden="true"
+    >
+      <div key={view.key} className="hero-showcase-content space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">{view.icon}</span>
+          <span className="text-xs font-semibold text-secondary">{view.label}</span>
+        </div>
+        <div className="space-y-1.5">
+          <div className="h-2 rounded-full bg-primary/15 relative overflow-hidden">
+            <div className="absolute inset-y-0 left-0 bg-primary/60 rounded-full" style={{ width: '80%' }} />
+          </div>
+          <div className="h-2 rounded-full bg-primary/15 relative overflow-hidden">
+            <div className="absolute inset-y-0 left-0 bg-primary/60 rounded-full" style={{ width: '55%' }} />
+          </div>
+          <p className="text-[11px] text-muted-foreground pt-1 leading-snug">{view.caption}</p>
+        </div>
+      </div>
+      <div className="flex gap-1 justify-center mt-3">
+        {VIEWS.map((v, idx) => (
+          <span
+            key={v.key}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              idx === active ? 'w-4 bg-primary' : 'w-1.5 bg-primary/30'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default HeroShowcase;
+```
+
+Notas sobre este componente:
+- Es puramente decorativo (`aria-hidden="true"`): no añade información nueva relevante para lectores de pantalla, solo refuerzo visual.
+- Las 3 etiquetas (`label`) y las 3 descripciones (`caption`) son el único texto nuevo de todo este plan. Son cortas y reutilizan vocabulario ya presente en la página (análisis de errores, progreso, simulacro/examen cronometrado).
+- Se oculta en mobile (`hidden sm:block`) para no saturar el hero en pantallas pequeñas, donde ya hay poco espacio.
+- El `key={view.key}` en el contenedor interior fuerza el remount de ese nodo en cada rotación, lo que retrigguea la animación CSS `hero-showcase-content` definida en el Step 2.
+
+- [ ] **Step 2: Añadir el keyframe de fade-in en `index.css`**
+
+En `frontend/src/index.css`, después del bloque `.animate-pulse-subtle { ... }` (línea 113-115), añadir:
+
+```css
+@keyframes fade-in-showcase {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-showcase-content {
+  animation: fade-in-showcase 0.5s ease-out;
+}
+```
+
+- [ ] **Step 3: Insertar `HeroShowcase` en el Hero**
+
+En `frontend/src/HomePage.js`, añadir el import junto al resto de imports de componentes (cerca de la línea 12):
+
+```jsx
+import HeroShowcase from './components/HeroShowcase';
+```
+
+Y en el hero, sustituir (línea 561-563):
+
+```jsx
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-md">
+                {!showHeroVideo ? (
+```
+
+por:
+
+```jsx
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-md relative">
+                <HeroShowcase />
+                {!showHeroVideo ? (
+```
+
+(El resto del bloque del vídeo, líneas siguientes, no cambia — el carrusel queda superpuesto en la esquina superior izquierda del bloque de vídeo gracias a `relative` en el contenedor padre y `absolute` en `HeroShowcase`.)
+
+- [ ] **Step 4: Verificar visualmente**
+
+Run: `cd frontend && npm start`
+Expected: en desktop/tablet (≥640px de ancho), aparece una pequeña card flotante en la esquina superior izquierda del bloque de vídeo del hero, que rota cada 3.5s entre "Análisis IA", "Progreso" y "Examen en vivo" con un fade-in suave. En mobile (<640px) la card no aparece. El vídeo del hero sigue funcionando exactamente igual (clic para reproducir).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/components/HeroShowcase.jsx frontend/src/index.css frontend/src/HomePage.js
+git commit -m "Añade carrusel de mockups flotante (HeroShowcase) en el Hero"
+```
+
+---
+
+### Task 6: Restilizar secciones de stats, modalidades y funcionalidades
 
 **Files:**
 - Modify: `frontend/src/HomePage.js:628-786`
@@ -415,7 +552,7 @@ git commit -m "Restiliza cards de stats, modalidades y funcionalidades con sombr
 
 ---
 
-### Task 6: Restilizar testimonios, "quién hay detrás", planes y FAQ
+### Task 7: Restilizar testimonios, "quién hay detrás", planes y FAQ
 
 **Files:**
 - Modify: `frontend/src/HomePage.js:788-1088`
@@ -530,7 +667,7 @@ git commit -m "Restiliza testimonios, planes y FAQ con el mismo lenguaje de somb
 
 ---
 
-### Task 7: Refinar navbar y footer
+### Task 8: Refinar navbar y footer
 
 **Files:**
 - Modify: `frontend/src/HomePage.js:406-487,1089-1141`
@@ -593,7 +730,7 @@ git commit -m "Refina navbar y footer con el nuevo lenguaje visual"
 
 ---
 
-### Task 8: Verificación final de que no cambió copy ni funcionalidad
+### Task 9: Verificación final de que no cambió copy ni funcionalidad
 
 **Files:**
 - No se modifican archivos de producto en esta tarea (solo verificación).
