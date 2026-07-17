@@ -804,39 +804,48 @@ function HomePage() {
 
       <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
-              Lo que dicen nuestros estudiantes
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Descubre las experiencias de quienes ya están preparando su plaza con Simulia
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 max-w-5xl mx-auto mb-12">
+            <div className="text-center sm:text-left">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary mb-2">Testimonios</p>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
+                Así lo viven
+              </h2>
+              <p className="text-lg text-muted-foreground mt-2">
+                Descubre las experiencias de quienes ya están preparando su plaza con Simulia
+              </p>
+            </div>
           </div>
 
           <div className="relative overflow-hidden">
             <div className="flex gap-6 animate-scroll">
               {[
-                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando." },
-                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela." },
-                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto." },
+                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando.", color: "bg-rose-200 text-rose-700" },
+                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela.", color: "bg-amber-200 text-amber-700" },
+                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad.", color: "bg-sky-200 text-sky-700" },
+                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino.", color: "bg-emerald-200 text-emerald-700" },
+                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen.", color: "bg-violet-200 text-violet-700" },
+                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto.", color: "bg-cyan-200 text-cyan-700" },
               ].concat([
-                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando." },
-                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela." },
-                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad." },
-                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino." },
-                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen." },
-                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto." },
+                { name: "María G.", context: "Convocatoria 2025", text: "Llevo 3 meses usando Simulia y he notado un cambio brutal. Antes me costaba mantener el ritmo, ahora hasta me divierto estudiando.", color: "bg-rose-200 text-rose-700" },
+                { name: "Carlos R.", context: "Convocatoria 2025", text: "Me encanta que puedo estudiar en cualquier momento. Hacer test rápidos en el bus es ya mi rutina. El tiempo vuela.", color: "bg-amber-200 text-amber-700" },
+                { name: "Ana M.", context: "Convocatoria 2024", text: "Las estadísticas me ayudaron a saber dónde fallaba y cómo mejorar cada día. Ahora estudio con más intención y seguridad.", color: "bg-sky-200 text-sky-700" },
+                { name: "David L.", context: "Convocatoria 2025", text: "Lo que más me gusta es practicar por temas. Cuando flojeo en uno, le meto caña hasta que lo domino.", color: "bg-emerald-200 text-emerald-700" },
+                { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen.", color: "bg-violet-200 text-violet-700" },
+                { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto.", color: "bg-cyan-200 text-cyan-700" },
               ]).map((testimonial, idx) => (
                 <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
-                  <div className="p-6 space-y-4">
-                    <p className="text-muted-foreground italic leading-relaxed">"{testimonial.text}"</p>
-                    <div>
-                      <p className="font-semibold text-secondary">{testimonial.name}</p>
-                      <p className="text-xs text-muted-foreground">{testimonial.context}</p>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${testimonial.color}`}>
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-secondary leading-tight">{testimonial.name}</p>
+                        <p className="text-xs text-muted-foreground">{testimonial.context}</p>
+                      </div>
                     </div>
+                    <div className="text-amber-400 text-sm tracking-tight" aria-label="5 de 5 estrellas">★★★★★</div>
+                    <p className="text-muted-foreground leading-relaxed text-sm">{testimonial.text}</p>
                   </div>
                 </div>
               ))}
