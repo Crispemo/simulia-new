@@ -412,6 +412,12 @@ function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
+              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                Simulacro EIR
+              </a>
+              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+                Precios
+              </a>
               <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
                 Blog
               </a>
@@ -431,8 +437,22 @@ function HomePage() {
           {showMobileMenu && (
             <div className="md:hidden border-t border-white/20 bg-secondary/98 backdrop-blur">
               <div className="px-4 py-4 space-y-4">
-                <a 
-                  href="/blog" 
+                <a
+                  href="/simulacro"
+                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  Simulacro EIR
+                </a>
+                <a
+                  href="/precios"
+                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  Precios
+                </a>
+                <a
+                  href="/blog"
                   className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
                   onClick={() => setShowMobileMenu(false)}
                 >
