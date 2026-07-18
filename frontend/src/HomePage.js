@@ -519,7 +519,7 @@ function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                 <div className="flex-1 sm:flex-initial max-w-md w-full">
                   <button
-                    className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] text-white px-8 py-4 rounded-full font-bold shadow-soft hover:shadow-soft-lg transition-all duration-300 text-base flex items-center justify-center gap-2"
+                    className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] hover:-translate-y-0.5 text-white px-8 py-4 rounded-full font-bold shadow-[0_8px_20px_-4px_rgba(126,160,167,0.5)] hover:shadow-[0_10px_34px_-2px_rgba(126,160,167,0.85),0_0_40px_-6px_rgba(126,160,167,0.6)] transition-all duration-300 text-base flex items-center justify-center gap-2"
                     onClick={() => {
                       const pricingSection = document.querySelector('#planes');
                       pricingSection?.scrollIntoView({ behavior: 'smooth' });
