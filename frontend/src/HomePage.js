@@ -769,15 +769,15 @@ function HomePage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all cursor-pointer group shadow-sm hover:shadow-md ${
+              className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm hover:shadow-soft ${
                 item.highlight
                   ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                   : 'border-border bg-card hover:border-primary/50'
               }`}
-              title={item.desc}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
               <span className="text-sm font-semibold text-secondary">{item.title}</span>
+              <p className="text-xs text-muted-foreground leading-snug">{item.desc}</p>
               {item.highlight && (
                 <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">Empieza aquí</span>
               )}
