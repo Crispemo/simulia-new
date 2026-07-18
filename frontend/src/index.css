@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply font-['Poppins',_sans-serif];
+    @apply font-['Inter',_sans-serif];
   }
   
   :root {
@@ -129,6 +129,10 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   text-wrap: balance;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.02em;
 }
 
 p {
