@@ -514,7 +514,7 @@ function HomePage() {
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="space-y-6 text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance text-secondary">
-              Entrena el EIR como si ya estuvieras dentro del examen.
+              Practica el EIR exactamente como lo vas a vivir, hasta que dejar de sorprenderte sea la norma.
             </h1>
             <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary shadow-soft">
               <span className="text-lg">⏳</span>
