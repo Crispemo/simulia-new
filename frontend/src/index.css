@@ -114,6 +114,21 @@
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+@keyframes fade-in-showcase {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-showcase-content {
+  animation: fade-in-showcase 0.5s ease-out;
+}
+
 /* Smooth Scrolling */
 html {
   scroll-behavior: smooth;

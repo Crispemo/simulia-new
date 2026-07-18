@@ -10,6 +10,7 @@ import { useAuth } from './context/AuthContext';
 import { API_URL } from './config';
 import { toast } from 'react-toastify';
 import DemoModal from './components/DemoModal'; // Demo component
+import HeroShowcase from './components/HeroShowcase';
 
 
 function HomePage() {
@@ -558,7 +559,8 @@ function HomePage() {
             </div>
 
             <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-md relative">
+                <HeroShowcase />
                 {!showHeroVideo ? (
                   <button
                     type="button"
