@@ -512,10 +512,10 @@ function HomePage() {
       <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance text-secondary">
               Entrena el EIR como si ya estuvieras dentro del examen.
             </h1>
-            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
+            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary shadow-soft">
               <span className="text-lg">⏳</span>
               <span>
                 Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
@@ -531,7 +531,7 @@ function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                 <div className="flex-1 sm:flex-initial max-w-md w-full">
                   <button
-                    className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle"
+                    className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] text-white px-8 py-4 rounded-full font-bold shadow-soft hover:shadow-soft-lg transition-all duration-300 text-base flex items-center justify-center gap-2"
                     onClick={() => {
                       const pricingSection = document.querySelector('#planes');
                       pricingSection?.scrollIntoView({ behavior: 'smooth' });
@@ -563,7 +563,7 @@ function HomePage() {
                   <button
                     type="button"
                     onClick={() => setShowHeroVideo(true)}
-                      className="relative w-full overflow-hidden rounded-3xl bg-card shadow-md hover:shadow-xl transition-all"
+                      className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft hover:shadow-soft-lg transition-all duration-300"
                     aria-label="Ver video de Simulia en acción"
                   >
                       <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
@@ -590,7 +590,7 @@ function HomePage() {
                       </div>
                   </button>
                 ) : (
-                    <div className="relative w-full overflow-hidden rounded-3xl bg-card shadow-md">
+                    <div className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft">
                       <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
                         <div className="rounded-[1.15rem] overflow-hidden">
                           <div className="aspect-video relative">
