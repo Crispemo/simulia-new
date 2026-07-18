@@ -10,6 +10,7 @@ import { useAuth } from './context/AuthContext';
 import { API_URL } from './config';
 import { toast } from 'react-toastify';
 import DemoModal from './components/DemoModal'; // Demo component
+import HeroShowcase from './components/HeroShowcase';
 
 
 function HomePage() {
@@ -29,9 +30,13 @@ function HomePage() {
   const [checkedAfterLogin, setCheckedAfterLogin] = useState(false);
 
   useEffect(() => {
-    if (window.innerWidth > 768) {
-      AOS.init({ duration: 1200, once: true });
-    }
+    AOS.init({
+      duration: 600,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 40,
+      disable: window.innerWidth <= 480,
+    });
   }, []);
 
   // useEffect para manejar la navegación post-login (móvil y desktop)
@@ -241,11 +246,6 @@ function HomePage() {
     }
   };
 
-  // Inicializar AOS (sin llamadas a API que interfieren)
-  useEffect(() => {
-    AOS.init({ duration: 1200, once: true });
-  }, []);
-
   const scrollToPricing = () => {
     const pricingSection = document.querySelector('#planes');
     if (pricingSection) {
@@ -403,7 +403,7 @@ function HomePage() {
           `}
         </script>
       </Helmet>
-    <nav className="sticky top-0 z-50 border-b bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-sm">
+    <nav className="sticky top-0 z-50 border-b border-white/5 bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-soft">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
@@ -412,13 +412,13 @@ function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
-              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Simulacro EIR
               </a>
-              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Precios
               </a>
-              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Blog
               </a>
               {renderActionButtons()}
@@ -495,7 +495,7 @@ function HomePage() {
           </p>
         </div>
       )}
-      <section className="bg-primary/10 border-y border-primary/20 py-3">
+      <section data-aos="fade-up" className="bg-primary/10 border-y border-primary/20 py-3">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-secondary">
             <div className="flex items-center gap-2">
@@ -510,13 +510,13 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
-              Entrena el EIR como si ya estuvieras dentro del examen.
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance text-secondary">
+              Practica el EIR exactamente como lo vas a vivir, hasta que dejar de sorprenderte sea la norma.
             </h1>
-            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary">
+            <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary shadow-soft">
               <span className="text-lg">⏳</span>
               <span>
                 Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
@@ -532,7 +532,7 @@ function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-start">
                 <div className="flex-1 sm:flex-initial max-w-md w-full">
                   <button
-                    className="w-full bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all text-base flex items-center justify-center gap-2 animate-pulse-subtle"
+                    className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] text-white px-8 py-4 rounded-full font-bold shadow-soft hover:shadow-soft-lg transition-all duration-300 text-base flex items-center justify-center gap-2"
                     onClick={() => {
                       const pricingSection = document.querySelector('#planes');
                       pricingSection?.scrollIntoView({ behavior: 'smooth' });
@@ -559,12 +559,13 @@ function HomePage() {
             </div>
 
             <div className="flex justify-center lg:justify-end">
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-md relative">
+                <HeroShowcase />
                 {!showHeroVideo ? (
                   <button
                     type="button"
                     onClick={() => setShowHeroVideo(true)}
-                      className="relative w-full overflow-hidden rounded-3xl bg-card shadow-md hover:shadow-xl transition-all"
+                      className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft hover:shadow-soft-lg transition-all duration-300"
                     aria-label="Ver video de Simulia en acción"
                   >
                       <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
@@ -591,7 +592,7 @@ function HomePage() {
                       </div>
                   </button>
                 ) : (
-                    <div className="relative w-full overflow-hidden rounded-3xl bg-card shadow-md">
+                    <div className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft">
                       <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
                         <div className="rounded-[1.15rem] overflow-hidden">
                           <div className="aspect-video relative">
@@ -625,8 +626,8 @@ function HomePage() {
           </div>
         </div>
       </section>
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border border-primary/20 p-8 lg:p-12 shadow-soft">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
               <div className="text-4xl lg:text-5xl font-bold text-primary">+15.000</div>
@@ -647,7 +648,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
             Elige tu modalidad de entrenamiento, mejora justo donde lo necesitas
@@ -659,9 +660,9 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -675,7 +676,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -689,7 +690,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -703,7 +704,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -717,7 +718,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -731,7 +732,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
+          <div className="rounded-xl border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-soft bg-card p-6">
             <div className="flex items-start gap-4">
               <svg className="w-12 h-12 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#3e5156">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -747,7 +748,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="modalidades" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+      <section data-aos="fade-up" id="modalidades" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-4 mb-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
             7 modos de entrenamiento para cada momento
@@ -768,15 +769,15 @@ function HomePage() {
           ].map((item, idx) => (
             <div
               key={idx}
-              className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all cursor-pointer group shadow-sm hover:shadow-md ${
+              className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm hover:shadow-soft ${
                 item.highlight
                   ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                   : 'border-border bg-card hover:border-primary/50'
               }`}
-              title={item.desc}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
               <span className="text-sm font-semibold text-secondary">{item.title}</span>
+              <p className="text-xs text-muted-foreground leading-snug">{item.desc}</p>
               {item.highlight && (
                 <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">Empieza aquí</span>
               )}
@@ -785,7 +786,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
+      <section data-aos="fade-up" className="py-16 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-4 mb-10">
@@ -797,17 +798,17 @@ function HomePage() {
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">+15.000</div>
                 <p className="text-secondary font-semibold">preguntas basadas en exámenes oficiales</p>
                 <p className="text-sm text-muted-foreground">Todas inspiradas en convocatorias reales del Ministerio de Sanidad y protocolos actualizados</p>
               </div>
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">7 modos</div>
                 <p className="text-secondary font-semibold">de práctica para cada momento</p>
                 <p className="text-sm text-muted-foreground">Desde simulacros completos de 4h hasta quiz rápidos de 50 preguntas en el bus</p>
               </div>
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">IA</div>
                 <p className="text-secondary font-semibold">que analiza tus errores por ti</p>
                 <p className="text-sm text-muted-foreground">Feedback personalizado después de cada simulacro para que sepas exactamente qué reforzar</p>
@@ -822,7 +823,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
+      <section data-aos="fade-up" className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 max-w-5xl mx-auto mb-12">
             <div className="text-center sm:text-left">
@@ -853,7 +854,7 @@ function HomePage() {
                 { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen.", color: "bg-violet-200 text-violet-700" },
                 { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto.", color: "bg-cyan-200 text-cyan-700" },
               ]).map((testimonial, idx) => (
-                <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
+                <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft bg-card rounded-xl">
                   <div className="p-6 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${testimonial.color}`}>
@@ -874,8 +875,8 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
+      <section data-aos="fade-up" id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+        <div className="max-w-3xl mx-auto bg-card border border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left shadow-soft">
           <img
             src="/foto_cris_peris.JPG"
             alt="Cristina Peris, fundadora de Simulia"
@@ -893,7 +894,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section data-aos="fade-up" id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-6 mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
             Elige tu plan, elige tu preparación, elige tu plaza
@@ -908,7 +909,7 @@ function HomePage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl p-8 space-y-6">
+          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft rounded-xl p-8 space-y-6">
             <div>
               <h3 className="text-2xl font-bold mb-2 text-secondary">Explora sin presión</h3>
               <div className="flex items-baseline gap-2">
@@ -952,7 +953,7 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
+          <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <div className="flex flex-col items-center gap-1">
                 <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
@@ -1002,7 +1003,7 @@ function HomePage() {
 
             <button
               onClick={() => handlePlanSelection('anual', 5999)}
-              className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold animate-pulse-subtle"
+              className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
             >
               Comenzar prueba gratuita
             </button>
@@ -1011,14 +1012,14 @@ function HomePage() {
 
       </section>
 
-      <section id="faq" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section data-aos="fade-up" id="faq" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 text-secondary">
             Preguntas Frecuentes
           </h2>
 
           <div className="space-y-4">
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4" open>
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Puedo cancelar si no me convence en los primeros días?
@@ -1029,7 +1030,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Sirve si todavía no he visto todo el temario?
@@ -1040,7 +1041,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
@@ -1051,7 +1052,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Las preguntas son como las del examen real?
@@ -1062,7 +1063,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Puedo usarla desde el móvil?
@@ -1073,7 +1074,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Cuántas preguntas hay y se actualizan?
@@ -1102,7 +1103,7 @@ function HomePage() {
               </a>
             </div>
 
-            <div className="border-t border-secondary-foreground/20 pt-8 space-y-4">
+            <div className="border-t border-secondary-foreground/10 pt-10 space-y-4">
               <p className="text-sm text-secondary-foreground/70">
                 © {new Date().getFullYear()} Simulia – Todos los derechos reservados
               </p>
