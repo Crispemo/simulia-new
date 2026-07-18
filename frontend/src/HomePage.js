@@ -10,7 +10,7 @@ import { useAuth } from './context/AuthContext';
 import { API_URL } from './config';
 import { toast } from 'react-toastify';
 import DemoModal from './components/DemoModal'; // Demo component
-import HeroShowcase from './components/HeroShowcase';
+import HeroMockupStack from './components/HeroMockupStack';
 
 
 function HomePage() {
@@ -18,9 +18,7 @@ function HomePage() {
   const [preguntas, setPreguntas] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
-  const [showHeroVideo, setShowHeroVideo] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showHeroVideoHint, setShowHeroVideoHint] = useState(false);
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const { logoSrc } = useLogo();
@@ -85,17 +83,6 @@ function HomePage() {
     }
   };
 
-  const HERO_VIDEO_YT_ID = 'mq2DUm4h7r4';
-  const HERO_VIDEO_THUMB_URL = `https://img.youtube.com/vi/${HERO_VIDEO_YT_ID}/hqdefault.jpg`;
-
-  useEffect(() => {
-    if (!showHeroVideo) return;
-    // Mostrar un "hint" corto para que se entienda que el video ya está reproduciéndose.
-    setShowHeroVideoHint(true);
-    const t = setTimeout(() => setShowHeroVideoHint(false), 2600);
-    return () => clearTimeout(t);
-  }, [showHeroVideo]);
-  
   const handleLoginClick = async () => {
     try {
       setIsSigningIn(true);
@@ -560,67 +547,7 @@ function HomePage() {
 
             <div className="flex justify-center lg:justify-end">
               <div className="w-full max-w-md relative">
-                <HeroShowcase />
-                {!showHeroVideo ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowHeroVideo(true)}
-                      className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft hover:shadow-soft-lg transition-all duration-300"
-                    aria-label="Ver video de Simulia en acción"
-                  >
-                      <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
-                        <div className="rounded-[1.15rem] overflow-hidden">
-                          <div className="aspect-video relative">
-                            <img
-                              src={HERO_VIDEO_THUMB_URL}
-                              alt="Video de Simulia"
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                            <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
-                              <div className="flex flex-col items-center gap-2">
-                                <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center animate-pulse-subtle">
-                                  <span className="text-2xl">▶</span>
-                                </div>
-                                <span className="text-white text-sm font-semibold px-4 text-center">
-                                  Toca para ver
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                  </button>
-                ) : (
-                    <div className="relative w-full overflow-hidden rounded-3xl bg-card shadow-soft">
-                      <div className="p-[2px] rounded-3xl bg-gradient-to-r from-primary via-accent to-primary">
-                        <div className="rounded-[1.15rem] overflow-hidden">
-                          <div className="aspect-video relative">
-                            <iframe
-                              className="absolute inset-0 w-full h-full"
-                              src={`https://www.youtube.com/embed/${HERO_VIDEO_YT_ID}?autoplay=1&mute=1&rel=0`}
-                              title="Simulia - Video"
-                              frameBorder="0"
-                              allow="autoplay; encrypted-media"
-                              allowFullScreen
-                            />
-                            {showHeroVideoHint && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="backdrop-blur-sm bg-black/40 border border-white/20 px-5 py-3 rounded-full">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-white text-lg">▶</span>
-                                    <span className="text-white/95 text-sm font-semibold">
-                                      Video en marcha (sin sonido)
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                    </div>
-                  </div>
-                )}
+                <HeroMockupStack />
               </div>
             </div>
           </div>
