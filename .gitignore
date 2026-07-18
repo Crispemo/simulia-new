@@ -39,3 +39,6 @@ yarn-error.log*
 # Archivos grandes
 simulia-project.zip
 *.zip
+
+# Superpowers brainstorming sessions
+.superpowers/
