@@ -29,9 +29,13 @@ function HomePage() {
   const [checkedAfterLogin, setCheckedAfterLogin] = useState(false);
 
   useEffect(() => {
-    if (window.innerWidth > 768) {
-      AOS.init({ duration: 1200, once: true });
-    }
+    AOS.init({
+      duration: 600,
+      easing: 'ease-out-cubic',
+      once: true,
+      offset: 40,
+      disable: window.innerWidth <= 480,
+    });
   }, []);
 
   // useEffect para manejar la navegación post-login (móvil y desktop)
@@ -240,11 +244,6 @@ function HomePage() {
       toast.error('Hubo un problema al procesar el plan. Inténtalo de nuevo.');
     }
   };
-
-  // Inicializar AOS (sin llamadas a API que interfieren)
-  useEffect(() => {
-    AOS.init({ duration: 1200, once: true });
-  }, []);
 
   const scrollToPricing = () => {
     const pricingSection = document.querySelector('#planes');
@@ -495,7 +494,7 @@ function HomePage() {
           </p>
         </div>
       )}
-      <section className="bg-primary/10 border-y border-primary/20 py-3">
+      <section data-aos="fade-up" className="bg-primary/10 border-y border-primary/20 py-3">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-secondary">
             <div className="flex items-center gap-2">
@@ -510,7 +509,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="space-y-6 text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-balance text-secondary">
@@ -625,7 +624,7 @@ function HomePage() {
           </div>
         </div>
       </section>
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
@@ -647,7 +646,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
             Elige tu modalidad de entrenamiento, mejora justo donde lo necesitas
@@ -659,7 +658,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           <div className="rounded-xl border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-xl bg-card p-6">
             <div className="flex items-start gap-4">
@@ -747,7 +746,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="modalidades" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+      <section data-aos="fade-up" id="modalidades" className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
         <div className="max-w-3xl mx-auto text-center space-y-4 mb-10">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
             7 modos de entrenamiento para cada momento
@@ -785,7 +784,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
+      <section data-aos="fade-up" className="py-16 lg:py-20 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-4 mb-10">
@@ -822,7 +821,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
+      <section data-aos="fade-up" className="py-16 lg:py-24 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 max-w-5xl mx-auto mb-12">
             <div className="text-center sm:text-left">
@@ -874,7 +873,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+      <section data-aos="fade-up" id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
           <img
             src="/foto_cris_peris.JPG"
@@ -893,7 +892,7 @@ function HomePage() {
         </div>
       </section>
 
-      <section id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section data-aos="fade-up" id="planes" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto text-center space-y-6 mb-12">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
             Elige tu plan, elige tu preparación, elige tu plaza
@@ -1011,7 +1010,7 @@ function HomePage() {
 
       </section>
 
-      <section id="faq" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+      <section data-aos="fade-up" id="faq" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 text-secondary">
             Preguntas Frecuentes
