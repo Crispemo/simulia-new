@@ -403,7 +403,7 @@ function HomePage() {
           `}
         </script>
       </Helmet>
-    <nav className="sticky top-0 z-50 border-b bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-sm">
+    <nav className="sticky top-0 z-50 border-b border-white/5 bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-soft">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
@@ -412,13 +412,13 @@ function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
-              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Simulacro EIR
               </a>
-              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Precios
               </a>
-              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
+              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
                 Blog
               </a>
               {renderActionButtons()}
@@ -1103,7 +1103,7 @@ function HomePage() {
               </a>
             </div>
 
-            <div className="border-t border-secondary-foreground/20 pt-8 space-y-4">
+            <div className="border-t border-secondary-foreground/10 pt-10 space-y-4">
               <p className="text-sm text-secondary-foreground/70">
                 © {new Date().getFullYear()} Simulia – Todos los derechos reservados
               </p>
