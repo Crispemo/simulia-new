@@ -798,17 +798,17 @@ function HomePage() {
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">+15.000</div>
                 <p className="text-secondary font-semibold">preguntas basadas en exámenes oficiales</p>
                 <p className="text-sm text-muted-foreground">Todas inspiradas en convocatorias reales del Ministerio de Sanidad y protocolos actualizados</p>
               </div>
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">7 modos</div>
                 <p className="text-secondary font-semibold">de práctica para cada momento</p>
                 <p className="text-sm text-muted-foreground">Desde simulacros completos de 4h hasta quiz rápidos de 50 preguntas en el bus</p>
               </div>
-              <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
+              <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
                 <div className="text-4xl font-bold text-primary">IA</div>
                 <p className="text-secondary font-semibold">que analiza tus errores por ti</p>
                 <p className="text-sm text-muted-foreground">Feedback personalizado después de cada simulacro para que sepas exactamente qué reforzar</p>
@@ -854,7 +854,7 @@ function HomePage() {
                 { name: "Sofía P.", context: "Convocatoria 2024", text: "Me ha ayudado a organizarme mejor. Sé exactamente qué repasar y llegué súper tranquila al examen.", color: "bg-violet-200 text-violet-700" },
                 { name: "Javier T.", context: "Convocatoria 2025", text: "Las preguntas son muy parecidas a las del examen real. Me da mucha seguridad saber que estoy practicando con algo que se parece tanto.", color: "bg-cyan-200 text-cyan-700" },
               ]).map((testimonial, idx) => (
-                <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
+                <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft bg-card rounded-xl">
                   <div className="p-6 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${testimonial.color}`}>
@@ -876,7 +876,7 @@ function HomePage() {
       </section>
 
       <section data-aos="fade-up" id="quien-hay-detras" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
+        <div className="max-w-3xl mx-auto bg-card border border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left shadow-soft">
           <img
             src="/foto_cris_peris.JPG"
             alt="Cristina Peris, fundadora de Simulia"
@@ -909,7 +909,7 @@ function HomePage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl p-8 space-y-6">
+          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft rounded-xl p-8 space-y-6">
             <div>
               <h3 className="text-2xl font-bold mb-2 text-secondary">Explora sin presión</h3>
               <div className="flex items-baseline gap-2">
@@ -953,7 +953,7 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
+          <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <div className="flex flex-col items-center gap-1">
                 <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
@@ -1003,7 +1003,7 @@ function HomePage() {
 
             <button
               onClick={() => handlePlanSelection('anual', 5999)}
-              className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold animate-pulse-subtle"
+              className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
             >
               Comenzar prueba gratuita
             </button>
@@ -1019,7 +1019,7 @@ function HomePage() {
           </h2>
 
           <div className="space-y-4">
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4" open>
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Puedo cancelar si no me convence en los primeros días?
@@ -1030,7 +1030,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Sirve si todavía no he visto todo el temario?
@@ -1041,7 +1041,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
@@ -1052,7 +1052,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Las preguntas son como las del examen real?
@@ -1063,7 +1063,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Puedo usarla desde el móvil?
@@ -1074,7 +1074,7 @@ function HomePage() {
               </details>
             </div>
 
-            <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
+            <div className="border border-border hover:border-primary/50 rounded-xl px-6 transition-all duration-300 shadow-sm hover:shadow-soft bg-card">
               <details className="py-4">
                 <summary className="text-left hover:no-underline text-secondary font-semibold cursor-pointer">
                   ¿Cuántas preguntas hay y se actualizan?
