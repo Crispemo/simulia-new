@@ -390,7 +390,7 @@ function HomePage() {
           `}
         </script>
       </Helmet>
-    <nav className="sticky top-0 z-50 border-b border-white/5 bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-soft">
+    <nav className="sticky top-0 z-50 border-b border-[#dbe6e5] bg-[#eef4f3]/95 backdrop-blur supports-[backdrop-filter]:bg-[#eef4f3]/80 shadow-soft">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
@@ -399,20 +399,20 @@ function HomePage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
-              <a href="/simulacro" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
+              <a href="/simulacro" className="text-sm font-medium text-secondary/80 hover:text-secondary transition-colors duration-200">
                 Simulacro EIR
               </a>
-              <a href="/precios" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
+              <a href="/precios" className="text-sm font-medium text-secondary/80 hover:text-secondary transition-colors duration-200">
                 Precios
               </a>
-              <a href="/blog" className="text-sm font-medium text-white/80 hover:text-white transition-colors duration-200">
+              <a href="/blog" className="text-sm font-medium text-secondary/80 hover:text-secondary transition-colors duration-200">
                 Blog
               </a>
               {renderActionButtons()}
             </div>
 
             <button 
-              className="md:hidden text-white text-2xl focus:outline-none" 
+              className="md:hidden text-secondary text-2xl focus:outline-none" 
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               aria-label="Menú móvil"
             >
@@ -422,25 +422,25 @@ function HomePage() {
           
           {/* Menú móvil desplegable */}
           {showMobileMenu && (
-            <div className="md:hidden border-t border-white/20 bg-secondary/98 backdrop-blur">
+            <div className="md:hidden border-t border-[#dbe6e5] bg-[#eef4f3]/98 backdrop-blur">
               <div className="px-4 py-4 space-y-4">
                 <a
                   href="/simulacro"
-                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  className="block text-sm font-medium text-secondary/80 hover:text-secondary transition-colors py-2"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   Simulacro EIR
                 </a>
                 <a
                   href="/precios"
-                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  className="block text-sm font-medium text-secondary/80 hover:text-secondary transition-colors py-2"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   Precios
                 </a>
                 <a
                   href="/blog"
-                  className="block text-sm font-medium text-white/80 hover:text-white transition-colors py-2"
+                  className="block text-sm font-medium text-secondary/80 hover:text-secondary transition-colors py-2"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   Blog
