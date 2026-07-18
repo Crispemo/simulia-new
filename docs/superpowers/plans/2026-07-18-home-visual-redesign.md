@@ -1,14 +1,12 @@
-# Rediseño Visual de la Home Implementation Plan
-
-> **Superseded:** no se ejecutó ninguna de sus tareas. Sustituido por `docs/superpowers/plans/2026-07-18-home-visual-redesign.md`, que incluye todo lo de aquí más el titular del hero y los subtítulos de modalidad. Se conserva este archivo como histórico.
+# Rediseño Visual + Contenido de la Home Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+>
+> Sustituye a `docs/superpowers/plans/2026-07-17-home-visual-redesign.md` (no ejecutado). Implementa `docs/superpowers/specs/2026-07-18-home-visual-redesign-design.md`, que a su vez sustituye al spec del 17/07.
 
-**Goal:** Modernizar visualmente `frontend/src/HomePage.js` (tipografía, color, espaciado, sombras, motion) sin cambiar ni una palabra de copy, ni el orden/estructura de secciones, ni ninguna lógica de negocio.
+**Goal:** Modernizar visualmente `frontend/src/HomePage.js` (tipografía, color, espaciado, sombras, motion) y aplicar dos cambios de copy puntuales (titular del hero, subtítulos visibles de las 7 modalidades), sin tocar el resto del texto, ni el orden/estructura de secciones, ni ninguna lógica de negocio.
 
-**Architecture:** Cambios puramente de presentación: (1) nueva fuente Inter cargada globalmente, (2) tokens de color/sombra/radio refinados en `index.css` y `tailwind.config.js`, (3) reclases Tailwind en los elementos existentes de `HomePage.js` sección por sección, (4) ajuste fino de la configuración de AOS ya presente, (5) un componente nuevo y autocontenido (`HeroShowcase`) para el carrusel de mockups flotante del hero. Salvo ese componente, ningún string de texto existente se toca.
-
-**Nota sobre el carrusel del Hero:** el spec (`docs/superpowers/specs/2026-07-17-home-visual-redesign-design.md`) describía un mockup del hero que rota entre 3 vistas del producto (IA/dashboard/examen). El usuario pidió explícitamente incluirlo (Task 5), como card flotante decorativa superpuesta al bloque de vídeo existente — el vídeo no se elimina ni pierde funcionalidad. Es el único punto del plan que introduce texto nuevo (3 etiquetas cortas + 3 descripciones breves, ver Task 5), reutilizando vocabulario ya presente en la página (análisis de errores, progreso, simulacro cronometrado).
+**Architecture:** Cambios de presentación: (1) nueva fuente Inter cargada globalmente, (2) tokens de color/sombra/radio refinados en `index.css` y `tailwind.config.js`, (3) reclases Tailwind en los elementos existentes de `HomePage.js` sección por sección, (4) ajuste fino de la configuración de AOS ya presente, (5) un componente nuevo y autocontenido (`HeroShowcase`) para el carrusel de mockups flotante del hero, (6) nuevo titular del hero, (7) subtítulos de las 7 modalidades, hoy solo visibles como tooltip HTML (`title` attr, invisible en táctil), pasan a ser un párrafo siempre visible.
 
 **Tech Stack:** React (CRA), Tailwind CSS, AOS (ya instalado).
 
@@ -16,7 +14,7 @@
 
 ## Antes de empezar: snapshot de copy
 
-Antes de tocar nada, se genera un snapshot del texto visible de la Home para poder verificar al final que no ha cambiado ni una palabra.
+Antes de tocar nada, se genera un snapshot del texto visible de la Home para poder verificar al final que el único copy que cambió es el esperado (titular del hero + 7 subtítulos de modalidad, antes ocultos en un tooltip).
 
 ### Task 0: Snapshot de copy para verificación posterior
 
@@ -26,7 +24,7 @@ Antes de tocar nada, se genera un snapshot del texto visible de la Home para pod
 - [ ] **Step 1: Extraer todo el texto entre comillas relevante de HomePage.js**
 
 Run: `grep -oE '>[^<{}]{3,}<' frontend/src/HomePage.js | sort > /tmp/home-copy-before.txt && wc -l /tmp/home-copy-before.txt`
-Expected: un número de líneas > 0 (referencia para comparar al final del plan, en la Task 9).
+Expected: un número de líneas > 0 (referencia para comparar al final del plan, en la Task 11).
 
 - [ ] **Step 2: No hay commit en este paso** (es solo una captura de referencia local, no se toca el repo).
 
@@ -85,7 +83,7 @@ h1, h2, h3 {
 - [ ] **Step 4: Verificar visualmente**
 
 Run: `cd frontend && npm start`
-Expected: la Home carga en `localhost:3000` con la tipografía Inter visible en titulares y cuerpo de texto (compáralo con capturas previas si tienes alguna; visualmente debe verse una sans-serif más geométrica que antes). Ningún texto ha cambiado, solo la fuente.
+Expected: la Home carga en `localhost:3000` con la tipografía Inter visible en titulares y cuerpo de texto. Ningún texto ha cambiado, solo la fuente.
 
 - [ ] **Step 5: Commit**
 
@@ -188,24 +186,18 @@ Y eliminar el segundo bloque duplicado (líneas ~244-247):
 
 - [ ] **Step 2: Añadir `data-aos` a las secciones que aún no lo tengan**
 
-Cada `<section>` de `HomePage.js` (franja de aviso, hero, stats, modalidades, funcionalidades, testimonios, quién hay detrás, planes, FAQ) debe llevar `data-aos="fade-up"` en su elemento raíz si no lo tiene ya. Ejemplo para la sección de stats (línea 650):
+Cada `<section>` de `HomePage.js` (franja de aviso, hero, stats, funcionalidades, modalidades, evidencia, testimonios, quién hay detrás, planes, FAQ) debe llevar `data-aos="fade-up"` en su elemento raíz si no lo tiene ya. Ejemplo para la sección de stats (línea 628):
 
 Antes:
 ```jsx
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
-            Elige tu modalidad de entrenamiento, mejora justo donde lo necesitas
-          </h2>
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
 ```
 
 Después:
 ```jsx
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20" data-aos="fade-up">
-        <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-balance text-secondary">
-            Elige tu modalidad de entrenamiento, mejora justo donde lo necesitas
-          </h2>
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4" data-aos="fade-up">
+        <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border-2 border-primary/20 p-8 lg:p-12">
 ```
 
 Aplicar el mismo patrón (añadir `data-aos="fade-up"` al `<section>` raíz, sin tocar el contenido interior) a todas las secciones listadas arriba que no lo tengan ya.
@@ -246,6 +238,8 @@ por:
               Entrena el EIR como si ya estuvieras dentro del examen.
             </h1>
 ```
+
+(El texto del titular se cambia en la Task 6 de este plan, después de fijar el estilo. Aquí solo cambian las clases.)
 
 - [ ] **Step 2: Suavizar el badge de countdown**
 
@@ -301,12 +295,12 @@ por:
                     className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] text-white px-8 py-4 rounded-full font-bold shadow-soft hover:shadow-soft-lg transition-all duration-300 text-base flex items-center justify-center gap-2"
 ```
 
-(Se retira `animate-pulse-subtle` del CTA principal del hero porque un botón que pulsa constantemente no encaja con el tono "sutil y elegante" acordado; el énfasis pasa a un hover más marcado. Ver Task 7 para el resto de usos de `animate-pulse-subtle`.)
+(Se retira `animate-pulse-subtle` del CTA principal del hero porque un botón que pulsa constantemente no encaja con el tono "sutil y elegante" acordado; el énfasis pasa a un hover más marcado. Ver Task 9 para el resto de usos de `animate-pulse-subtle`.)
 
 - [ ] **Step 5: Verificar visualmente**
 
 Run: `cd frontend && npm start`
-Expected: el hero se ve con un titular más grande y compacto, el badge y el bloque de vídeo tienen una sombra más difusa y elegante, y el botón principal crece ligeramente al hacer hover en vez de pulsar todo el rato. Ningún texto ha cambiado.
+Expected: el hero se ve con un titular más grande y compacto, el badge y el bloque de vídeo tienen una sombra más difusa y elegante, y el botón principal crece ligeramente al hacer hover en vez de pulsar todo el rato. Ningún texto ha cambiado todavía.
 
 - [ ] **Step 6: Commit**
 
@@ -388,7 +382,7 @@ export default HeroShowcase;
 
 Notas sobre este componente:
 - Es puramente decorativo (`aria-hidden="true"`): no añade información nueva relevante para lectores de pantalla, solo refuerzo visual.
-- Las 3 etiquetas (`label`) y las 3 descripciones (`caption`) son el único texto nuevo de todo este plan. Son cortas y reutilizan vocabulario ya presente en la página (análisis de errores, progreso, simulacro/examen cronometrado).
+- Las 3 etiquetas (`label`) y las 3 descripciones (`caption`) son texto nuevo autocontenido en este componente (no tocan copy existente de `HomePage.js`). Son cortas y reutilizan vocabulario ya presente en la página (análisis de errores, progreso, simulacro/examen cronometrado).
 - Se oculta en mobile (`hidden sm:block`) para no saturar el hero en pantallas pequeñas, donde ya hay poco espacio.
 - El `key={view.key}` en el contenedor interior fuerza el remount de ese nodo en cada rotación, lo que retrigguea la animación CSS `hero-showcase-content` definida en el Step 2.
 
@@ -454,7 +448,46 @@ git commit -m "Añade carrusel de mockups flotante (HeroShowcase) en el Hero"
 
 ---
 
-### Task 6: Restilizar secciones de stats, modalidades y funcionalidades
+### Task 6: Actualizar el titular del Hero
+
+**Files:**
+- Modify: `frontend/src/HomePage.js:517` (número de línea tras la Task 4; el texto vive dentro del `<h1>` ya restilizado)
+
+- [ ] **Step 1: Sustituir el texto del titular**
+
+Buscar el `<h1>` del hero (con las clases ya aplicadas en la Task 4):
+
+```jsx
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance text-secondary">
+              Entrena el EIR como si ya estuvieras dentro del examen.
+            </h1>
+```
+
+Sustituir por:
+
+```jsx
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight text-balance text-secondary">
+              Practica el EIR exactamente como lo vas a vivir, hasta que dejar de sorprenderte sea la norma.
+            </h1>
+```
+
+Solo cambia el texto entre las etiquetas `<h1>`; las clases no se tocan en este paso.
+
+- [ ] **Step 2: Verificar visualmente**
+
+Run: `cd frontend && npm start`
+Expected: el hero muestra el nuevo titular. El resto del hero (badge de countdown, subtítulo, botones, vídeo, `HeroShowcase`) no cambia.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/HomePage.js
+git commit -m "Actualiza el titular del Hero"
+```
+
+---
+
+### Task 7: Restilizar secciones de stats, funcionalidades y modalidades
 
 **Files:**
 - Modify: `frontend/src/HomePage.js:628-786`
@@ -520,48 +553,105 @@ Sustituir **cada una de las 6 apariciones** por:
 
 - [ ] **Step 4: Cards de modalidades con sombra y hover consistentes**
 
-Línea 769-775, el div de cada modalidad tiene:
+Línea 769-777, el div de cada modalidad tiene:
 
 ```jsx
+            <div
+              key={idx}
               className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all cursor-pointer group shadow-sm hover:shadow-md ${
                 item.highlight
                   ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                   : 'border-border bg-card hover:border-primary/50'
               }`}
+              title={item.desc}
+            >
 ```
 
-Sustituir por:
+Sustituir por (se retira `title={item.desc}` aquí porque la Task 8 lo reemplaza por un párrafo visible):
 
 ```jsx
+            <div
+              key={idx}
               className={`flex flex-col items-center text-center gap-2 p-5 rounded-xl border-2 transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm hover:shadow-soft ${
                 item.highlight
                   ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
                   : 'border-border bg-card hover:border-primary/50'
               }`}
+            >
 ```
 
 - [ ] **Step 5: Verificar visualmente**
 
 Run: `cd frontend && npm start`
-Expected: las secciones tienen más aire vertical, y al pasar el ratón sobre las cards de funcionalidades y modalidades, se elevan ligeramente (`-translate-y-1`) con una sombra más difusa, con una transición de 300ms. El contenido y el texto de cada card es idéntico al actual.
+Expected: las secciones tienen más aire vertical, y al pasar el ratón sobre las cards de funcionalidades y modalidades, se elevan ligeramente (`-translate-y-1`) con una sombra más difusa, con una transición de 300ms. El contenido y el texto de cada card es idéntico al actual (el tooltip de modalidades ya no aparece al hacer hover — se sustituye por texto visible en la Task 8).
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add frontend/src/HomePage.js
-git commit -m "Restiliza cards de stats, modalidades y funcionalidades con sombra y hover consistentes"
+git commit -m "Restiliza cards de stats, funcionalidades y modalidades con sombra y hover consistentes"
 ```
 
 ---
 
-### Task 7: Restilizar testimonios, "quién hay detrás", planes y FAQ
+### Task 8: Mostrar el subtítulo de cada modalidad (antes solo tooltip)
 
 **Files:**
-- Modify: `frontend/src/HomePage.js:788-1088`
+- Modify: `frontend/src/HomePage.js:778-782` (números de línea tras la Task 7)
 
-- [ ] **Step 1: Cards de "¿esto ayuda a aprobar?"**
+- [ ] **Step 1: Añadir un párrafo visible con `item.desc` dentro de cada card de modalidad**
 
-Líneas 800, 805, 810, cada una:
+Buscar (dentro del `.map` de las 7 modalidades, tras la Task 7):
+
+```jsx
+              <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+              <span className="text-sm font-semibold text-secondary">{item.title}</span>
+              {item.highlight && (
+                <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">Empieza aquí</span>
+              )}
+            </div>
+          ))}
+        </div>
+```
+
+Sustituir por:
+
+```jsx
+              <span className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</span>
+              <span className="text-sm font-semibold text-secondary">{item.title}</span>
+              <p className="text-xs text-muted-foreground leading-snug">{item.desc}</p>
+              {item.highlight && (
+                <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">Empieza aquí</span>
+              )}
+            </div>
+          ))}
+        </div>
+```
+
+No se toca el array de datos (`{ icon, title, desc, highlight }`) — el campo `desc` ya existe para las 7 modalidades, solo cambia cómo se renderiza (de atributo `title` invisible en táctil, a párrafo siempre visible).
+
+- [ ] **Step 2: Verificar visualmente**
+
+Run: `cd frontend && npm start`
+Expected: cada una de las 7 cards de modalidad muestra ahora, debajo del nombre, una frase corta explicando qué es (p.ej. bajo "Quiz 50 preguntas" se lee "Sesiones rápidas de práctica adaptadas a ti"). Visible tanto en desktop como en mobile, sin depender de hover. Las cards son ligeramente más altas que antes; el grid (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`) se sigue viendo ordenado.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/HomePage.js
+git commit -m "Muestra el subtítulo de cada modalidad en la card en vez de solo en el tooltip"
+```
+
+---
+
+### Task 9: Restilizar evidencia, testimonios, "quién hay detrás", planes y FAQ
+
+**Files:**
+- Modify: `frontend/src/HomePage.js:788-1088` (números de línea tras las Tasks 7-8; pueden haberse desplazado unas pocas líneas por el párrafo añadido en la Task 8)
+
+- [ ] **Step 1: Sombra suave en las 3 cards de "¿esto ayuda a aprobar?"**
+
+Las 3 cards de la sección de evidencia (originalmente líneas 800, 805, 810), cada una:
 
 ```jsx
               <div className="bg-card border-2 border-border rounded-xl p-6 text-center space-y-3">
@@ -575,7 +665,7 @@ Sustituir las 3 apariciones por:
 
 - [ ] **Step 2: Cards de testimonios**
 
-Línea 856:
+Buscar (dentro del `.map` de testimonios):
 
 ```jsx
                 <div key={idx} className="flex-shrink-0 w-80 border border-border hover:border-primary/50 transition-all shadow-md hover:shadow-lg bg-card rounded-xl">
@@ -589,7 +679,7 @@ Sustituir por:
 
 - [ ] **Step 3: Bloque "quién hay detrás"**
 
-Línea 878:
+Buscar:
 
 ```jsx
         <div className="max-w-3xl mx-auto bg-card border-2 border-border rounded-2xl p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8 text-center sm:text-left">
@@ -603,7 +693,7 @@ Sustituir por:
 
 - [ ] **Step 4: Cards de planes/precios**
 
-Línea 911 (plan mensual):
+Plan mensual, buscar:
 
 ```jsx
           <div className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl p-8 space-y-6">
@@ -615,7 +705,7 @@ Sustituir por:
           <div className="bg-card border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft rounded-xl p-8 space-y-6">
 ```
 
-Línea 955 (plan anual destacado):
+Plan anual destacado, buscar:
 
 ```jsx
           <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
@@ -627,15 +717,13 @@ Sustituir por:
           <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
 ```
 
-Los botones de ambos planes (líneas 947-952 y 1003-1008) usan `animate-pulse-subtle` en el botón del plan anual (línea 1005). Se retira ese `animate-pulse-subtle` por el mismo motivo que en el Task 4 (Step 4):
-
-Línea 1005, sustituir:
+El botón del plan anual usa `animate-pulse-subtle`. Se retira por el mismo motivo que en la Task 4 (Step 4). Buscar:
 
 ```jsx
               className="w-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold animate-pulse-subtle"
 ```
 
-por:
+Sustituir por:
 
 ```jsx
               className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
@@ -643,7 +731,7 @@ por:
 
 - [ ] **Step 5: FAQ accordion**
 
-Cada uno de los 6 bloques FAQ (líneas 1021, 1032, 1043, 1054, 1065, 1076) tiene:
+Cada uno de los 6 bloques FAQ tiene:
 
 ```jsx
             <div className="border-2 border-border hover:border-primary/50 rounded-xl px-6 transition-all shadow-sm hover:shadow-md bg-card">
@@ -658,25 +746,25 @@ Sustituir **las 6 apariciones** por:
 - [ ] **Step 6: Verificar visualmente**
 
 Run: `cd frontend && npm start`
-Expected: testimonios, bloque de fundadora, planes y FAQ se ven con bordes más finos, sombras suaves y consistentes con el resto de la página. Ningún texto, precio ni funcionalidad ha cambiado.
+Expected: evidencia, testimonios, bloque de fundadora, planes y FAQ se ven con bordes más finos, sombras suaves y consistentes con el resto de la página. Ningún texto, precio ni funcionalidad ha cambiado.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add frontend/src/HomePage.js
-git commit -m "Restiliza testimonios, planes y FAQ con el mismo lenguaje de sombras y bordes"
+git commit -m "Restiliza evidencia, testimonios, planes y FAQ con el mismo lenguaje de sombras y bordes"
 ```
 
 ---
 
-### Task 8: Refinar navbar y footer
+### Task 10: Refinar navbar y footer
 
 **Files:**
-- Modify: `frontend/src/HomePage.js:406-487,1089-1141`
+- Modify: `frontend/src/HomePage.js:406-487,1089-1141` (números de línea aproximados, pueden haberse desplazado por las tasks anteriores)
 
 - [ ] **Step 1: Sombra más sutil en la navbar**
 
-Línea 406:
+Buscar:
 
 ```jsx
     <nav className="sticky top-0 z-50 border-b bg-secondary/95 backdrop-blur supports-[backdrop-filter]:bg-secondary/80 shadow-sm">
@@ -690,7 +778,7 @@ Sustituir por:
 
 - [ ] **Step 2: Transición suave en los links de navegación**
 
-Los links `Simulacro EIR`, `Precios`, `Blog` (líneas 415, 418, 421) tienen:
+Los links `Simulacro EIR`, `Precios`, `Blog` del menú desktop tienen:
 
 ```jsx
 className="text-sm font-medium text-white/80 hover:text-white transition-colors"
@@ -706,7 +794,7 @@ className="text-sm font-medium text-white/80 hover:text-white transition-colors 
 
 - [ ] **Step 3: Footer — separación y contraste**
 
-Línea 1105:
+Buscar:
 
 ```jsx
             <div className="border-t border-secondary-foreground/20 pt-8 space-y-4">
@@ -721,7 +809,7 @@ Sustituir por:
 - [ ] **Step 4: Verificar visualmente**
 
 Run: `cd frontend && npm start`
-Expected: navbar y footer mantienen exactamente el mismo contenido y enlaces, con una separación y sombra ligeramente más refinadas.
+Expected: navbar y footer mantienen exactamente el mismo contenido y enlaces (incluido el email de contacto, que no se toca), con una separación y sombra ligeramente más refinadas.
 
 - [ ] **Step 5: Commit**
 
@@ -732,15 +820,20 @@ git commit -m "Refina navbar y footer con el nuevo lenguaje visual"
 
 ---
 
-### Task 9: Verificación final de que no cambió copy ni funcionalidad
+### Task 11: Verificación final de copy, build y funcionalidad
 
 **Files:**
-- No se modifican archivos de producto en esta tarea (solo verificación).
+- No se modifican archivos de producto en esta tarea (solo verificación), salvo que el Step 1 detecte una regresión de copy no esperada.
 
 - [ ] **Step 1: Comparar el copy antes/después**
 
 Run: `grep -oE '>[^<{}]{3,}<' frontend/src/HomePage.js | sort > /tmp/home-copy-after.txt && diff /tmp/home-copy-before.txt /tmp/home-copy-after.txt`
-Expected: **sin diferencias** (el comando `diff` no debe imprimir nada). Si aparece alguna diferencia, hay que revisar qué Task la introdujo y revertir ese cambio de texto sin tocar el resto del styling.
+
+Expected: el diff muestra **exactamente** estos cambios y ningún otro:
+- Se elimina la línea del titular antiguo (`>Entrena el EIR como si ya estuvieras dentro del examen.<`) y aparece la línea del titular nuevo (`>Practica el EIR exactamente como lo vas a vivir, hasta que dejar de sorprenderte sea la norma.<`).
+- Aparecen 7 líneas nuevas correspondientes a los `desc` de las 7 modalidades, que antes no salían en este grep porque vivían en un atributo `title` y no entre `>...<` (p.ej. `>Réplica exacta del examen real incluyendo preguntas con imágenes<`, `>Repite todos los errores que cometiste hasta dominarlos<`, etc.).
+
+Si aparece cualquier otra diferencia, hay que revisar qué Task la introdujo y revertir ese cambio de texto sin tocar el resto del styling.
 
 - [ ] **Step 2: Comprobar que el proyecto compila sin errores**
 
@@ -752,18 +845,20 @@ Expected: build finaliza con `Compiled successfully` (o con únicamente los warn
 Run: `cd frontend && npm start`
 
 Recorrer manualmente, en desktop y en una vista mobile (DevTools responsive, ~375px de ancho):
-- Hero: título, countdown, botones, vídeo demo.
+- Hero: nuevo titular, countdown, botones, vídeo demo, `HeroShowcase` (visible ≥640px, rota cada 3.5s).
 - Franja de stats (+15.000 preguntas, etc.).
-- Modalidades (7 modos) y funcionalidades (6 cards).
+- Funcionalidades (6 cards) y modalidades (7 modos, cada una con su subtítulo visible).
+- Sección "¿esto realmente ayuda a aprobar?".
 - Testimonios (scroll horizontal automático).
 - Quién hay detrás.
 - Planes: los dos botones deben seguir abriendo el flujo de Stripe (`handlePlanSelection`) — probarlo con un usuario logueado si es posible, o al menos confirmar que el click dispara la función sin error en consola.
-- FAQ: los `<details>` abren y cierran correctamente.
+- FAQ: los `<details>` abren y cierran correctamente, la primera sigue abierta por defecto.
 - Login con Google (botón "Entrar en Simulia" / "Haz tu simulacro EIR") sigue funcionando sin cambios.
+- Footer: el email de contacto sigue siendo `simuliaproject@simulia.es` (no se toca en este plan).
 
-Expected: toda la funcionalidad existente (scroll a `#planes`, countdown en vivo, login, checkout, FAQ accordion) funciona exactamente igual que antes de este trabajo; solo cambia el aspecto visual.
+Expected: toda la funcionalidad existente (scroll a `#planes`, countdown en vivo, login, checkout, FAQ accordion) funciona exactamente igual que antes de este trabajo; solo cambia el aspecto visual, el titular del hero y los subtítulos de modalidad.
 
-- [ ] **Step 4: Commit final (si Step 1-3 no generaron cambios de código, este paso no aplica)**
+- [ ] **Step 4: Commit final (solo si Step 1-3 requirieron un ajuste de código)**
 
 Si alguna verificación anterior requirió un ajuste de código (por ejemplo, revertir un cambio de copy accidental), comitear ese ajuste puntual:
 

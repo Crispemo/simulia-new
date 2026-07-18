@@ -1,5 +1,7 @@
 # Rediseño visual de la Home (Fase 1) — Simulia
 
+> **Superseded:** sustituido por `docs/superpowers/specs/2026-07-18-home-visual-redesign-design.md`, que incluye todo lo de aquí más dos cambios de copy puntuales. Se conserva este archivo como histórico.
+
 ## Objetivo
 
 Modernizar la estética de la Home (`frontend/src/HomePage.js`) para que transmita un producto de 2026: premium, dinámico, cuidado — sin tocar copy, contenido, estructura de secciones ni funcionalidad. Es un cambio puramente visual (tipografía, color, espaciado, motion, tratamiento de componentes).
