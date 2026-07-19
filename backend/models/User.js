@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema({
   userName: { type: String },
   stripeId: { type: String, index: true, unique: true, sparse: true },
   plan: { type: String, enum: ['mensual', 'anual'], required: false, default: null },
+  tier: { type: String, enum: ['explorar', 'plaza'], required: false, default: null },
+  entradaUsage: {
+    periodStart: { type: Date },
+    simulacrosUsed: { type: Number, default: 0 }
+  },
   expirationDate: { type: Date },
   examHistory: [examHistorySchema],
   failedQuestions: [failedQuestionSchema],
