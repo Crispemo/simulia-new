@@ -44,7 +44,7 @@ const Blog = () => {
 
       <div className="blog-grid">
         {blogPosts.map(post => (
-          <article key={post.id} className="blog-card">
+          <Link key={post.id} to={`/blog/${post.slug}`} className="blog-card">
             <div className="blog-card-image">
               <img src={post.image} alt={post.title} onError={e => { e.target.onerror = null; e.target.src = '/blog/Preparar_EIR.png'; }} />
               <span className="blog-category">{post.category}</span>
@@ -56,9 +56,9 @@ const Blog = () => {
                 <span className="blog-date">{post.date}</span>
                 <span className="blog-reading-time">{post.readingTime} min de lectura</span>
               </div>
-              <Link to={`/blog/${post.slug}`} className="read-more">Leer más</Link>
+              <span className="read-more">Leer más</span>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </div>
