@@ -75,12 +75,12 @@ export default function Precios() {
             </div>
             <div className="bg-muted/40 rounded-xl p-6 border border-border">
               <ul className="space-y-3">
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial (175 preguntas) — hasta 4 al mes</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial — hasta 4 al mes</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Corrección y resultado de cada simulacro</span></li>
-                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Quizz Rápido, Repite Errores, Protocolario, Contrarreloj y Personalizado</span></li>
-                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Banco completo de preguntas por asignatura</span></li>
-                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Contacto por WhatsApp</span></li>
-                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Analítica de fallos por asignatura</span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Quizz Rápido, Repite Errores, Protocolario, Contrarreloj y Personalizado <span className="text-xs font-semibold uppercase tracking-wide">· No incluido</span></span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Banco completo de preguntas por asignatura <span className="text-xs font-semibold uppercase tracking-wide">· No incluido</span></span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Contacto por WhatsApp <span className="text-xs font-semibold uppercase tracking-wide">· No incluido</span></span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Analítica de fallos por asignatura <span className="text-xs font-semibold uppercase tracking-wide">· No incluido</span></span></li>
               </ul>
             </div>
             <div className="max-w-sm mx-auto space-y-2">
@@ -115,13 +115,13 @@ export default function Precios() {
               </div>
             </div>
             <div className="bg-primary/10 rounded-xl p-6 border border-primary/20">
-              <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+              <ul className="space-y-3">
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial — ilimitado</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Quizz, Errores, Protocolario, Contrarreloj y Personalizado — ilimitados</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Quizz, Errores, Protocolario, Contrarreloj, Personalizado y Escalas — ilimitados</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Respuestas justificadas pregunta a pregunta</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Posibilidad de impugnación si detectas un error</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Contacto directo por WhatsApp</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso a la comunidad de WhatsApp</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Analítica de fallos por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Actualizaciones de preguntas durante toda tu preparación</span></li>
               </ul>
