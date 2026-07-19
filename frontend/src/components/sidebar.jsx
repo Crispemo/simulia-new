@@ -48,6 +48,9 @@ export default function Sidebar({
   onSurveyClick,
   isResourcesLocked = false,
   isCommunityLocked = false,
+  lockedModeIds = new Set(),
+  simulacrosUsed = 0,
+  simulacrosLimit = 4,
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
@@ -61,6 +64,15 @@ export default function Sidebar({
     localStorage.removeItem('progresoExamen')
     navigate(path)
     setIsMobileOpen(false)
+  }
+
+  const handleModeClick = (item) => {
+    if (lockedModeIds.has(item.id)) {
+      toast.error('Este modo requiere el plan Voy a por la plaza')
+      setIsMobileOpen(false)
+      return
+    }
+    handleNavigate(item.path)
   }
 
   const handleResourcesClick = () => {
@@ -157,21 +169,34 @@ export default function Sidebar({
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
+              const isLocked = lockedModeIds.has(item.id)
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleNavigate(item.path)}
+                  onClick={() => handleModeClick(item)}
+                  disabled={isLocked}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-accent hover:text-accent-foreground',
-                    isCollapsed && 'justify-center'
+                    isCollapsed && 'justify-center',
+                    isLocked && 'opacity-50 cursor-not-allowed'
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  {!isCollapsed && <span>{item.label}</span>}
+                  {isLocked && <Lock className="h-4 w-4 text-destructive" />}
+                  {!isCollapsed && (
+                    <span>
+                      {item.label}
+                      {item.id === 'simulacro' && simulacrosUsed !== null && (
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          ({simulacrosUsed}/{simulacrosLimit})
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -295,20 +320,31 @@ export default function Sidebar({
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
+              const isLocked = lockedModeIds.has(item.id)
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleNavigate(item.path)}
+                  onClick={() => handleModeClick(item)}
+                  disabled={isLocked}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all',
                     isActive
                       ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground',
+                    isLocked && 'opacity-50 cursor-not-allowed'
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  {isLocked && <Lock className="h-4 w-4 text-destructive" />}
+                  <span>
+                    {item.label}
+                    {item.id === 'simulacro' && simulacrosUsed !== null && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({simulacrosUsed}/{simulacrosLimit})
+                      </span>
+                    )}
+                  </span>
                 </button>
               )
             })}
