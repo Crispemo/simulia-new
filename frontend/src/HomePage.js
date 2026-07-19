@@ -173,94 +173,12 @@ function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handlePlanSelection = async (plan, amount) => {
-    try {
-      // Verificar si el usuario está autenticado
-      if (!currentUser) {
-        console.log("Usuario no autenticado, iniciando proceso de login antes de seleccionar plan");
-        toast.info('Primero debes iniciar sesión para seleccionar un plan');
-        
-        // Guardar el plan seleccionado para usarlo después del login
-        localStorage.setItem('selectedPlan', JSON.stringify({ plan, amount }));
-        
-        // Iniciar el proceso de login
-        await handleLoginClick();
-        return;
-      }
-      
-      // VERIFICACIÓN ADICIONAL: Comprobar que tenemos los datos mínimos
-      if (!currentUser.uid || !currentUser.email) {
-        console.error('❌ DATOS DE USUARIO INCOMPLETOS:', currentUser);
-        toast.error('Error: Datos de usuario incompletos. Inténtalo de nuevo.');
-        return;
-      }
-      
-      console.log(`Usuario autenticado (${currentUser.uid}), procesando plan ${plan} por €${amount/100}`);
-      
-      // DEBUG: Mostrar todos los datos del usuario
-      console.log('🔍 DATOS DEL USUARIO:', {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        displayName: currentUser.displayName,
-        currentUser: currentUser
-      });
-      
-      const paymentData = {
-        userId: currentUser.uid,
-        email: currentUser.email,
-        userName: currentUser.displayName || currentUser.uid,
-        plan,
-        amount,
-      };
-      
-      console.log('💳 DATOS ENVIADOS AL BACKEND:', paymentData);
-      
-      // Crear sesión de checkout en Stripe
-      const response = await axios.post(`${API_URL}/create-payment-intent`, paymentData);
-  
-      if (response.data && response.data.checkoutUrl) {
-        console.log("URL de checkout recibida:", response.data.checkoutUrl);
-        // Redirigir a la página de pago de Stripe
-        window.location.href = response.data.checkoutUrl;
-      } else {
-        console.error("Respuesta inesperada:", response.data);
-        toast.error('Error al procesar el pago. Inténtalo de nuevo.');
-        throw new Error('No se recibió una URL de Stripe válida.');
-      }
-    } catch (error) {
-      console.error('Error en el flujo de selección de plan:', error);
-      toast.error('Hubo un problema al procesar el plan. Inténtalo de nuevo.');
-    }
-  };
-
   const scrollToPricing = () => {
     const pricingSection = document.querySelector('#planes');
     if (pricingSection) {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
-  // Efecto para verificar si hay un plan pendiente después del login
-  useEffect(() => {
-    // Si el usuario acaba de autenticarse y hay un plan guardado en localStorage
-    if (currentUser && !isSigningIn) {
-      try {
-        const savedPlan = localStorage.getItem('selectedPlan');
-        if (savedPlan) {
-          const { plan, amount } = JSON.parse(savedPlan);
-          console.log(`Usuario autenticado con plan pendiente: ${plan}`);
-          
-          // Limpiar el localStorage
-          localStorage.removeItem('selectedPlan');
-          
-          // Ejecutar la selección de plan
-          handlePlanSelection(plan, amount);
-        }
-      } catch (error) {
-        console.error('Error al procesar plan guardado:', error);
-      }
-    }
-  }, [currentUser, isSigningIn]);
 
   const renderActionButtons = () => {
     if (currentUser) {
@@ -324,9 +242,9 @@ function HomePage() {
         "screenshot": "https://www.simulia.es/Dashboard-EIR-Simulia.png",
         "offers": {
           "@type": "Offer",
-          "price": "4.99",
+          "price": "89.00",
           "priceCurrency": "EUR",
-          "description": "Plan anual (59,99 €/año, equivalente a 4,99 €/mes)"
+          "description": "Pago único de 89 € con acceso hasta el examen (23 de enero de 2027)"
         }
       }
     `}
@@ -358,7 +276,7 @@ function HomePage() {
                   "name": "¿Qué diferencia hay entre Simulia y una academia EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 4,99 €/mes."
+                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, por 89 € de pago único."
                   }
                 },
                 {
@@ -835,67 +753,24 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          <div className="bg-card border-2 border-border hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-soft rounded-xl p-8 space-y-6">
-            <div>
-              <h3 className="text-2xl font-bold mb-2 text-secondary">Explora sin presión</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">11,99 €</span>
-                <span className="text-muted-foreground text-lg">/mes</span>
-              </div>
-            </div>
-
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Flexibilidad total: cancela cuando quieras</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">7 días gratis para probar sin compromiso</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Simulacros y modos de práctica (con tiempo e imágenes)</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-success text-xl mt-0.5">✓</span>
-                <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Biblioteca de Recursos (guías/plantillas)</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-destructive text-xl mt-0.5">✗</span>
-                <span className="text-secondary">Comunidad completa </span>
-              </li>
-            </ul>
-
-            <button
-              onClick={() => handlePlanSelection('mensual', 1199)}
-              className="w-full bg-primary/10 border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all py-3 rounded-full font-bold shadow-md hover:shadow-lg"
-            >
-              Comenzar prueba gratuita
-            </button>
-          </div>
-
+        <div className="max-w-lg mx-auto">
           <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
-              <div className="flex flex-col items-center gap-1">
-                <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
-                  Más popular • Ahorra 84 €
-                </span>
-              </div>
+              <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
+                Precio único • Sin mensualidades
+              </span>
             </div>
             <div className="mt-2 md:mt-0">
               <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">59,99 €</span>
-                <span className="text-muted-foreground text-lg">/año</span>
+                <span className="text-5xl font-bold text-primary">89 €</span>
+                <span className="text-muted-foreground text-lg">pago único</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
-                <span className="line-through">143,88 €</span> • Equivale a 4,99 €/mes
+                Acceso hasta tu examen • 23 de enero de 2027
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Equivale a 0,47 €/día si empiezas hoy
               </div>
             </div>
 
@@ -903,15 +778,23 @@ function HomePage() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Acceso completo durante todo el año</span>
+                  <span className="text-secondary">Acceso completo hasta el 23 de enero de 2027</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">7 días gratis para probar</span>
+                  <span className="text-secondary">7 modos de examen basados en el formato oficial del Ministerio</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Biblioteca de Recursos (guías/plantillas) y materiales</span>
+                  <span className="text-secondary">Respuestas justificadas pregunta a pregunta</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Posibilidad de impugnación si detectas un error</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Biblioteca de recursos (guías y plantillas)</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -919,22 +802,31 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Ahorra 84 € al año (vs 11,99 € × 12)</span>
+                  <span className="text-secondary">Acceso directo a mí</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Actualizaciones de preguntas y contenido de práctica durante todo el año</span>
+                  <span className="text-secondary">Actualizaciones de preguntas durante toda tu preparación</span>
                 </li>
               </ul>
             </div>
 
-            <button
-              onClick={() => handlePlanSelection('anual', 5999)}
-              className="w-full bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
-            >
-              Comenzar prueba gratuita
-            </button>
+            <div className="space-y-2">
+              <a
+                href="https://buy.stripe.com/8x23cv6sAda06FPbmC6Zy0h"
+                className="block w-full text-center bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
+              >
+                Empieza hoy • 89 €
+              </a>
+              <p className="text-center text-xs text-muted-foreground">
+                Garantía de devolución de 7 días
+              </p>
+            </div>
           </div>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Una academia completa cuesta desde 1.500 €.
+          </p>
         </div>
 
       </section>
@@ -974,7 +866,7 @@ function HomePage() {
                   ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 4,99 €/mes.
+                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, por 89 € de pago único.
                 </p>
               </details>
             </div>
