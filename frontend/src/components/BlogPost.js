@@ -112,9 +112,10 @@ const BlogPost = () => {
         )}
       </Helmet>
 
-      {/* Flecha volver atrás */}
-      <div className="blog-back-link">
+      {/* Flechas volver atrás */}
+      <div className="blog-back-link blog-back-links-row">
         <Link to="/blog"><span className="arrow-left">←</span> Volver al blog</Link>
+        <Link to="/"><span className="arrow-left">←</span> Volver al inicio</Link>
       </div>
 
       {/* Imagen de portada */}

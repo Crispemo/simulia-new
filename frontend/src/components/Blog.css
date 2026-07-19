@@ -4,6 +4,28 @@
   padding: 0 20px;
 }
 
+.blog-back-link {
+  margin-bottom: 18px;
+  font-size: 1.05rem;
+}
+.blog-back-link a {
+  color: #7da0a7;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.blog-back-link a:hover {
+  color: #3e5055;
+  text-decoration: underline;
+}
+.blog-back-link .arrow-left {
+  font-size: 1.3rem;
+  margin-right: 4px;
+}
+
 .blog-header {
   text-align: center;
   margin-bottom: 60px;

@@ -275,6 +275,11 @@
   margin-bottom: 18px;
   font-size: 1.05rem;
 }
+.blog-back-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
 .blog-back-link a {
   color: #7da0a7;
   text-decoration: none;

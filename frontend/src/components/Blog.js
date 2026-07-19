@@ -33,6 +33,10 @@ const Blog = () => {
         })}</script>
       </Helmet>
 
+      <div className="blog-back-link">
+        <Link to="/"><span className="arrow-left">←</span> Volver al inicio</Link>
+      </div>
+
       <header className="blog-header">
         <h1>Blog de preparación EIR</h1>
         <p>Recursos, consejos y estrategias para tu éxito en el EIR</p>
