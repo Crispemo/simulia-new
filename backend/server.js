@@ -19,8 +19,10 @@ const stripe = Stripe(process.env.STRIPE_SECRET);
 const User = require('./models/User');
 const {
   EXPLORAR_ALLOWED_EXAM_TYPE,
+  ENTRADA_MONTHLY_LIMIT,
   computeEffectiveTier,
   checkEntradaAllowance,
+  getCurrentPeriodUsage,
   consumeEntradaSimulacro,
 } = require('./services/tierService');
 const Exam = require('./models/Exam');
@@ -645,6 +647,9 @@ app.post('/users/check-subscription', async (req, res) => {
         source: 'stripe',
         resourcesAccessAllowed: false,
         communityAccessAllowed: false,
+        tier: computeEffectiveTier(user),
+        simulacrosUsed: getCurrentPeriodUsage(user).simulacrosUsed,
+        simulacrosLimit: ENTRADA_MONTHLY_LIMIT,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     }
@@ -703,6 +708,9 @@ app.post('/users/check-subscription', async (req, res) => {
           source: 'stripe',
           resourcesAccessAllowed: accessAllowedForPremiumSections,
           communityAccessAllowed: accessAllowedForPremiumSections,
+          tier: computeEffectiveTier(user),
+          simulacrosUsed: getCurrentPeriodUsage(user).simulacrosUsed,
+          simulacrosLimit: ENTRADA_MONTHLY_LIMIT,
           user: { userId: user.userId, email: user.email, userName: user.userName },
         });
       }
@@ -727,6 +735,9 @@ app.post('/users/check-subscription', async (req, res) => {
         source: 'stripe',
         resourcesAccessAllowed: false,
         communityAccessAllowed: false,
+        tier: computeEffectiveTier(user),
+        simulacrosUsed: getCurrentPeriodUsage(user).simulacrosUsed,
+        simulacrosLimit: ENTRADA_MONTHLY_LIMIT,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     } catch (stripeErr) {
@@ -742,6 +753,9 @@ app.post('/users/check-subscription', async (req, res) => {
         subscriptionUnverifiable: true,
         resourcesAccessAllowed: false,
         communityAccessAllowed: false,
+        tier: computeEffectiveTier(user),
+        simulacrosUsed: getCurrentPeriodUsage(user).simulacrosUsed,
+        simulacrosLimit: ENTRADA_MONTHLY_LIMIT,
         user: { userId: user.userId, email: user.email, userName: user.userName },
       });
     }
