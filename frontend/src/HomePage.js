@@ -400,15 +400,15 @@ function HomePage() {
           </p>
         </div>
       )}
-      <section className="py-2.5 bg-background border-b border-border/60">
+      <section className="py-3 bg-primary/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs font-medium text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="text-primary">✓</span>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="inline-flex items-center gap-1.5 bg-card border border-primary/20 rounded-full px-3.5 py-1.5 text-xs font-medium text-secondary shadow-soft">
+              <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/15 text-primary text-[10px]">✓</span>
               Creado por y para enfermeras que preparan el EIR
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="text-primary">✓</span>
+            <span className="inline-flex items-center gap-1.5 bg-card border border-primary/20 rounded-full px-3.5 py-1.5 text-xs font-medium text-secondary shadow-soft">
+              <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/15 text-primary text-[10px]">✓</span>
               Basado en guías/protocolos del Ministerio
             </span>
           </div>
@@ -418,7 +418,7 @@ function HomePage() {
       <section data-aos="fade-up" className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-8">
         <div className="max-w-5xl mx-auto space-y-8">
           <div className="space-y-6 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight text-balance text-secondary">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.08] tracking-tight text-balance text-secondary">
               Practica el EIR exactamente como lo vas a vivir, hasta que dejar de sorprenderte sea la norma.
             </h1>
             <div className="inline-flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 text-sm font-medium text-secondary shadow-soft">
@@ -427,7 +427,7 @@ function HomePage() {
                 Quedan <span className="text-primary font-bold">{eirTimeLeft.days || 0}</span> días para el EIR 2027
               </span>
             </div>
-            <p className="text-lg sm:text-xl text-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
               Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
             </p>
           </div>

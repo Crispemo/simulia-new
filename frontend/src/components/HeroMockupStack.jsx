@@ -21,15 +21,14 @@ function HeroMockupStack() {
           <span className="text-lg">📊</span>
           <span className="text-xs font-semibold text-secondary">Progreso</span>
         </div>
-        <div className="space-y-1.5">
-          <div className="h-2 rounded-full bg-primary/15 relative overflow-hidden">
-            <div className="absolute inset-y-0 left-0 bg-primary/60 rounded-full" style={{ width: '70%' }} />
-          </div>
-          <div className="h-2 rounded-full bg-primary/15 relative overflow-hidden">
-            <div className="absolute inset-y-0 left-0 bg-primary/60 rounded-full" style={{ width: '45%' }} />
-          </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-2xl font-bold text-primary">68%</span>
+          <span className="text-[11px] text-muted-foreground">de aciertos</span>
         </div>
-        <p className="text-[11px] text-muted-foreground pt-2 leading-snug">Tu evolución semana a semana</p>
+        <div className="h-1.5 rounded-full bg-primary/15 relative overflow-hidden mt-2">
+          <div className="absolute inset-y-0 left-0 bg-primary/60 rounded-full" style={{ width: '68%' }} />
+        </div>
+        <p className="text-[11px] text-muted-foreground pt-2 leading-snug">+12% respecto al mes pasado</p>
       </div>
 
       <div
@@ -60,15 +59,10 @@ function HeroMockupStack() {
           <span className="text-lg">🤖</span>
           <span className="text-xs font-semibold">Análisis IA</span>
         </div>
-        <div className="space-y-1.5">
-          <div className="h-2 rounded-full bg-white/15 relative overflow-hidden">
-            <div className="absolute inset-y-0 left-0 bg-white/50 rounded-full" style={{ width: '75%' }} />
-          </div>
-          <div className="h-2 rounded-full bg-white/15 relative overflow-hidden">
-            <div className="absolute inset-y-0 left-0 bg-white/50 rounded-full" style={{ width: '55%' }} />
-          </div>
-        </div>
-        <p className="text-[11px] text-white/70 pt-2 leading-snug">Identifica qué fallaste y por qué</p>
+        <p className="text-[13px] leading-snug">
+          Fallas más en <span className="font-semibold">Farmacología cardiovascular</span>
+        </p>
+        <p className="text-[11px] text-white/70 pt-2 leading-snug">Repite estas preguntas para reforzarlo</p>
       </div>
     </div>
   );
