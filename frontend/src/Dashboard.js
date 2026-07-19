@@ -59,6 +59,9 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   // Por defecto mantenemos "sin bloqueo" hasta confirmar con backend.
   const [resourcesLocked, setResourcesLocked] = useState(false);
   const [communityLocked, setCommunityLocked] = useState(false);
+  const [lockedModeIds, setLockedModeIds] = useState(new Set());
+  const [simulacrosUsed, setSimulacrosUsed] = useState(0);
+  const [simulacrosLimit, setSimulacrosLimit] = useState(4);
   const [hasErrorsAvailable, setHasErrorsAvailable] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -97,11 +100,18 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
         const communityAllowed = data?.communityAccessAllowed ?? true;
         setResourcesLocked(resourcesAllowed === false);
         setCommunityLocked(communityAllowed === false);
+
+        const tier = data?.tier ?? null;
+        const EXPLORAR_LOCKED_MODE_IDS = new Set(['quizz', 'errores', 'protocolos', 'contrarreloj', 'personalizado']);
+        setLockedModeIds(tier === 'explorar' ? EXPLORAR_LOCKED_MODE_IDS : new Set());
+        setSimulacrosUsed(data?.simulacrosUsed ?? 0);
+        setSimulacrosLimit(data?.simulacrosLimit ?? 4);
       } catch (err) {
         console.error('Error al cargar política de acceso:', err);
         // Stand-by: si falla, no bloqueamos por seguridad.
         setResourcesLocked(false);
         setCommunityLocked(false);
+        setLockedModeIds(new Set());
       }
     };
 
@@ -2403,6 +2413,9 @@ const handleErroresClick = () => {
           onTutorialClick={openTutorialModal}
           isResourcesLocked={resourcesLocked}
           isCommunityLocked={communityLocked}
+          lockedModeIds={lockedModeIds}
+          simulacrosUsed={simulacrosUsed}
+          simulacrosLimit={simulacrosLimit}
           onResourcesClick={() => {
             if (resourcesLocked) return;
             setShowResourcesModal(true);
