@@ -112,6 +112,8 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
         setResourcesLocked(false);
         setCommunityLocked(false);
         setLockedModeIds(new Set());
+        setSimulacrosUsed(0);
+        setSimulacrosLimit(4);
       }
     };
 
