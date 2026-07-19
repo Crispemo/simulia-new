@@ -17,6 +17,12 @@ const nodemailer = require('nodemailer');
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET);
 const User = require('./models/User');
+const {
+  EXPLORAR_ALLOWED_EXAM_TYPE,
+  computeEffectiveTier,
+  checkEntradaAllowance,
+  consumeEntradaSimulacro,
+} = require('./services/tierService');
 const Exam = require('./models/Exam');
 const ExamenResultado = require('./models/ExamenResultado');
 const { ExamenCompleto, ExamenFotos, ExamenProtocolos } = require('./models/Pregunta');
@@ -2088,6 +2094,12 @@ app.post('/validate-and-save-exam', verifyUser, verifySubscription, async (req, 
     return res.status(400).json({ error: 'Falta el tipo de examen' });
   }
 
+  const entradaCheck = checkEntradaAllowance(req.user, examType);
+  if (!entradaCheck.allowed) {
+    console.log(`Usuario ${req.user.userId} bloqueado por tier al guardar examen tipo ${examType}: ${entradaCheck.reason}`);
+    return res.status(403).json({ error: entradaCheck.reason });
+  }
+
   if (!questions || !Array.isArray(questions) || questions.length === 0) {
     console.error('Preguntas inválidas o vacías');
     return res.status(400).json({ error: 'Las preguntas son inválidas o están vacías' });
@@ -2379,6 +2391,12 @@ app.post('/validate-and-save-exam', verifyUser, verifySubscription, async (req, 
     }
     
     console.log('Examen guardado en ExamenResultado con ID:', examenResultado._id);
+
+    if (computeEffectiveTier(user) === 'explorar' && examType === EXPLORAR_ALLOWED_EXAM_TYPE) {
+      user.entradaUsage = consumeEntradaSimulacro(user);
+      await user.save();
+      console.log(`Cupo Explorar actualizado para ${user.userId}: ${user.entradaUsage.simulacrosUsed}/4 simulacros usados`);
+    }
 
     // 4. Actualizar las preguntas incorrectas/sin contestar en el perfil del usuario
     try {
