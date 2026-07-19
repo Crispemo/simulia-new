@@ -753,7 +753,7 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
@@ -775,7 +775,7 @@ function HomePage() {
             </div>
 
             <div className="bg-primary/10 rounded-xl p-6 border border-primary/20">
-              <ul className="space-y-3">
+              <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
                   <span className="text-secondary">Acceso completo hasta el 23 de enero de 2027</span>
@@ -802,7 +802,7 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Acceso directo a mí</span>
+                  <span className="text-secondary">Contacto conmigo por WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -811,7 +811,7 @@ function HomePage() {
               </ul>
             </div>
 
-            <div className="space-y-2">
+            <div className="max-w-sm mx-auto space-y-2">
               <a
                 href="https://buy.stripe.com/8x23cv6sAda06FPbmC6Zy0h"
                 className="block w-full text-center bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
@@ -823,10 +823,6 @@ function HomePage() {
               </p>
             </div>
           </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            Una academia completa cuesta desde 1.500 €.
-          </p>
         </div>
 
       </section>

@@ -48,7 +48,7 @@ export default function Precios() {
           </p>
         </div>
 
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
@@ -69,18 +69,18 @@ export default function Precios() {
               </div>
             </div>
             <div className="bg-primary/10 rounded-xl p-6 border border-primary/20">
-              <ul className="space-y-3">
+              <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso completo hasta el 23 de enero de 2027</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">7 modos de examen basados en el formato oficial del Ministerio</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Respuestas justificadas pregunta a pregunta</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Posibilidad de impugnación si detectas un error</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Biblioteca de recursos (guías y plantillas)</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Comunidad completa (dudas, presentaciones y recursos)</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso directo a mí</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Contacto conmigo por WhatsApp</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Actualizaciones de preguntas durante toda tu preparación</span></li>
               </ul>
             </div>
-            <div className="space-y-2">
+            <div className="max-w-sm mx-auto space-y-2">
               <a
                 href={STRIPE_PAYMENT_LINK}
                 className="block w-full text-center bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold"
@@ -106,11 +106,6 @@ export default function Precios() {
                 </tr>
               </thead>
               <tbody className="text-muted-foreground">
-                <tr className="border-b border-border">
-                  <td className="py-3 px-4 font-medium text-secondary">Coste total</td>
-                  <td className="py-3 px-4">1.500 € – 3.000 €</td>
-                  <td className="py-3 px-4">89 € (pago único)</td>
-                </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 px-4 font-medium text-secondary">Compromiso</td>
                   <td className="py-3 px-4">Anual, con contrato</td>
