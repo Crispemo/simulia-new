@@ -48,8 +48,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   userName: { type: String },
   stripeId: { type: String, index: true, unique: true, sparse: true },
-  plan: { type: String, enum: ['mensual', 'anual'], required: false, default: null },
-  tier: { type: String, enum: ['explorar', 'plaza'], required: false, default: null },
+  plan: { type: String, enum: ['mensual', 'anual', null], required: false, default: null },
+  tier: { type: String, enum: ['explorar', 'plaza', null], required: false, default: null },
   entradaUsage: {
     periodStart: { type: Date },
     simulacrosUsed: { type: Number, default: 0 }
