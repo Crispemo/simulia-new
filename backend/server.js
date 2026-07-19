@@ -3519,36 +3519,36 @@ app.post('/stripe-webhook', async (req, res) => {
           break; // responderá 200 más abajo para evitar reintentos infinitos
         }
         
-        // Si no se pudo determinar el plan desde metadata, obtenerlo desde la suscripción
+        // finalPlan puede venir ya resuelto desde metadata, pero finalTier nunca viene en
+        // metadata — así que esta consulta a Stripe se hace siempre (no solo cuando falta
+        // el plan) para poder resolver finalTier desde el priceId real de la suscripción.
         let finalPlan = plan;
         let finalTier = null;
-        if (!finalPlan || !['mensual', 'anual'].includes(finalPlan) || finalTier === null) {
-          console.log(`💳 STRIPE WEBHOOK: Resolviendo plan/tier desde suscripción (plan en metadata: ${plan})...`);
-          
-          try {
-            // Obtener suscripciones del cliente
-            const subscriptions = await stripe.subscriptions.list({
-              customer: session.customer,
-              status: 'active'
-            });
-            
-            if (subscriptions.data.length > 0) {
-              const subscription = subscriptions.data[0];
-              const item = subscription.items.data[0];
-              const priceId = item?.price?.id;
-              const interval = item?.price?.recurring?.interval;
+        console.log(`💳 STRIPE WEBHOOK: Resolviendo plan/tier desde suscripción (plan en metadata: ${plan})...`);
 
-              // Deducir plan por intervalo para no depender de priceIds hardcodeados
-              if (interval === 'month') finalPlan = 'mensual';
-              if (interval === 'year') finalPlan = 'anual';
+        try {
+          // Obtener suscripciones del cliente
+          const subscriptions = await stripe.subscriptions.list({
+            customer: session.customer,
+            status: 'active'
+          });
 
-              finalTier = resolveTierFromPriceId(priceId, STRIPE_PRICE_TIER_MAP);
+          if (subscriptions.data.length > 0) {
+            const subscription = subscriptions.data[0];
+            const item = subscription.items.data[0];
+            const priceId = item?.price?.id;
+            const interval = item?.price?.recurring?.interval;
 
-              console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (interval: ${interval}, priceId: ${priceId}, tier: ${finalTier})`);
-            }
-          } catch (subError) {
-            console.error('💳 STRIPE WEBHOOK: Error obteniendo suscripción:', subError.message);
+            // Deducir plan por intervalo para no depender de priceIds hardcodeados
+            if (interval === 'month') finalPlan = 'mensual';
+            if (interval === 'year') finalPlan = 'anual';
+
+            finalTier = resolveTierFromPriceId(priceId, STRIPE_PRICE_TIER_MAP);
+
+            console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (interval: ${interval}, priceId: ${priceId}, tier: ${finalTier})`);
           }
+        } catch (subError) {
+          console.error('💳 STRIPE WEBHOOK: Error obteniendo suscripción:', subError.message);
         }
         
         // Validar que el plan final sea válido
