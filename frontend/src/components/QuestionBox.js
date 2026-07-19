@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './QuestionBox.module.css';
 
@@ -24,6 +24,13 @@ const QuestionBox = ({
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [questionTimeLeft, setQuestionTimeLeft] = useState(timePerQuestion);
+
+  // Cache-buster fijo por pregunta: si se recalculara en cada render (p.ej. cada
+  // tick de la barra de tiempo), el <img> reharía la petición constantemente.
+  const currentImagePath = questions && questions[currentQuestion]
+    ? (questions[currentQuestion].image || questions[currentQuestion].imagen)
+    : null;
+  const imageCacheBuster = useMemo(() => new Date().getTime(), [currentImagePath]);
 
   // Reiniciar el tiempo cuando cambia la pregunta actual
   useEffect(() => {
@@ -82,7 +89,7 @@ const QuestionBox = ({
   // Detectar imagen de forma simple (como en código antiguo)
   const hasImage = currentQuestionData.image || (currentQuestionData.imagen && currentQuestionData.imagen !== '');
   const imagePath = currentQuestionData.image || currentQuestionData.imagen;
-  
+
   // Get the correct answer from the question data or correctAnswersMap
   const rawCorrectAnswer =
     correctAnswersMap[currentQuestion] !== undefined
@@ -184,17 +191,17 @@ const QuestionBox = ({
   // Renderizar imagen de la pregunta (código antiguo simplificado)
   const renderQuestionImage = (imagePath) => {
     if (!imagePath) return null;
-    
+
     // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
-    const timestamp = new Date().getTime();
-    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/') 
-      ? `${imagePath}?t=${timestamp}`
-      : `/examen_fotos/${imagePath}?t=${timestamp}`;
-    
+    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/')
+      ? `${imagePath}?t=${imageCacheBuster}`
+      : `/examen_fotos/${imagePath}?t=${imageCacheBuster}`;
+
     return (
       <>
         <div className={styles.questionImage}>
           <img
+            key={imagePath}
             src={fullPath}
             alt="Imagen de la pregunta"
             className={styles.examImage}

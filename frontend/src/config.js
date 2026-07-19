@@ -32,7 +32,7 @@ const API_BASE_URL = API_URL;
 const APP_CONFIG = {
   appName: 'Simulia',
   companyName: 'Simulia EIR',
-  contactEmail: 'simuliaproject@simulia.es',
+  contactEmail: 'hola@simulia.es',
   isProduction: process.env.NODE_ENV === 'production'
 };
 

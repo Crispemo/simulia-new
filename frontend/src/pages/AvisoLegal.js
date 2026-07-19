@@ -26,7 +26,7 @@ export default function AvisoLegal() {
               <li><strong>Titular:</strong> Cristina Peris Moreno</li>
               <li><strong>Domicilio profesional:</strong> Valencia, España</li>
               <li><strong>Sitio web:</strong> https://www.simulia.es</li>
-              <li><strong>Correo electrónico:</strong> simuliaproject@simulia.es</li>
+              <li><strong>Correo electrónico:</strong> hola@simulia.es</li>
               <li><strong>Actividad:</strong> Plataforma online de preparación para el examen EIR</li>
             </ul>
           </div>
@@ -110,8 +110,8 @@ export default function AvisoLegal() {
             <h2 className="text-2xl font-semibold mb-2">9. Contacto</h2>
             <p>
               Para cualquier consulta relacionada con este aviso legal, puedes contactarnos en{' '}
-              <a href="mailto:simuliaproject@simulia.es" className="text-primary hover:underline">
-                simuliaproject@simulia.es
+              <a href="mailto:hola@simulia.es" className="text-primary hover:underline">
+                hola@simulia.es
               </a>.
             </p>
           </div>

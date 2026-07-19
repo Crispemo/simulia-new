@@ -26,7 +26,7 @@ export default function PoliticaPrivacidad() {
               <li><strong>Identidad:</strong> Cristina Peris Moreno</li>
               <li><strong>Actividad:</strong> Plataforma online de preparación para el examen EIR</li>
               <li><strong>Domicilio profesional:</strong> Valencia, España</li>
-              <li><strong>Correo electrónico:</strong> simuliaproject@simulia.es</li>
+              <li><strong>Correo electrónico:</strong> hola@simulia.es</li>
             </ul>
           </div>
 
@@ -111,7 +111,7 @@ export default function PoliticaPrivacidad() {
 
           <div>
             <h2 className="text-2xl font-semibold mb-2">6. Tus derechos (RGPD)</h2>
-            <p>Puedes ejercer los siguientes derechos enviando un correo a simuliaproject@simulia.es:</p>
+            <p>Puedes ejercer los siguientes derechos enviando un correo a hola@simulia.es:</p>
             <ul className="list-disc list-inside pl-4 space-y-1 mt-2">
               <li><strong>Acceso:</strong> Conocer qué datos tenemos sobre ti</li>
               <li><strong>Rectificación:</strong> Corregir datos inexactos o incompletos</li>
@@ -159,8 +159,8 @@ export default function PoliticaPrivacidad() {
             <h2 className="text-2xl font-semibold mb-2">10. Contacto</h2>
             <p>
               Para cualquier consulta sobre protección de datos, contacta en{' '}
-              <a href="mailto:simuliaproject@simulia.es" className="text-primary hover:underline">
-                simuliaproject@simulia.es
+              <a href="mailto:hola@simulia.es" className="text-primary hover:underline">
+                hola@simulia.es
               </a>.
             </p>
           </div>

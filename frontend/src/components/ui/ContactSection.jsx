@@ -9,7 +9,7 @@ const ContactSection = () => {
           ¿Tienes dudas o necesitas ayuda? Estamos aquí para ti. Escríbenos y te responderemos lo antes posible.
         </p>
         <Button variant="outline" asChild>
-          <a href="mailto:simuliaproject@simulia.es">simuliaproject@simulia.es</a>
+          <a href="mailto:hola@simulia.es">hola@simulia.es</a>
         </Button>
       </div>
     </section>

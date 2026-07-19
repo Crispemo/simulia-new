@@ -909,10 +909,10 @@ function HomePage() {
                 ¿Tienes dudas o necesitas ayuda? Estamos aquí para ti. Escríbenos y te responderemos lo antes posible.
               </p>
               <a
-                href="mailto:simuliaproject@simulia.es"
+                href="mailto:hola@simulia.es"
                 className="inline-block bg-primary/20 hover:bg-primary hover:text-white px-8 py-3 rounded-full transition-all font-medium shadow-md hover:shadow-lg"
               >
-                simuliaproject@simulia.es
+                hola@simulia.es
               </a>
             </div>
 

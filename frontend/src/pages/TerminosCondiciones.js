@@ -24,7 +24,7 @@ export default function TerminosCondiciones() {
             <ul className="list-disc list-inside pl-4 space-y-1">
               <li><strong>Titular:</strong> Cristina Peris Moreno</li>
               <li><strong>Domicilio profesional:</strong> Valencia, España</li>
-              <li><strong>Correo electrónico:</strong> simuliaproject@simulia.es</li>
+              <li><strong>Correo electrónico:</strong> hola@simulia.es</li>
             </ul>
           </div>
 
@@ -99,7 +99,7 @@ export default function TerminosCondiciones() {
             </p>
             <p className="mt-2">
               Para ejercer el desistimiento, envía un correo a{' '}
-              <a href="mailto:simuliaproject@simulia.es" className="text-primary hover:underline">simuliaproject@simulia.es</a>{' '}
+              <a href="mailto:hola@simulia.es" className="text-primary hover:underline">hola@simulia.es</a>{' '}
               indicando tu voluntad de desistir. El reembolso se realizará en un plazo máximo de 14 días.
             </p>
           </div>
@@ -112,7 +112,7 @@ export default function TerminosCondiciones() {
               por el tiempo restante del período ya pagado.
             </p>
             <p className="mt-2">
-              Para cancelar, contacta a simuliaproject@simulia.es o utiliza la opción de gestión de suscripción
+              Para cancelar, contacta a hola@simulia.es o utiliza la opción de gestión de suscripción
               disponible en tu panel de Stripe.
             </p>
           </div>
@@ -130,7 +130,7 @@ export default function TerminosCondiciones() {
             <h2 className="text-2xl font-semibold mb-2">9. Resolución de incidencias</h2>
             <p>
               Para cualquier incidencia relacionada con el servicio o los pagos, contacta en{' '}
-              <a href="mailto:simuliaproject@simulia.es" className="text-primary hover:underline">simuliaproject@simulia.es</a>.
+              <a href="mailto:hola@simulia.es" className="text-primary hover:underline">hola@simulia.es</a>.
               El plazo de respuesta es de 5 días laborables.
             </p>
             <p className="mt-2">

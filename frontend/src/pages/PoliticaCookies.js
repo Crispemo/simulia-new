@@ -147,8 +147,8 @@ export default function PoliticaCookies() {
             <h2 className="text-2xl font-semibold mb-2">Contacto</h2>
             <p>
               Si tienes dudas sobre nuestra política de cookies, puedes contactarnos en{' '}
-              <a href="mailto:simuliaproject@simulia.es" className="text-primary hover:underline">
-                simuliaproject@simulia.es
+              <a href="mailto:hola@simulia.es" className="text-primary hover:underline">
+                hola@simulia.es
               </a>.
             </p>
           </div>
