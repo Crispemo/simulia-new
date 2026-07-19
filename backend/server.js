@@ -3522,8 +3522,8 @@ app.post('/stripe-webhook', async (req, res) => {
         // Si no se pudo determinar el plan desde metadata, obtenerlo desde la suscripción
         let finalPlan = plan;
         let finalTier = null;
-        if (!finalPlan || !['mensual', 'anual'].includes(finalPlan)) {
-          console.log(`💳 STRIPE WEBHOOK: Plan no determinado desde metadata (${plan}), obteniendo desde suscripción...`);
+        if (!finalPlan || !['mensual', 'anual'].includes(finalPlan) || finalTier === null) {
+          console.log(`💳 STRIPE WEBHOOK: Resolviendo plan/tier desde suscripción (plan en metadata: ${plan})...`);
           
           try {
             // Obtener suscripciones del cliente
