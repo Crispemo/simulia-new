@@ -1,23 +1,25 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/8x23cv6sAda06FPbmC6Zy0h';
+const STRIPE_PAYMENT_LINK_EXPLORAR = 'https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g';
+const STRIPE_PAYMENT_LINK_PLAZA = 'https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i';
 
 export default function Precios() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
-        <title>Precios Simulia – 89 € pago único | Preparación EIR</title>
+        <title>Precios Simulia – Explorar 11,99 € / Voy a por la plaza 23,99 € | Preparación EIR</title>
         <meta
           name="description"
-          content="Accede a Simulia por 89 € de pago único hasta tu examen EIR. Simulacros reales, análisis de errores con IA y +15.000 preguntas, sin mensualidades."
+          content="Elige tu plan de preparación EIR: Explorar desde 11,99 €/mes o Voy a por la plaza desde 23,99 €/mes, con simulacros reales, banco de +15.000 preguntas y 7 días de prueba gratis."
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.simulia.es/precios" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Precios Simulia – 89 € pago único" />
-        <meta property="og:description" content="Accede a Simulia por 89 € de pago único hasta tu examen EIR, sin mensualidades." />
+        <meta property="og:title" content="Precios Simulia – Explorar 11,99 € / Voy a por la plaza 23,99 €" />
+        <meta property="og:description" content="Prueba Simulia gratis 7 días. Elige Explorar o Voy a por la plaza según cuánto quieras entrenar para el EIR." />
         <meta property="og:url" content="https://www.simulia.es/precios" />
         <meta property="og:image" content="https://www.simulia.es/Dashboard-EIR-Simulia.png" />
         <script type="application/ld+json">
@@ -26,13 +28,22 @@ export default function Precios() {
             "@type": "Product",
             "name": "Simulia",
             "description": "Plataforma de preparación EIR con simulacros reales y análisis de errores por IA",
-            "offers": {
-              "@type": "Offer",
-              "name": "Voy a por la plaza",
-              "price": "89.00",
-              "priceCurrency": "EUR",
-              "url": "https://www.simulia.es/precios"
-            }
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Explorar",
+                "price": "11.99",
+                "priceCurrency": "EUR",
+                "url": "https://www.simulia.es/precios"
+              },
+              {
+                "@type": "Offer",
+                "name": "Voy a por la plaza",
+                "price": "23.99",
+                "priceCurrency": "EUR",
+                "url": "https://www.simulia.es/precios"
+              }
+            ]
           })}
         </script>
       </Helmet>
@@ -41,54 +52,89 @@ export default function Precios() {
         <div className="max-w-3xl mx-auto text-center space-y-6 mb-12">
           <Link to="/" className="text-primary hover:underline text-sm">← Volver a Simulia</Link>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-secondary">
-            Precio de Simulia: preparación EIR sin mensualidades
+            Elige cómo quieres preparar el EIR
           </h1>
           <p className="text-lg sm:text-xl text-foreground">
-            Pago único, sin letra pequeña. Accede hasta tu examen del 23 de enero de 2027.
+            7 días de prueba gratis en los dos planes. Cancela antes de que se te cobre, sin coste ni compromiso.
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-start">
+          {/* Explorar */}
+          <div className="bg-card border border-border shadow-md hover:shadow-lg transition-all rounded-xl p-8 space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold mb-2 text-secondary">Explorar</h2>
+              <p className="text-sm text-muted-foreground mb-4">Prueba Simulia sin presión</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-secondary">11,99 €</span>
+                <span className="text-muted-foreground text-lg">/mes</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                7 días de prueba gratis · cancela cuando quieras
+              </div>
+            </div>
+            <div className="bg-muted/40 rounded-xl p-6 border border-border">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial (175 preguntas) — hasta 4 al mes</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Corrección y resultado de cada simulacro</span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Quizz Rápido, Repite Errores, Protocolario, Contrarreloj y Personalizado</span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Banco completo de preguntas por asignatura</span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Contacto por WhatsApp</span></li>
+                <li className="flex items-start gap-3 opacity-60"><Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" /><span className="text-muted-foreground">Analítica de fallos por asignatura</span></li>
+              </ul>
+            </div>
+            <div className="max-w-sm mx-auto space-y-2">
+              <a
+                href={STRIPE_PAYMENT_LINK_EXPLORAR}
+                className="block w-full text-center bg-secondary hover:bg-secondary/90 shadow-md hover:shadow-lg transition-all text-white py-3 rounded-full font-bold"
+              >
+                Empieza gratis 7 días
+              </a>
+              <p className="text-center text-xs text-muted-foreground">
+                Después, 11,99 €/mes. Cancela cuando quieras.
+              </p>
+            </div>
+          </div>
+
+          {/* Voy a por la plaza */}
           <div className="bg-card border-2 border-primary relative shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
-                Precio único • Sin mensualidades
+                Recomendado
               </span>
             </div>
             <div className="mt-2 md:mt-0">
               <h2 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h2>
+              <p className="text-sm text-muted-foreground mb-4">Todo lo que necesitas hasta el examen, sin límites</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">89 €</span>
-                <span className="text-muted-foreground text-lg">pago único</span>
+                <span className="text-5xl font-bold text-primary">23,99 €</span>
+                <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
-                Acceso hasta tu examen • 23 de enero de 2027
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Equivale a 0,47 €/día si empiezas hoy
+                7 días de prueba gratis · cancela cuando quieras
               </div>
             </div>
             <div className="bg-primary/10 rounded-xl p-6 border border-primary/20">
               <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso completo hasta el 23 de enero de 2027</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">7 modos de examen basados en el formato oficial del Ministerio</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial — ilimitado</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Quizz, Errores, Protocolario, Contrarreloj y Personalizado — ilimitados</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Respuestas justificadas pregunta a pregunta</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Posibilidad de impugnación si detectas un error</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Biblioteca de recursos (guías y plantillas)</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Comunidad completa (dudas, presentaciones y recursos)</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Contacto conmigo por WhatsApp</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Contacto directo por WhatsApp</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Analítica de fallos por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Actualizaciones de preguntas durante toda tu preparación</span></li>
               </ul>
             </div>
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href={STRIPE_PAYMENT_LINK}
+                href={STRIPE_PAYMENT_LINK_PLAZA}
                 className="block w-full text-center bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold"
               >
-                Empieza hoy • 89 €
+                Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Garantía de devolución de 7 días
+                Después, 23,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
@@ -109,12 +155,12 @@ export default function Precios() {
                 <tr className="border-b border-border">
                   <td className="py-3 px-4 font-medium text-secondary">Compromiso</td>
                   <td className="py-3 px-4">Anual, con contrato</td>
-                  <td className="py-3 px-4">Pago único, sin permanencia</td>
+                  <td className="py-3 px-4">Mensual, sin permanencia</td>
                 </tr>
                 <tr className="border-b border-border">
                   <td className="py-3 px-4 font-medium text-secondary">Garantía</td>
                   <td className="py-3 px-4">Poco habitual</td>
-                  <td className="py-3 px-4">Devolución en 7 días</td>
+                  <td className="py-3 px-4">7 días de prueba gratis</td>
                 </tr>
               </tbody>
             </table>
