@@ -343,10 +343,10 @@ const DemoModal = ({ isOpen, onClose }) => {
       <div className="demo-modal">
         {!selectedMode && (
           <div className="demo-mode-selection">
-            <div className="demo-header">
+            <div className="demo-header demo-header--intro">
+              <button className="close-btn close-btn--floating" onClick={closeModal}>×</button>
               <h2>Prueba Simulia</h2>
               <p>Elige una modalidad para experimentar cómo funciona nuestra plataforma</p>
-              <button className="close-btn" onClick={closeModal}>×</button>
             </div>
             
             <div className="demo-modes">

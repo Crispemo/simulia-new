@@ -60,16 +60,36 @@
   color: #333;
 }
 
+/* Intro header: title + subtitle stack in one column, close button floats
+   in the corner instead of sharing the flex row (3 children in a row was
+   squeezing the subtitle into a narrow strip on mobile). */
+.demo-header--intro {
+  display: block;
+  position: relative;
+  padding: 30px 56px 20px 30px;
+}
+
+.demo-header--intro h2 {
+  font-size: clamp(22px, 5vw, 28px);
+}
+
+.close-btn--floating {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  flex-shrink: 0;
+}
+
 /* Mode Selection */
 .demo-mode-selection {
-  padding: 20px 30px 40px 30px;
+  padding: 0 30px 40px 30px;
 }
 
 .demo-mode-selection p {
   color: #666;
   font-size: 16px;
-  margin: 10px 0 30px 0;
-  text-align: center;
+  margin: 10px 0 0 0;
+  text-align: left;
 }
 
 .demo-modes {
@@ -552,7 +572,23 @@
     margin: 10px;
     max-height: 95vh;
   }
-  
+
+  .demo-header--intro {
+    padding: 24px 48px 16px 20px;
+  }
+
+  .close-btn--floating {
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 26px;
+  }
+
+  .demo-mode-selection {
+    padding: 0 20px 30px 20px;
+  }
+
   .demo-modes {
     grid-template-columns: 1fr;
     gap: 20px;
