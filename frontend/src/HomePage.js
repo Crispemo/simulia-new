@@ -11,6 +11,7 @@ import { API_URL } from './config';
 import { toast } from 'react-toastify';
 import DemoModal from './components/DemoModal'; // Demo component
 import HeroMockupStack from './components/HeroMockupStack';
+import { Lock } from 'lucide-react';
 
 
 function HomePage() {
@@ -242,9 +243,9 @@ function HomePage() {
         "screenshot": "https://www.simulia.es/Dashboard-EIR-Simulia.png",
         "offers": {
           "@type": "Offer",
-          "price": "89.00",
+          "price": "11.99",
           "priceCurrency": "EUR",
-          "description": "Pago único de 89 € con acceso hasta el examen (23 de enero de 2027)"
+          "description": "Desde 11,99 €/mes (plan Explorar) o 23,99 €/mes (plan Voy a por la plaza), con 7 días de prueba gratis"
         }
       }
     `}
@@ -276,7 +277,7 @@ function HomePage() {
                   "name": "¿Qué diferencia hay entre Simulia y una academia EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, por 89 € de pago único."
+                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 11,99 €/mes."
                   }
                 },
                 {
@@ -743,7 +744,7 @@ function HomePage() {
             Elige tu plan, elige tu preparación, elige tu plaza
           </h2>
           <p className="text-lg sm:text-xl text-foreground">
-            Selecciona el plan que mejor se adapte a tus necesidades y empieza tu preparación hoy mismo.
+            7 días de prueba gratis en los dos planes. Cancela antes de que se te cobre, sin coste ni compromiso.
           </p>
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-6 py-2 text-sm font-medium text-secondary">
             <span className="text-lg">🔥</span>
@@ -751,24 +752,79 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6 items-start">
+          {/* Explorar */}
+          <div className="bg-card border border-border shadow-soft hover:shadow-soft-lg transition-all duration-300 rounded-xl p-8 space-y-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2 text-secondary">Explorar</h3>
+              <p className="text-sm text-muted-foreground mb-4">Prueba Simulia sin presión</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-secondary">11,99 €</span>
+                <span className="text-muted-foreground text-lg">/mes</span>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">
+                7 días de prueba gratis · cancela cuando quieras
+              </div>
+            </div>
+
+            <div className="bg-muted/40 rounded-xl p-6 border border-border">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Simulacro EIR oficial (175 preguntas) — hasta 4 al mes</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Corrección y resultado de cada simulacro</span>
+                </li>
+                <li className="flex items-start gap-3 opacity-60">
+                  <Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground">Quizz Rápido, Repite Errores, Protocolario, Contrarreloj y Personalizado</span>
+                </li>
+                <li className="flex items-start gap-3 opacity-60">
+                  <Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground">Banco completo de preguntas por asignatura</span>
+                </li>
+                <li className="flex items-start gap-3 opacity-60">
+                  <Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground">Contacto por WhatsApp</span>
+                </li>
+                <li className="flex items-start gap-3 opacity-60">
+                  <Lock className="h-4 w-4 mt-1 shrink-0 text-muted-foreground" />
+                  <span className="text-muted-foreground">Analítica de fallos por asignatura</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="max-w-sm mx-auto space-y-2">
+              <a
+                href="https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g"
+                className="block w-full text-center bg-secondary hover:bg-secondary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
+              >
+                Empieza gratis 7 días
+              </a>
+              <p className="text-center text-xs text-muted-foreground">
+                Después, 11,99 €/mes. Cancela cuando quieras.
+              </p>
+            </div>
+          </div>
+
+          {/* Voy a por la plaza */}
           <div className="bg-card border-2 border-primary relative shadow-soft hover:shadow-soft-lg transition-all duration-300 bg-gradient-to-br from-card to-primary/5 rounded-xl p-8 pt-12 md:pt-8 space-y-6">
             <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 z-10">
               <span className="bg-primary text-primary-foreground px-4 md:px-6 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-semibold shadow-lg whitespace-nowrap">
-                Precio único • Sin mensualidades
+                Recomendado
               </span>
             </div>
             <div className="mt-2 md:mt-0">
               <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
+              <p className="text-sm text-muted-foreground mb-4">Todo lo que necesitas hasta el examen, sin límites</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">89 €</span>
-                <span className="text-muted-foreground text-lg">pago único</span>
+                <span className="text-5xl font-bold text-primary">23,99 €</span>
+                <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
-                Acceso hasta tu examen • 23 de enero de 2027
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Equivale a 0,47 €/día si empiezas hoy
+                7 días de prueba gratis · cancela cuando quieras
               </div>
             </div>
 
@@ -776,11 +832,15 @@ function HomePage() {
               <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Acceso completo hasta el 23 de enero de 2027</span>
+                  <span className="text-secondary">Simulacro EIR oficial — ilimitado</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">7 modos de examen basados en el formato oficial del Ministerio</span>
+                  <span className="text-secondary">Quizz, Errores, Protocolario, Contrarreloj y Personalizado — ilimitados</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-success text-xl mt-0.5">✓</span>
+                  <span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -792,15 +852,11 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Biblioteca de recursos (guías y plantillas)</span>
+                  <span className="text-secondary">Contacto directo por WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Comunidad completa (dudas, presentaciones y recursos)</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Contacto conmigo por WhatsApp</span>
+                  <span className="text-secondary">Analítica de fallos por asignatura</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -811,13 +867,13 @@ function HomePage() {
 
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href="https://buy.stripe.com/8x23cv6sAda06FPbmC6Zy0h"
+                href="https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i"
                 className="block w-full text-center bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
               >
-                Empieza hoy • 89 €
+                Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Garantía de devolución de 7 días
+                Después, 23,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
@@ -860,7 +916,7 @@ function HomePage() {
                   ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, por 89 € de pago único.
+                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 11,99 €/mes.
                 </p>
               </details>
             </div>
