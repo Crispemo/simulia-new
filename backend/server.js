@@ -16,10 +16,19 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET);
+const STRIPE_PRICE_TIER_MAP = (() => {
+  try {
+    return JSON.parse(process.env.STRIPE_PRICE_TIER_MAP || '{}');
+  } catch (err) {
+    console.error('STRIPE_PRICE_TIER_MAP inválido (debe ser JSON), usando mapa vacío:', err.message);
+    return {};
+  }
+})();
 const User = require('./models/User');
 const {
   EXPLORAR_ALLOWED_EXAM_TYPE,
   ENTRADA_MONTHLY_LIMIT,
+  resolveTierFromPriceId,
   computeEffectiveTier,
   checkEntradaAllowance,
   getCurrentPeriodUsage,
@@ -3305,10 +3314,12 @@ app.post('/stripe/confirm-checkout', async (req, res) => {
       });
     }
 
+    const priceId = subscription?.items?.data?.[0]?.price?.id;
     const interval = subscription?.items?.data?.[0]?.price?.recurring?.interval;
     let finalPlan = null;
     if (interval === 'month') finalPlan = 'mensual';
     if (interval === 'year') finalPlan = 'anual';
+    const finalTier = resolveTierFromPriceId(priceId, STRIPE_PRICE_TIER_MAP);
 
     if (!finalPlan) {
       return res.status(500).json({
@@ -3332,6 +3343,7 @@ app.post('/stripe/confirm-checkout', async (req, res) => {
       { userId },
       {
         plan: finalPlan,
+        ...(finalTier && { tier: finalTier }),
         email: normalizedEmail || emailFromStripe || userId,
         stripeId: session.customer || undefined,
         expirationDate: expirationDate || undefined,
@@ -3509,6 +3521,7 @@ app.post('/stripe-webhook', async (req, res) => {
         
         // Si no se pudo determinar el plan desde metadata, obtenerlo desde la suscripción
         let finalPlan = plan;
+        let finalTier = null;
         if (!finalPlan || !['mensual', 'anual'].includes(finalPlan)) {
           console.log(`💳 STRIPE WEBHOOK: Plan no determinado desde metadata (${plan}), obteniendo desde suscripción...`);
           
@@ -3529,7 +3542,9 @@ app.post('/stripe-webhook', async (req, res) => {
               if (interval === 'month') finalPlan = 'mensual';
               if (interval === 'year') finalPlan = 'anual';
 
-              console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (interval: ${interval}, priceId: ${priceId})`);
+              finalTier = resolveTierFromPriceId(priceId, STRIPE_PRICE_TIER_MAP);
+
+              console.log(`💳 STRIPE WEBHOOK: Plan obtenido desde suscripción: ${finalPlan} (interval: ${interval}, priceId: ${priceId}, tier: ${finalTier})`);
             }
           } catch (subError) {
             console.error('💳 STRIPE WEBHOOK: Error obteniendo suscripción:', subError.message);
@@ -3545,8 +3560,9 @@ app.post('/stripe-webhook', async (req, res) => {
         // Actualizar usuario en la base de datos
         const updatedUser = await User.findOneAndUpdate(
           { userId: effectiveUserId },
-          { 
+          {
             plan: finalPlan, // Usar el plan final determinado
+            ...(finalTier && { tier: finalTier }),
             email: email || effectiveUserId,
             userName: userName || effectiveUserId,
             stripeId: session.customer || undefined, // Guardar siempre el stripeId
