@@ -103,11 +103,17 @@
 }
 
 .animate-scroll {
-  animation: scroll 40s linear infinite;
+  animation: scroll 22s linear infinite;
 }
 
 .animate-scroll:hover {
   animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll {
+    animation: none;
+  }
 }
 
 .animate-pulse-subtle {

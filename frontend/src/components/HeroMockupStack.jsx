@@ -6,14 +6,14 @@ function HeroMockupStack() {
   useEffect(() => {
     const timer = setInterval(() => {
       setActive((i) => (i + 1) % 3);
-    }, 3200);
+    }, 1800);
     return () => clearInterval(timer);
   }, []);
 
   return (
     <div className="relative w-full aspect-video" aria-hidden="true">
       <div
-        className={`absolute top-[38%] left-[6%] w-44 sm:w-52 -rotate-6 rounded-2xl bg-card border border-border p-4 transition-all duration-700 ${
+        className={`absolute top-[38%] left-[6%] w-44 sm:w-52 -rotate-6 rounded-2xl bg-card border border-border p-4 transition-all duration-500 ${
           active === 0 ? 'scale-110 z-30 shadow-soft-lg' : 'scale-95 z-0 shadow-soft opacity-80'
         }`}
       >
@@ -32,7 +32,7 @@ function HeroMockupStack() {
       </div>
 
       <div
-        className={`absolute top-[8%] left-[30%] w-44 sm:w-52 rounded-2xl bg-card border border-border p-4 transition-all duration-700 ${
+        className={`absolute top-[8%] left-[30%] w-44 sm:w-52 rounded-2xl bg-card border border-border p-4 transition-all duration-500 ${
           active === 1 ? 'scale-110 z-30 shadow-soft-lg' : 'scale-95 z-10 shadow-soft opacity-80'
         }`}
       >
@@ -51,7 +51,7 @@ function HeroMockupStack() {
       </div>
 
       <div
-        className={`absolute top-[42%] left-[52%] w-40 sm:w-48 rotate-6 rounded-2xl bg-secondary text-secondary-foreground p-4 transition-all duration-700 ${
+        className={`absolute top-[42%] left-[52%] w-40 sm:w-48 rotate-6 rounded-2xl bg-secondary text-secondary-foreground p-4 transition-all duration-500 ${
           active === 2 ? 'scale-110 z-30 shadow-soft-lg' : 'scale-95 z-0 shadow-soft opacity-80'
         }`}
       >
