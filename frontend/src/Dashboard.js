@@ -12,7 +12,7 @@ import { Moon, Sun, CreditCard } from 'lucide-react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import jwtDecode from "jwt-decode"
-import ChatBot from "./components/ChatBot"
+import AIAssistant from "./components/ai-assistant"
 import Community from "./components/Community"
 import TimelineProgress from "./components/TimelineProgress"
 import { FiX, FiMenu, FiUsers, FiMessageSquare, FiSun, FiMoon, FiChevronRight, FiChevronLeft } from 'react-icons/fi';
@@ -26,7 +26,6 @@ import Sidebar from './components/sidebar';
 import ExamHistoryTable from './components/exam-history-table';
 import TopFailedSubjects from './components/top-failed-subjects';
 import StreakCounter from './components/streak-counter';
-// import AIAssistant from './components/ai-assistant';
 import ResourcesModal from './components/ResourcesModal';
 import AllSubjectsModal from './components/AllSubjectsModal';
 import SurveyModal from './components/SurveyModal';
@@ -130,8 +129,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     withLongAnswer: 0
   });
 
-  // Estado para controlar la visibilidad de los componentes de comunidad y chatbot
-  const [showChatBot, setShowChatBot] = useState(false)
+  // Estado para controlar la visibilidad del componente de comunidad
   const [showCommunity, setShowCommunity] = useState(false);
   // Estado para el popup de avatar
   const [showAvatarPopup, setShowAvatarPopup] = useState(false);
@@ -469,7 +467,10 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
         // Group and count failed questions by subject
         const subjectGroups = {};
         processedFailedQuestions.forEach(question => {
-          const subject = question.subject || 'General';
+          const subject = question.subject;
+          if (!subject || subject === 'undefined' || subject === 'test' || subject === 'Test' || subject === 'ERROR' || subject === 'Error' || subject === 'null') {
+            return;
+          }
           if (!subjectGroups[subject]) {
             subjectGroups[subject] = 0;
           }
@@ -1315,9 +1316,9 @@ const handleErroresClick = () => {
         if (exam.userAnswers && Array.isArray(exam.userAnswers)) {
           exam.userAnswers.forEach((userAnswer) => {
             // Obtener la asignatura desde questionData dentro de userAnswer
-            const subject = userAnswer.questionData?.subject || 'General';
-            
-            // Filtrar asignaturas inválidas
+            const subject = userAnswer.questionData?.subject;
+
+            // Filtrar asignaturas inválidas o ausentes
             if (!subject || subject === 'undefined' || subject === 'test' || subject === 'Test' || subject === 'ERROR' || subject === 'Error' || subject === 'null') {
               return;
             }
@@ -1965,25 +1966,12 @@ const handleErroresClick = () => {
     );
   };
 
-  // Función para alternar la visibilidad del ChatBot (desactivada)
-  const toggleChatBot = () => {
-    // Función desactivada temporalmente
-    console.log("Función de chatbot desactivada");
-    return false;
-  }
-
   // Función para alternar la visibilidad de la Comunidad (desactivada)
   const toggleCommunity = () => {
     // Función desactivada temporalmente
     console.log("Función de comunidad desactivada");
     return false;
   };
-  
-  // Función para cerrar ChatBot (desactivada)
-  const closeChatBot = () => {
-    // Función desactivada temporalmente
-    return false;
-  }
 
   const [selectedAvatar, setSelectedAvatar] = useState(currentUser?.avatar || '/muñeco_enfermera.png');
 
@@ -2529,7 +2517,7 @@ const handleErroresClick = () => {
                     <StreakCounter streak={timeLeft.days || 0} label="Días hasta EIR" textColor="#ef4444" />
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* <AIAssistant /> */}
+                    <AIAssistant />
                     <Button
                       variant="outline"
                       onClick={() => setShowFlashcardModal(true)}
@@ -2702,7 +2690,7 @@ const handleErroresClick = () => {
           </main>
         </div>
 
-        {/* Popups, Overlays, ChatBot, Community */} 
+        {/* Popups, Overlays, Community */} 
         {showEleccionPopup && <AEleccion onClose={closePopup} />}
         {showContrarrelojPopup && <Contrarreloj onClose={closePopup} />}
         <ResourcesModal 

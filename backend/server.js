@@ -47,12 +47,12 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
 const axios = require('axios');
-const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 const app = express();
 
-// Inicializar OpenAI
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Inicializar Claude
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 }) : null;
 
 // Configuración de URLs para desarrollo y producción
@@ -315,7 +315,7 @@ app.use(surveyRoutes);
 // Rutas de práctica y preferencias
 app.use(practiceRoutes);
 
-// Ruta para el asistente de IA con ChatGPT
+// Ruta para el asistente de IA con Claude
 app.post('/ai-assistant/chat', async (req, res) => {
   try {
     const { message, messages, userContext } = req.body;
@@ -324,12 +324,12 @@ app.post('/ai-assistant/chat', async (req, res) => {
       return res.status(400).json({ error: 'Mensaje requerido' });
     }
 
-    // Verificar si OpenAI está configurado
-    if (!openai || !process.env.OPENAI_API_KEY) {
-      console.warn('⚠️ OpenAI no configurado, usando respuesta por defecto');
-      return res.status(503).json({ 
+    // Verificar si Claude está configurado
+    if (!anthropic || !process.env.ANTHROPIC_API_KEY) {
+      console.warn('⚠️ Claude no configurado, usando respuesta por defecto');
+      return res.status(503).json({
         error: 'Servicio de IA no disponible',
-        fallback: true 
+        fallback: true
       });
     }
 
@@ -377,11 +377,10 @@ LÍMITE:
       systemPrompt += `\n\n${userContext}`;
     }
 
-    let conversationMessages = [
-      { role: 'system', content: systemPrompt }
-    ];
+    // Construir el historial de turnos user/assistant para Claude
+    // (el system prompt va aparte, no como mensaje)
+    let conversationMessages = [];
 
-    // Si hay historial de mensajes, convertirlo al formato de OpenAI
     if (messages && Array.isArray(messages) && messages.length > 0) {
       messages.forEach(msg => {
         if (msg.sender === 'user') {
@@ -397,40 +396,48 @@ LÍMITE:
       conversationMessages.push({ role: 'user', content: message });
     }
 
-    console.log(`🤖 ChatGPT: Procesando mensaje (historial: ${conversationMessages.length - 1} mensajes)`);
+    // Claude exige que el primer turno sea del usuario: descartar
+    // cualquier mensaje inicial del bot (ej. el saludo de bienvenida)
+    const firstUserIndex = conversationMessages.findIndex(m => m.role === 'user');
+    if (firstUserIndex > 0) {
+      conversationMessages = conversationMessages.slice(firstUserIndex);
+    }
 
-    // Llamar a la API de OpenAI
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Modelo más económico y rápido
-      messages: conversationMessages,
-      temperature: 0.7,
+    console.log(`🤖 Claude: Procesando mensaje (historial: ${conversationMessages.length - 1} mensajes)`);
+
+    // Llamar a la API de Claude
+    const completion = await anthropic.messages.create({
+      model: 'claude-sonnet-5',
       max_tokens: 300,
+      system: systemPrompt,
+      messages: conversationMessages,
     });
 
-    const aiResponse = completion.choices[0]?.message?.content || 'Lo siento, no pude generar una respuesta.';
+    const aiResponse = completion.content.find(block => block.type === 'text')?.text
+      || 'Lo siento, no pude generar una respuesta.';
 
-    console.log(`✅ ChatGPT: Respuesta generada (${aiResponse.length} caracteres)`);
+    console.log(`✅ Claude: Respuesta generada (${aiResponse.length} caracteres)`);
 
     res.json({
       response: aiResponse,
-      model: 'gpt-4o-mini'
+      model: 'claude-sonnet-5'
     });
 
   } catch (error) {
-    console.error('❌ Error en ChatGPT:', error);
+    console.error('❌ Error en Claude:', error);
     console.error('Stack:', error.stack);
-    
-    // Si hay error de rate limit o cuota, devolver un error específico
-    if (error.status === 429 || error.code === 'insufficient_quota' || error.response?.status === 429) {
-      return res.status(503).json({ 
+
+    // Si hay error de rate limit, devolver un error específico
+    if (error.status === 429) {
+      return res.status(503).json({
         error: 'Límite de uso alcanzado. Inténtalo más tarde.',
         fallback: true
       });
     }
 
     // Si hay error de autenticación o API key inválida
-    if (error.status === 401 || error.code === 'invalid_api_key' || error.response?.status === 401) {
-      console.error('⚠️ API Key de OpenAI inválida o no configurada');
+    if (error.status === 401) {
+      console.error('⚠️ API Key de Anthropic inválida o no configurada');
       return res.status(503).json({ 
         error: 'Servicio de IA no disponible',
         fallback: true
@@ -4701,7 +4708,7 @@ app.get('/user-stats/:userId', async (req, res) => {
     completedExams.forEach(exam => {
       if (exam.userAnswers && Array.isArray(exam.userAnswers)) {
         exam.userAnswers.forEach((userAnswer) => {
-          const subject = userAnswer.questionData?.subject || 'General';
+          const subject = userAnswer.questionData?.subject;
           if (subject && subject !== 'undefined' && subject !== 'test' && subject !== 'Test' && subject !== 'ERROR' && subject !== 'Error' && subject !== 'null') {
             const isCorrect = userAnswer.isCorrect === true;
             const hasAnswered = userAnswer.selectedAnswer !== undefined && userAnswer.selectedAnswer !== null && userAnswer.selectedAnswer !== '';
