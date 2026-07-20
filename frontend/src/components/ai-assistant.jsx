@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { Button } from './ui/button'
-import { Bot, Send, Loader2, X } from 'lucide-react'
+import { Bot, Send, Loader2, X, Trash2 } from 'lucide-react'
 import { API_URL } from '../config'
 import { useAuth } from '../context/AuthContext'
 
@@ -107,6 +107,22 @@ export default function AIAssistant() {
     }
   }
 
+  // Borra la conversación actual y vuelve al mensaje de bienvenida
+  const handleClearChat = () => {
+    if (!window.confirm('¿Borrar toda la conversación? Esta acción no se puede deshacer.')) {
+      return
+    }
+    localStorage.removeItem(STORAGE_KEY)
+    setMessages([
+      {
+        text: "¡Hola! Soy el asistente de IA de Simulia. ¿En qué puedo ayudarte con tu preparación para el examen EIR?",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ])
+    setConversationContext({ lastTopic: null, lastOffer: null, waitingForConfirmation: false })
+  }
+
   // Función para obtener estadísticas del usuario
   const fetchUserStats = async () => {
     if (!userId) return null
@@ -180,19 +196,19 @@ export default function AIAssistant() {
       }
     }
     
-    let contextText = `\n\n=== DATOS DEL USUARIO ===\n\n📊 RENDIMIENTO GENERAL:\n- Exámenes completados: ${general.totalExams || 0}\n- Preguntas respondidas: ${general.totalQuestions || 0}\n- Tasa de acierto: ${general.successRate || 0}%\n- Puntuación media: ${general.averageScore || 0} puntos\n`
+    let contextText = `\n\n=== DATOS DEL USUARIO ===\n\nRENDIMIENTO GENERAL:\n- Exámenes completados: ${general.totalExams || 0}\n- Preguntas respondidas: ${general.totalQuestions || 0}\n- Tasa de acierto: ${general.successRate || 0}%\n- Puntuación media: ${general.averageScore || 0} puntos\n`
     
     if (worstSubjects?.length > 0) {
-      contextText += `\n⚠️ ÁREAS PROBLEMÁTICAS (Top 3):\n${worstSubjects.map((s, i) => 
+      contextText += `\nÁREAS PROBLEMÁTICAS (Top 3):\n${worstSubjects.map((s, i) => 
         `${i + 1}. ${s.subject}: ${s.errors} errores (${s.errorRate}% tasa de error)`
       ).join('\n')}\n`
     }
     
     if (relevantSubject) {
-      contextText += `\n📌 ASIGNATURA MENCIONADA (${relevantSubject.subject}):\n- Errores: ${relevantSubject.errors}\n- Tasa de error: ${relevantSubject.errorRate}%\n- Tasa de acierto: ${relevantSubject.successRate}%\n- Total: ${relevantSubject.total} preguntas\n`
+      contextText += `\nASIGNATURA MENCIONADA (${relevantSubject.subject}):\n- Errores: ${relevantSubject.errors}\n- Tasa de error: ${relevantSubject.errorRate}%\n- Tasa de acierto: ${relevantSubject.successRate}%\n- Total: ${relevantSubject.total} preguntas\n`
     }
     
-    contextText += `\n📚 RECURSOS:\n- Preguntas falladas: ${stats.failedQuestions || 0}\n- Preguntas sin contestar: ${stats.unansweredQuestions || 0}\n`
+    contextText += `\nRECURSOS:\n- Preguntas falladas: ${stats.failedQuestions || 0}\n- Preguntas sin contestar: ${stats.unansweredQuestions || 0}\n`
     
     return contextText
   }
@@ -207,12 +223,12 @@ export default function AIAssistant() {
       
       if (type === 'create_exam') {
         return {
-          text: `📝 **Pasos para crear un examen personalizado de ${subject}:**\n\n> 1. En el menú principal, haz clic en "Personalizado"\n\n> 2. Selecciona "${subject}" en el filtro de asignaturas\n\n> 3. Elige 30 preguntas (recomendado para empezar)\n\n> 4. Haz clic en "Comenzar examen"\n\n💡 **Después del examen:**\n- Revisa TODAS las respuestas, especialmente las incorrectas\n- Anota los conceptos que no dominas\n- Repite el examen en 2-3 días\n\n¿Necesitas ayuda con algún otro aspecto de tu preparación?`,
+          text: `**Pasos para crear un examen personalizado de ${subject}:**\n\n1. En el menú principal, haz clic en "Personalizado"\n\n2. Selecciona "${subject}" en el filtro de asignaturas\n\n3. Elige 30 preguntas (recomendado para empezar)\n\n4. Haz clic en "Comenzar examen"\n\n**Después del examen:**\n- Revisa TODAS las respuestas, especialmente las incorrectas\n- Anota los conceptos que no dominas\n- Repite el examen en 2-3 días\n\n¿Necesitas ayuda con algún otro aspecto de tu preparación?`,
           clearOffer: true
         }
       } else if (type === 'review_errors') {
         return {
-          text: `📝 **Cómo usar "Repite tus errores":**\n\n> 1. Ve a la sección "Práctica" en el menú\n\n> 2. Selecciona "Repite tus errores"\n\n> 3. Filtra por ${subject || 'la asignatura que quieras'} si quieres enfocarte\n\n> 4. Comienza el examen\n\n💡 **Consejos:**\n- Lee cuidadosamente cada pregunta antes de responder\n- Intenta entender POR QUÉ fallaste originalmente\n- Toma notas de los conceptos difíciles\n\n¿Hay alguna asignatura específica en la que quieras enfocarte?`,
+          text: `**Cómo usar "Repite tus errores":**\n\n1. Ve a la sección "Práctica" en el menú\n\n2. Selecciona "Repite tus errores"\n\n3. Filtra por ${subject || 'la asignatura que quieras'} si quieres enfocarte\n\n4. Comienza el examen\n\n**Consejos:**\n- Lee cuidadosamente cada pregunta antes de responder\n- Intenta entender POR QUÉ fallaste originalmente\n- Toma notas de los conceptos difíciles\n\n¿Hay alguna asignatura específica en la que quieras enfocarte?`,
           clearOffer: true
         }
       }
@@ -246,15 +262,15 @@ export default function AIAssistant() {
       if (subjectStats) {
         let recommendation = ''
         if (subjectStats.errorRate > 30) {
-          recommendation = `Esta asignatura necesita ATENCIÓN URGENTE. Te recomiendo:\n\n> 1. Crear exámenes de 20-30 preguntas solo de ${detectedSubject}\n\n> 2. Estudiar la teoría antes de cada sesión de práctica\n\n> 3. Revisar CADA error cuidadosamente\n\n> 4. Repetir el proceso cada 2-3 días`
+          recommendation = `Esta asignatura necesita ATENCIÓN URGENTE. Te recomiendo:\n\n1. Crear exámenes de 20-30 preguntas solo de ${detectedSubject}\n\n2. Estudiar la teoría antes de cada sesión de práctica\n\n3. Revisar CADA error cuidadosamente\n\n4. Repetir el proceso cada 2-3 días`
         } else if (subjectStats.errorRate > 15) {
-          recommendation = `Vas por buen camino, pero puedes mejorar:\n\n> 1. Practica con exámenes mixtos que incluyan ${detectedSubject}\n\n> 2. Usa "Repite tus errores" para esta asignatura\n\n> 3. Alterna con otras asignaturas`
+          recommendation = `Vas por buen camino, pero puedes mejorar:\n\n1. Practica con exámenes mixtos que incluyan ${detectedSubject}\n\n2. Usa "Repite tus errores" para esta asignatura\n\n3. Alterna con otras asignaturas`
         } else {
-          recommendation = `¡Excelente nivel en ${detectedSubject}!\n\n> 1. Mantén la práctica regular\n\n> 2. Usa el modo contrarreloj para optimizar velocidad\n\n> 3. Enfócate en otras asignaturas que necesiten más atención`
+          recommendation = `¡Excelente nivel en ${detectedSubject}!\n\n1. Mantén la práctica regular\n\n2. Usa el modo contrarreloj para optimizar velocidad\n\n3. Enfócate en otras asignaturas que necesiten más atención`
         }
         
         return {
-          text: `📊 **Análisis de ${detectedSubject}:**\n\n**Tu rendimiento:**\n- Errores: ${subjectStats.errors}\n- Tasa de error: ${subjectStats.errorRate}%\n- Tasa de acierto: ${subjectStats.successRate}%\n- Total preguntas: ${subjectStats.total}\n\n🎯 **Recomendación personalizada:**\n\n${recommendation}\n\n💡 **¿Quieres que te ayude a crear un examen específico de ${detectedSubject}?**`,
+          text: `**Análisis de ${detectedSubject}:**\n\n**Tu rendimiento:**\n- Errores: ${subjectStats.errors}\n- Tasa de error: ${subjectStats.errorRate}%\n- Tasa de acierto: ${subjectStats.successRate}%\n- Total preguntas: ${subjectStats.total}\n\n**Recomendación personalizada:**\n\n${recommendation}\n\n**¿Quieres que te ayude a crear un examen específico de ${detectedSubject}?**`,
           setOffer: { type: 'create_exam', subject: detectedSubject }
         }
       }
@@ -262,7 +278,7 @@ export default function AIAssistant() {
     
     // Respuesta por defecto mejorada
     return {
-      text: `Puedo ayudarte con:\n\n🎯 **Crear exámenes personalizados** por asignatura\n\n📊 **Analizar tu progreso** y áreas de mejora\n\n🔄 **Repasar tus errores** de forma efectiva\n\n⏱️ **Practicar contrarreloj** para mejorar velocidad\n\n¿Qué te gustaría hacer?`,
+      text: `Puedo ayudarte con:\n\n**Crear exámenes personalizados** por asignatura\n\n**Analizar tu progreso** y áreas de mejora\n\n**Repasar tus errores** de forma efectiva\n\n**Practicar contrarreloj** para mejorar velocidad\n\n¿Qué te gustaría hacer?`,
       clearOffer: true
     }
   }
@@ -307,7 +323,7 @@ export default function AIAssistant() {
     // Saludos básicos
     if (["hola", "buenas", "buenos días", "buenas tardes"].some(w => input.includes(w))) {
       return {
-        text: "¡Hola! Ahora mismo el asistente inteligente está teniendo problemas técnicos. Mientras tanto, puedes practicar desde el menú:\n\n• Simulacro EIR completo\n• Repite tus errores\n• Examen personalizado por asignaturas\n\nEn cuanto el asistente vuelva a estar disponible, te ayudará con recomendaciones más concretas.",
+        text: "¡Hola! Ahora mismo el asistente inteligente está teniendo problemas técnicos. Mientras tanto, puedes practicar desde el menú:\n\nSimulacro EIR completo\nRepite tus errores\nExamen personalizado por asignaturas\n\nEn cuanto el asistente vuelva a estar disponible, te ayudará con recomendaciones más concretas.",
         sender: "bot",
         timestamp: new Date(),
       }
@@ -316,7 +332,7 @@ export default function AIAssistant() {
     // Confirmaciones - dar pasos concretos
     if (["si", "sí", "ok", "vale", "de acuerdo"].includes(input)) {
       return {
-        text: "Perfecto. Haz esto ahora mismo:\n\n> 1. Ve al menú izquierdo y entra en 'Personalizado'.\n\n> 2. Selecciona 1–2 asignaturas donde quieras mejorar.\n\n> 3. Elige 30 preguntas y pulsa 'Comenzar examen'.\n\n💡 **Después:** Revisa bien las explicaciones de las preguntas falladas.",
+        text: "Perfecto. Haz esto ahora mismo:\n\n1. Ve al menú izquierdo y entra en 'Personalizado'.\n\n2. Selecciona 1–2 asignaturas donde quieras mejorar.\n\n3. Elige 30 preguntas y pulsa 'Comenzar examen'.\n\n**Después:** Revisa bien las explicaciones de las preguntas falladas.",
         sender: "bot",
         timestamp: new Date(),
       }
@@ -324,7 +340,7 @@ export default function AIAssistant() {
     
     // Mensaje genérico
     return {
-      text: "De momento el asistente de IA está limitado por un problema técnico.\n\nMientras tanto te recomiendo:\n\n> 1. Hacer un simulacro o un examen personalizado por asignaturas\n\n> 2. Revisar tus errores en la sección 'Repite tus errores'\n\nCuando el servicio se restablezca, podré darte recomendaciones personalizadas según tus estadísticas.",
+      text: "De momento el asistente de IA está limitado por un problema técnico.\n\nMientras tanto te recomiendo:\n\n1. Hacer un simulacro o un examen personalizado por asignaturas\n\n2. Revisar tus errores en la sección 'Repite tus errores'\n\nCuando el servicio se restablezca, podré darte recomendaciones personalizadas según tus estadísticas.",
       sender: "bot",
       timestamp: new Date(),
     }
@@ -393,7 +409,7 @@ export default function AIAssistant() {
     } else if (input.includes("mejorar") || input.includes("mejor") || input.includes("progresar")) {
       // Respuesta contextual sobre mejora
       if (temaDetectado === 'farmacologia') {
-        response = "📊 **Análisis:** Para mejorar en Farmacología necesitas práctica específica y revisión de errores.\n\n🎯 **Recomendación:** Te sugiero crear exámenes personalizados enfocados en esta asignatura.\n\n📝 **Plan de acción:**\n\n> 1. Crea en \"Personalizado\" un examen de 30 preguntas solo de Farmacología\n\n> 2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n> 3. Usa \"Repite tus errores\" para practicar las preguntas que has fallado\n\n> 4. Practica con el modo contrarreloj para mejorar velocidad\n\n💡 **Consejo:** Estudia los grupos farmacológicos más comunes en el EIR (analgésicos, antibióticos, antihipertensivos).\n\n¿Te ayudo a configurar un examen personalizado de Farmacología?"
+        response = "**Análisis:** Para mejorar en Farmacología necesitas práctica específica y revisión de errores.\n\n**Recomendación:** Te sugiero crear exámenes personalizados enfocados en esta asignatura.\n\n**Plan de acción:**\n\n1. Crea en \"Personalizado\" un examen de 30 preguntas solo de Farmacología\n\n2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n3. Usa \"Repite tus errores\" para practicar las preguntas que has fallado\n\n4. Practica con el modo contrarreloj para mejorar velocidad\n\n**Consejo:** Estudia los grupos farmacológicos más comunes en el EIR (analgésicos, antibióticos, antihipertensivos).\n\n¿Te ayudo a configurar un examen personalizado de Farmacología?"
       } else if (temaDetectado) {
         const nombreTema = temaDetectado === 'farmacologia' ? 'Farmacología' : 
                           temaDetectado === 'quirurgica' ? 'Enfermería Quirúrgica' :
@@ -551,27 +567,27 @@ export default function AIAssistant() {
           // Si pregunta específicamente sobre qué debería practicar
           if (input.includes("qué debería") || input.includes("que deberia") || input.includes("qué debo") || input.includes("que debo") || input.includes("debería practicar") || input.includes("deberia practicar") || input.includes("debo practicar") || input.includes("qué practicar") || input.includes("que practicar")) {
             if (worstSubjects.length > 0) {
-              responseText = `📊 **Análisis:** Basándome en tu progreso, estas son las asignaturas donde tienes más dificultades:\n\n${worstSubjects.map((s, i) => `**${i + 1}. ${s.subject}**\n   - ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n\n')}\n\n🎯 **Recomendación:** Enfócate en practicar estas áreas para mejorar tu rendimiento general.\n\n📝 **Plan de acción:**\n\n> 1. Crea en "Personalizado" un examen de 30 preguntas solo de ${worstSubjects[0].subject}\n\n> 2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n> 3. Te recomiendo practicar con el modo contrarreloj para mejorar velocidad\n\n> 4. Usa la función "Repite tus errores" para revisar las preguntas que has fallado en esta asignatura\n\n💡 **Consejo:** Practica de forma constante en estas áreas y verás mejoras significativas en 2-3 semanas.\n\n¿Te ayudo a configurar un examen personalizado de ${worstSubjects[0].subject}?`
+              responseText = `**Análisis:** Basándome en tu progreso, estas son las asignaturas donde tienes más dificultades:\n\n${worstSubjects.map((s, i) => `**${i + 1}. ${s.subject}**\n   - ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n\n')}\n\n**Recomendación:** Enfócate en practicar estas áreas para mejorar tu rendimiento general.\n\n**Plan de acción:**\n\n1. Crea en "Personalizado" un examen de 30 preguntas solo de ${worstSubjects[0].subject}\n\n2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n3. Te recomiendo practicar con el modo contrarreloj para mejorar velocidad\n\n4. Usa la función "Repite tus errores" para revisar las preguntas que has fallado en esta asignatura\n\n**Consejo:** Practica de forma constante en estas áreas y verás mejoras significativas en 2-3 semanas.\n\n¿Te ayudo a configurar un examen personalizado de ${worstSubjects[0].subject}?`
             } else if (general.totalExams === 0) {
-              responseText = `📊 **Análisis:** Aún no tienes exámenes completados para identificar tus áreas de mejora.\n\n🎯 **Recomendación:** Empieza con un simulacro completo para evaluar tu nivel inicial.\n\n📝 **Plan de acción:**\n\n> 1. Realiza un simulacro completo de 175 preguntas\n\n> 2. Revisa tus resultados y analiza en qué asignaturas tienes más dificultades\n\n> 3. Crea exámenes personalizados de 30 preguntas enfocados en las áreas que necesitas mejorar\n\n> 4. Practica regularmente y revisa tus errores\n\n💡 **Consejo:** El primer simulacro te dará una visión clara de tu nivel actual.\n\n¿Te ayudo a comenzar con un simulacro?`
+              responseText = `**Análisis:** Aún no tienes exámenes completados para identificar tus áreas de mejora.\n\n**Recomendación:** Empieza con un simulacro completo para evaluar tu nivel inicial.\n\n**Plan de acción:**\n\n1. Realiza un simulacro completo de 175 preguntas\n\n2. Revisa tus resultados y analiza en qué asignaturas tienes más dificultades\n\n3. Crea exámenes personalizados de 30 preguntas enfocados en las áreas que necesitas mejorar\n\n4. Practica regularmente y revisa tus errores\n\n**Consejo:** El primer simulacro te dará una visión clara de tu nivel actual.\n\n¿Te ayudo a comenzar con un simulacro?`
             } else {
-              responseText = `📊 **Análisis:** Tu rendimiento general es bueno. Mantén la práctica constante.\n\n🎯 **Recomendación:** Continúa mejorando con práctica dirigida.\n\n📝 **Plan de acción:**\n\n> 1. Sigue practicando con simulacros completos para mantener tu nivel\n\n> 2. Revisa tus errores usando la función "Repite tus errores"\n\n> 3. Crea exámenes personalizados de asignaturas específicas para profundizar\n\n> 4. Usa el modo contrarreloj para mejorar tu velocidad de respuesta\n\n💡 **Consejo:** La práctica constante es clave para mantener y mejorar tu rendimiento.\n\n¿Quieres que te ayude a crear un examen personalizado?`
+              responseText = `**Análisis:** Tu rendimiento general es bueno. Mantén la práctica constante.\n\n**Recomendación:** Continúa mejorando con práctica dirigida.\n\n**Plan de acción:**\n\n1. Sigue practicando con simulacros completos para mantener tu nivel\n\n2. Revisa tus errores usando la función "Repite tus errores"\n\n3. Crea exámenes personalizados de asignaturas específicas para profundizar\n\n4. Usa el modo contrarreloj para mejorar tu velocidad de respuesta\n\n**Consejo:** La práctica constante es clave para mantener y mejorar tu rendimiento.\n\n¿Quieres que te ayude a crear un examen personalizado?`
             }
           }
           // Si pregunta sobre su progreso o cómo va
           else if (input.includes("progreso") || input.includes("cómo voy") || input.includes("como voy") || input.includes("cómo estoy") || input.includes("como estoy") || input.includes("mi rendimiento") || input.includes("mis notas") || input.includes("mis netas") || input.includes("cómo ves") || input.includes("como ves")) {
             if (general.totalExams > 0) {
-              responseText = `📊 **Análisis de tu progreso:**\n\n**Rendimiento general:**\n- Exámenes completados: ${general.totalExams}\n- Preguntas respondidas: ${general.totalQuestions}\n- Tasa de acierto: ${general.successRate}%\n- Puntuación media: ${general.averageScore} puntos\n\n${worstSubjects.length > 0 ? `⚠️ **Áreas que requieren atención:**\n${worstSubjects.map(s => `• ${s.subject}: ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n')}\n\n🎯 **Recomendación:** Enfócate en estas asignaturas para mejorar tu rendimiento general.\n\n📝 **Plan de acción:**\n\n> 1. Crea en "Personalizado" exámenes de 30 preguntas enfocados en ${worstSubjects[0].subject}\n\n> 2. Revisa con detenimiento las respuestas después de cada examen\n\n> 3. Usa "Repite tus errores" para practicar específicamente las preguntas falladas\n\n> 4. Practica con el modo contrarreloj para mejorar tu velocidad\n\n💡 **Consejo:** La práctica constante en estas áreas te ayudará a mejorar significativamente.` : '✅ **¡Buen trabajo!** Tu rendimiento general es sólido.\n\n🎯 **Recomendación:** Mantén la práctica regular para seguir mejorando.\n\n📝 **Plan de acción:**\n\n> 1. Continúa con simulacros completos para mantener tu nivel\n\n> 2. Revisa tus errores periódicamente usando "Repite tus errores"\n\n> 3. Crea exámenes personalizados de asignaturas específicas para profundizar\n\n> 4. Practica con el modo contrarreloj para optimizar tu velocidad\n\n💡 **Consejo:** La consistencia es clave para mantener un buen rendimiento.'}\n\n¿Quieres que te ayude a crear un examen personalizado?`
+              responseText = `**Análisis de tu progreso:**\n\n**Rendimiento general:**\n- Exámenes completados: ${general.totalExams}\n- Preguntas respondidas: ${general.totalQuestions}\n- Tasa de acierto: ${general.successRate}%\n- Puntuación media: ${general.averageScore} puntos\n\n${worstSubjects.length > 0 ? `**Áreas que requieren atención:**\n${worstSubjects.map(s => `${s.subject}: ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n')}\n\n**Recomendación:** Enfócate en estas asignaturas para mejorar tu rendimiento general.\n\n**Plan de acción:**\n\n1. Crea en "Personalizado" exámenes de 30 preguntas enfocados en ${worstSubjects[0].subject}\n\n2. Revisa con detenimiento las respuestas después de cada examen\n\n3. Usa "Repite tus errores" para practicar específicamente las preguntas falladas\n\n4. Practica con el modo contrarreloj para mejorar tu velocidad\n\n**Consejo:** La práctica constante en estas áreas te ayudará a mejorar significativamente.` : '**¡Buen trabajo!** Tu rendimiento general es sólido.\n\n**Recomendación:** Mantén la práctica regular para seguir mejorando.\n\n**Plan de acción:**\n\n1. Continúa con simulacros completos para mantener tu nivel\n\n2. Revisa tus errores periódicamente usando "Repite tus errores"\n\n3. Crea exámenes personalizados de asignaturas específicas para profundizar\n\n4. Practica con el modo contrarreloj para optimizar tu velocidad\n\n**Consejo:** La consistencia es clave para mantener un buen rendimiento.'}\n\n¿Quieres que te ayude a crear un examen personalizado?`
             } else {
-              responseText = `📊 **Análisis:** Aún no tienes exámenes completados para analizar tu progreso.\n\n🎯 **Recomendación:** Empieza con un simulacro completo para evaluar tu nivel inicial.\n\n📝 **Plan de acción:**\n\n> 1. Realiza un simulacro completo de 175 preguntas\n\n> 2. Revisa tus resultados y analiza en qué asignaturas tienes más dificultades\n\n> 3. Crea exámenes personalizados de 30 preguntas enfocados en las áreas que necesitas mejorar\n\n> 4. Revisa con detenimiento las respuestas después de cada examen\n\n💡 **Consejo:** El primer simulacro te dará una visión clara de tu nivel actual y te ayudará a planificar tu estudio.\n\n¿Te ayudo a comenzar con un simulacro?`
+              responseText = `**Análisis:** Aún no tienes exámenes completados para analizar tu progreso.\n\n**Recomendación:** Empieza con un simulacro completo para evaluar tu nivel inicial.\n\n**Plan de acción:**\n\n1. Realiza un simulacro completo de 175 preguntas\n\n2. Revisa tus resultados y analiza en qué asignaturas tienes más dificultades\n\n3. Crea exámenes personalizados de 30 preguntas enfocados en las áreas que necesitas mejorar\n\n4. Revisa con detenimiento las respuestas después de cada examen\n\n**Consejo:** El primer simulacro te dará una visión clara de tu nivel actual y te ayudará a planificar tu estudio.\n\n¿Te ayudo a comenzar con un simulacro?`
             }
           }
           // Si pregunta sobre dónde falla más
           else if (input.includes("dónde fallo") || input.includes("donde fallo") || input.includes("fallo mucho") || input.includes("fallo mas") || input.includes("fallo más")) {
             if (worstSubjects.length > 0) {
-              responseText = `📊 **Análisis:** Estas son las asignaturas donde más fallas:\n\n${worstSubjects.slice(0, 3).map((s, i) => `**${i + 1}. ${s.subject}**\n   - ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n\n')}\n\n🎯 **Recomendación:** Enfócate en practicar estas áreas para mejorar tu rendimiento.\n\n📝 **Plan de acción:**\n\n> 1. Crea en "Personalizado" un examen de 30 preguntas solo de ${worstSubjects[0].subject}\n\n> 2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n> 3. Te recomiendo practicar con el modo contrarreloj para mejorar velocidad\n\n> 4. Usa "Repite tus errores" para revisar específicamente las ${worstSubjects[0].errors} preguntas que has fallado en ${worstSubjects[0].subject}\n\n💡 **Consejo:** La práctica constante en estas asignaturas te ayudará a reducir significativamente tus errores.\n\n¿Quieres que te ayude a crear un examen de ${worstSubjects[0].subject}?`
+              responseText = `**Análisis:** Estas son las asignaturas donde más fallas:\n\n${worstSubjects.slice(0, 3).map((s, i) => `**${i + 1}. ${s.subject}**\n   - ${s.errors} errores (${s.errorRate}% tasa de error)`).join('\n\n')}\n\n**Recomendación:** Enfócate en practicar estas áreas para mejorar tu rendimiento.\n\n**Plan de acción:**\n\n1. Crea en "Personalizado" un examen de 30 preguntas solo de ${worstSubjects[0].subject}\n\n2. Revisa con detenimiento las respuestas después de haber hecho el examen\n\n3. Te recomiendo practicar con el modo contrarreloj para mejorar velocidad\n\n4. Usa "Repite tus errores" para revisar específicamente las ${worstSubjects[0].errors} preguntas que has fallado en ${worstSubjects[0].subject}\n\n**Consejo:** La práctica constante en estas asignaturas te ayudará a reducir significativamente tus errores.\n\n¿Quieres que te ayude a crear un examen de ${worstSubjects[0].subject}?`
             } else {
-              responseText = `📊 **Análisis:** Aún no tienes suficientes datos para identificar tus áreas más débiles.\n\n🎯 **Recomendación:** Completa algunos exámenes para obtener datos de tu rendimiento.\n\n📝 **Plan de acción:**\n\n> 1. Realiza un simulacro completo de 175 preguntas\n\n> 2. Completa al menos 2-3 exámenes personalizados de diferentes asignaturas\n\n> 3. Revisa tus resultados para identificar patrones\n\n> 4. Una vez tengas datos, podré darte recomendaciones más específicas\n\n💡 **Consejo:** Cuantos más exámenes completes, más precisa será mi análisis de tus áreas de mejora.\n\n¿Te ayudo a empezar con un simulacro?`
+              responseText = `**Análisis:** Aún no tienes suficientes datos para identificar tus áreas más débiles.\n\n**Recomendación:** Completa algunos exámenes para obtener datos de tu rendimiento.\n\n**Plan de acción:**\n\n1. Realiza un simulacro completo de 175 preguntas\n\n2. Completa al menos 2-3 exámenes personalizados de diferentes asignaturas\n\n3. Revisa tus resultados para identificar patrones\n\n4. Una vez tengas datos, podré darte recomendaciones más específicas\n\n**Consejo:** Cuantos más exámenes completes, más precisa será mi análisis de tus áreas de mejora.\n\n¿Te ayudo a empezar con un simulacro?`
             }
           }
         }
@@ -672,14 +688,25 @@ export default function AIAssistant() {
               <Bot className="h-5 w-5" />
               Asistente de IA - Simulia
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDialogClose(false)}
-              className="h-8 w-8 rounded-full"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClearChat}
+                className="h-8 w-8 rounded-full"
+                title="Borrar conversación"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDialogClose(false)}
+                className="h-8 w-8 rounded-full"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </DialogHeader>
           
           {/* Área de mensajes con scroll (flex-1 ocupa el espacio restante del panel) */}
