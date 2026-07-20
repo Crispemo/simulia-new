@@ -83,6 +83,15 @@ export default function AIAssistant() {
     }
   }, [isOpen])
 
+  // Cargar las estadísticas del usuario en cuanto se abre el chat, para que
+  // el asistente siempre tenga sus métricas reales disponibles como contexto
+  // en vez de depender de que el mensaje "parezca" pedir datos.
+  useEffect(() => {
+    if (isOpen && userId && !userStats) {
+      fetchUserStats()
+    }
+  }, [isOpen, userId])
+
   // Guardar historial cuando cambien los mensajes
   useEffect(() => {
     if (messages.length > 1) { // Solo guardar si hay más que el mensaje inicial
@@ -475,9 +484,12 @@ export default function AIAssistant() {
     setInputText("")
     setIsLoading(true)
 
-    // Obtener estadísticas si es necesario
+    // Las estadísticas del usuario se cargan al abrir el chat; si por lo que
+    // sea aún no están (fallo de red, usuario recién logueado), se piden aquí
+    // como red de seguridad. Se envían SIEMPRE al backend, no solo cuando el
+    // mensaje "parece" pedir datos: es Claude quien decide si son relevantes.
     let stats = userStats
-    if (userId && needsUserData(input, messages)) {
+    if (userId && !stats) {
       stats = await fetchUserStats()
     }
 
@@ -636,6 +648,16 @@ export default function AIAssistant() {
     return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
+  // Renderiza **negrita** dentro del texto del mensaje (el resto ya se
+  // muestra tal cual gracias a whitespace-pre-wrap)
+  const renderMessageText = (text) => {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g)
+    return parts.map((part, i) => {
+      const boldMatch = part.match(/^\*\*([^*]+)\*\*$/)
+      return boldMatch ? <strong key={i}>{boldMatch[1]}</strong> : part
+    })
+  }
+
   return (
     <>
       <Button variant="outline" onClick={() => setIsOpen(true)}>
@@ -644,8 +666,8 @@ export default function AIAssistant() {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-2xl h-[600px] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b flex flex-row items-center justify-between">
+        <DialogContent className="w-full sm:max-w-2xl h-[85vh] sm:h-[600px] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b flex flex-row items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
               <Bot className="h-5 w-5" />
               Asistente de IA - Simulia
@@ -660,8 +682,8 @@ export default function AIAssistant() {
             </Button>
           </DialogHeader>
           
-          {/* Área de mensajes con scroll */}
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ maxHeight: 'calc(600px - 180px)' }}>
+          {/* Área de mensajes con scroll (flex-1 ocupa el espacio restante del panel) */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
             {/* Mostrar sugerencias rápidas solo si hay pocos mensajes */}
             {messages.length <= 2 && (
               <div className="mb-4">
@@ -693,7 +715,7 @@ export default function AIAssistant() {
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                  <p className="text-sm whitespace-pre-wrap">{renderMessageText(msg.text)}</p>
                   <span className="text-xs opacity-70 mt-1 block">
                     {formatTime(msg.timestamp)}
                   </span>
@@ -716,7 +738,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Área de input */}
-          <div className="px-6 pb-6 pt-4 border-t">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-4 border-t">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <input
                 ref={inputRef}
