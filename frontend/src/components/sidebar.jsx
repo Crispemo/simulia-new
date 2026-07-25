@@ -122,7 +122,7 @@ export default function Sidebar({
       setIsMobileOpen(false)
       return
     }
-    window.open('https://t.me/+GqghWP8AchIzOGNk', '_blank', 'noopener,noreferrer')
+    window.open('https://chat.whatsapp.com/CmRc87lK66X98TSiDmyGFS?s=cl&p=i&mlu=0&amv=1', '_blank', 'noopener,noreferrer')
     setIsMobileOpen(false)
   }
 
