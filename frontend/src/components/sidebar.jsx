@@ -252,7 +252,7 @@ export default function Sidebar({
             >
               <Users className="h-5 w-5" />
               {isCommunityLocked && <Lock className="h-4 w-4 text-destructive" />}
-              {!isCollapsed && <span>Comunidad</span>}
+              {!isCollapsed && <span>Grupo WhatsApp</span>}
             </button>
             <button
               onClick={handleTicketClick}
@@ -381,7 +381,7 @@ export default function Sidebar({
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
             >
               <Users className="h-5 w-5" />
-              <span>Comunidad</span>
+              <span>Grupo WhatsApp</span>
             </button>
             <button
               onClick={handleTicketClick}
