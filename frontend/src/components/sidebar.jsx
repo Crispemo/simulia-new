@@ -77,7 +77,7 @@ export default function Sidebar({
 
   const handleResourcesClick = () => {
     if (isResourcesLocked) {
-      toast.error('Recursos y Comunidad completos incluidos en el plan Anual.')
+      toast.error('Recursos y Grupo WhatsApp completos incluidos en el plan Anual.')
       setIsMobileOpen(false)
       return
     }
@@ -118,7 +118,7 @@ export default function Sidebar({
 
   const handleCommunityClick = () => {
     if (isCommunityLocked) {
-      toast.error('Comunidad bloqueada para suscripciones mensuales nuevas. Incluida en el plan Anual.')
+      toast.error('Grupo WhatsApp bloqueado para suscripciones mensuales nuevas. Incluido en el plan Anual.')
       setIsMobileOpen(false)
       return
     }

@@ -121,7 +121,7 @@ export default function Precios() {
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Respuestas justificadas pregunta a pregunta</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Posibilidad de impugnación si detectas un error</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso a la comunidad de WhatsApp</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso al Grupo WhatsApp</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Analítica de fallos por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Actualizaciones de preguntas durante toda tu preparación</span></li>
               </ul>

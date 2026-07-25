@@ -434,7 +434,7 @@ export default function AIAssistant() {
     } else if (input.includes("tiempo") || input.includes("contrarreloj") || input.includes("velocidad")) {
       response = "El modo 'Contrarreloj' te permite practicar con límite de tiempo (14 minutos para 30 preguntas) para mejorar tu velocidad de respuesta y simular las condiciones reales del examen."
     } else if (input.includes("comunidad") || input.includes("foro") || input.includes("chat") || input.includes("discusión")) {
-      response = "Puedes acceder a nuestra comunidad haciendo clic en el botón 'Comunidad' en la barra superior. Allí podrás interactuar con otros estudiantes, compartir experiencias y resolver dudas."
+      response = "Puedes unirte a nuestro Grupo WhatsApp haciendo clic en el botón 'Grupo WhatsApp' del menú lateral. Allí podrás interactuar con otros estudiantes, compartir experiencias y resolver dudas."
     } else if (input.includes("suscripción") || input.includes("plan") || input.includes("precio") || input.includes("pago")) {
       response = "Tenemos planes de suscripción mensual y anual. Puedes consultar los detalles en la sección de suscripciones. Si tienes problemas con tu suscripción, contacta con nuestro equipo de soporte."
     } else if (input.includes("protocolo") || input.includes("protocolos")) {

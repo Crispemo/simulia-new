@@ -852,7 +852,7 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Acceso a la comunidad de WhatsApp</span>
+                  <span className="text-secondary">Acceso al Grupo WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
