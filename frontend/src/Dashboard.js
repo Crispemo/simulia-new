@@ -146,6 +146,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [savingPracticePrefs, setSavingPracticePrefs] = useState(false);
   // Tutorial modal (primera visita)
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const [showWhatsappAnnouncement, setShowWhatsappAnnouncement] = useState(false);
   // Popup de diagnóstico inicial (después del tutorial)
   const [showDiagnosticPopup, setShowDiagnosticPopup] = useState(false);
   // Racha de acceso a la plataforma
@@ -219,6 +220,39 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
       console.warn('No se pudo acceder a localStorage para tutorial:', e);
     }
   }, [userId]);
+
+  // Aviso temporal (10 días) del nuevo grupo de WhatsApp de contacto directo
+  useEffect(() => {
+    try {
+      if (!userId) return;
+      const CAMPAIGN_END = new Date('2026-08-04T23:59:59');
+      if (new Date() > CAMPAIGN_END) return;
+
+      const key = `whatsappAnnouncementDismissed_${userId}`;
+      const dismissed = localStorage.getItem(key);
+      if (!dismissed) {
+        setShowWhatsappAnnouncement(true);
+      }
+    } catch (e) {
+      console.warn('No se pudo verificar el aviso de WhatsApp:', e);
+    }
+  }, [userId]);
+
+  const closeWhatsappAnnouncement = () => {
+    try {
+      if (userId) {
+        localStorage.setItem(`whatsappAnnouncementDismissed_${userId}`, 'true');
+      }
+    } catch (e) {
+      console.warn('No se pudo guardar el estado del aviso de WhatsApp:', e);
+    }
+    setShowWhatsappAnnouncement(false);
+  };
+
+  const handleJoinWhatsapp = () => {
+    window.open('https://chat.whatsapp.com/CmRc87lK66X98TSiDmyGFS?s=cl&p=i&mlu=0&amv=1', '_blank', 'noopener,noreferrer');
+    closeWhatsappAnnouncement();
+  };
 
   // Mostrar popup de diagnóstico SOLO si el usuario NUNCA ha hecho un examen
   useEffect(() => {
@@ -2177,6 +2211,37 @@ const handleErroresClick = () => {
     );
   };
 
+  const renderWhatsappAnnouncement = () => {
+    if (!showWhatsappAnnouncement || showTutorialModal || showDiagnosticPopup) return null;
+    return (
+      <div className="error-popup-overlay" onClick={closeWhatsappAnnouncement}>
+        <div className="error-popup tutorial-modal" onClick={(e) => e.stopPropagation()}>
+          <h3>💬 Nuevo grupo de WhatsApp</h3>
+          <div style={{
+            padding: '1rem 0',
+            textAlign: 'center',
+            lineHeight: '1.7'
+          }}>
+            <p style={{
+              fontSize: '1rem',
+              color: 'var(--text-color)',
+              marginBottom: '1.5rem'
+            }}>
+              Hemos abierto un grupo de WhatsApp para tener contacto directo conmigo:
+              dudas, sugerencias o lo que necesites. ¡Únete!
+            </p>
+          </div>
+          <div className="tutorial-buttons">
+            <button onClick={handleJoinWhatsapp}>Unirme al grupo</button>
+            <button onClick={closeWhatsappAnnouncement} style={{ background: 'transparent', color: 'var(--text-color-secondary)' }}>
+              Ahora no
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Popup de diagnóstico inicial
   const closeDiagnosticPopup = () => {
     // No permitir cerrar fácilmente - el usuario debe hacer el diagnóstico
@@ -2728,6 +2793,7 @@ const handleErroresClick = () => {
         {renderRecurrencePopup()}
         {renderTutorialModal()}
         {renderDiagnosticPopup()}
+        {renderWhatsappAnnouncement()}
       </div>
     </GoogleOAuthProvider>
   );
