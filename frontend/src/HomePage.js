@@ -212,7 +212,7 @@ function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
         <title>Simulia – Simulacros EIR con IA | Prepara tu plaza</title>
-        <meta name="description" content="Prepara el EIR con simulacros reales, análisis de errores por IA y +15.000 preguntas. Practica sin límite desde cualquier dispositivo." />
+        <meta name="description" content="Prepara el EIR con simulacros reales, análisis de errores por IA y +8.000 preguntas. Practica sin límite desde cualquier dispositivo." />
         <meta name="robots" content="index, follow" />
         <meta name="keywords" content="EIR, examen EIR, preparación EIR, simulacros EIR, protocolos EIR, enfermería, oposiciones enfermería, Simulia, análisis errores EIR" />
         <meta name="author" content="Simulia" />
@@ -301,7 +301,7 @@ function HomePage() {
                   "name": "¿Cuántas preguntas tiene Simulia y se actualizan?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Más de 15.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir."
+                    "text": "Más de 8.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir."
                   }
                 }
               ]
@@ -429,7 +429,7 @@ function HomePage() {
               </span>
             </div>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Más de 15.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
+              Más de 8.000 preguntas para que puedas hacer exámenes completos cada semana hasta el EIR, sin repetir y con exámanes basados en los errores cometidos.
             </p>
           </div>
 
@@ -476,7 +476,7 @@ function HomePage() {
         <div className="bg-gradient-to-br from-primary/10 to-accent/5 rounded-2xl border border-primary/20 p-8 lg:p-12 shadow-soft">
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div className="space-y-2">
-              <div className="text-4xl lg:text-5xl font-bold text-primary">+15.000</div>
+              <div className="text-4xl lg:text-5xl font-bold text-primary">+8.000</div>
               <div className="text-base text-foreground font-medium">preguntas EIR</div>
               <div className="text-sm text-muted-foreground">Clasificadas por asignaturas y años de examen</div>
             </div>
@@ -645,7 +645,7 @@ function HomePage() {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-card border border-border rounded-xl p-6 text-center space-y-3 shadow-sm hover:shadow-soft transition-shadow duration-300">
-                <div className="text-4xl font-bold text-primary">+15.000</div>
+                <div className="text-4xl font-bold text-primary">+8.000</div>
                 <p className="text-secondary font-semibold">preguntas basadas en exámenes oficiales</p>
                 <p className="text-sm text-muted-foreground">Todas inspiradas en convocatorias reales del Ministerio de Sanidad y protocolos actualizados</p>
               </div>
@@ -840,7 +840,7 @@ function HomePage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
-                  <span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span>
+                  <span className="text-secondary">Banco completo de +8.000 preguntas por asignatura</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-success text-xl mt-0.5">✓</span>
@@ -949,7 +949,7 @@ function HomePage() {
                   ¿Cuántas preguntas hay y se actualizan?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Más de 15.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir.
+                  Más de 8.000 preguntas clasificadas por asignatura y año, con nuevas incorporaciones cada semana. Suficiente para hacer un simulacro completo cada semana durante todo el año sin repetir.
                 </p>
               </details>
             </div>

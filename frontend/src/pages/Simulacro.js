@@ -104,7 +104,7 @@ export default function Simulacro() {
 
         <div className="max-w-3xl mx-auto text-center mb-16">
           <p className="text-muted-foreground">
-            El simulacro oficial es uno de los 7 modos de práctica de Simulia. También puedes repetir tus errores, entrenar a contrarreloj o crear un examen personalizado por asignatura — todo con el mismo banco de <Link to="/blog/banco-preguntas-eir" className="text-primary hover:underline">más de 15.000 preguntas</Link>.
+            El simulacro oficial es uno de los 7 modos de práctica de Simulia. También puedes repetir tus errores, entrenar a contrarreloj o crear un examen personalizado por asignatura — todo con el mismo banco de <Link to="/blog/banco-preguntas-eir" className="text-primary hover:underline">más de 8.000 preguntas</Link>.
           </p>
         </div>
 

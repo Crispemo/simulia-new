@@ -1183,7 +1183,7 @@ export const blogPosts = [
         "Ideal para: personas autodisciplinadas, con experiencia previa en oposiciones o que no pueden permitirse una academia."
       ]},
       { type: 'h2', text: "Opción 3: modelo híbrido (plataformas de práctica)" },
-      { type: 'p', text: "Existe un punto intermedio que cada vez eligen más opositoras: estudiar la teoría por tu cuenta y apoyarte en una plataforma de práctica para los simulacros y el seguimiento. Simulia, por ejemplo, ofrece acceso a más de 15.000 preguntas oficiales, simulacros cronometrados y estadísticas de rendimiento por 4,99 €/mes. Así conservas la flexibilidad del estudio libre pero añades la estructura de práctica que necesitas." },
+      { type: 'p', text: "Existe un punto intermedio que cada vez eligen más opositoras: estudiar la teoría por tu cuenta y apoyarte en una plataforma de práctica para los simulacros y el seguimiento. Simulia, por ejemplo, ofrece acceso a más de 8.000 preguntas oficiales, simulacros cronometrados y estadísticas de rendimiento por 4,99 €/mes. Así conservas la flexibilidad del estudio libre pero añades la estructura de práctica que necesitas." },
       { type: 'h2', text: "Tabla comparativa: academia vs. cuenta propia vs. híbrido" },
       {
         type: 'table',
@@ -1248,7 +1248,7 @@ export const blogPosts = [
       ]},
       { type: 'h2', text: "¿Y si no necesitas una academia completa?" },
       { type: 'p', text: "No todas las opositoras necesitan lo mismo. Si ya tienes una buena base teórica de la carrera, quizá lo que más te falte sea practicar con exámenes reales. En ese caso, puedes comparar la opción de <a href='/blog/academia-eir-vs-preparacion-cuenta'>academia frente a preparación por tu cuenta o un modelo híbrido</a>." },
-      { type: 'p', text: "Sea cual sea el camino que elijas, no descuides la práctica con preguntas reales. <a href='/blog/como-preparar-el-eir-con-simulia'>Descubre cómo preparar el EIR con Simulia</a> y empieza a practicar con más de 15.000 preguntas oficiales." },
+      { type: 'p', text: "Sea cual sea el camino que elijas, no descuides la práctica con preguntas reales. <a href='/blog/como-preparar-el-eir-con-simulia'>Descubre cómo preparar el EIR con Simulia</a> y empieza a practicar con más de 8.000 preguntas oficiales." },
       { type: 'p', text: "¿Quieres probar antes de decidir? <a href='/'>Entra en Simulia y empieza tu prueba gratuita de 7 días</a>. Sin permanencia, sin letra pequeña." }
     ]
   },
@@ -1290,7 +1290,7 @@ export const blogPosts = [
         "Revisa la fecha de cualquier material que descargues. Si tiene más de dos años, comprueba si la información sigue vigente."
       ]},
       { type: 'h2', text: "¿Dónde entra la práctica con plataforma?" },
-      { type: 'p', text: "El material gratuito puede cubrir buena parte de la teoría, pero la práctica estructurada es más difícil de conseguir gratis. Ahí es donde una herramienta como Simulia complementa lo que el PDF no puede darte: simulacros cronometrados, <a href='/blog/banco-preguntas-eir'>un banco de más de 15.000 preguntas organizadas por tema y año</a>, explicación de cada respuesta y seguimiento automático de tu progreso." },
+      { type: 'p', text: "El material gratuito puede cubrir buena parte de la teoría, pero la práctica estructurada es más difícil de conseguir gratis. Ahí es donde una herramienta como Simulia complementa lo que el PDF no puede darte: simulacros cronometrados, <a href='/blog/banco-preguntas-eir'>un banco de más de 8.000 preguntas organizadas por tema y año</a>, explicación de cada respuesta y seguimiento automático de tu progreso." },
       { type: 'p', text: "No se trata de elegir entre gratis o de pago, sino de combinar ambos. Si quieres profundizar en las opciones, consulta nuestra comparativa de <a href='/blog/academia-eir-vs-preparacion-cuenta'>academia EIR vs. preparación por tu cuenta</a>." },
       { type: 'p', text: "<a href='/'>Prueba Simulia gratis durante 7 días</a> y comprueba cómo la práctica guiada transforma tu preparación EIR." }
     ]
@@ -1405,7 +1405,7 @@ export const blogPosts = [
         "No variar las fuentes: si solo practicas con preguntas de un año, te acostumbras a un estilo concreto."
       ]},
       { type: 'h2', text: "Cómo organiza Simulia las preguntas EIR" },
-      { type: 'p', text: "Simulia reúne más de 15.000 preguntas de convocatorias oficiales, organizadas por año, asignatura y nivel de dificultad. Cada pregunta incluye una explicación detallada de la respuesta correcta, y el sistema registra automáticamente tus aciertos, fallos y preguntas sin responder para generar estadísticas de rendimiento en tiempo real." },
+      { type: 'p', text: "Simulia reúne más de 8.000 preguntas de convocatorias oficiales, organizadas por año, asignatura y nivel de dificultad. Cada pregunta incluye una explicación detallada de la respuesta correcta, y el sistema registra automáticamente tus aciertos, fallos y preguntas sin responder para generar estadísticas de rendimiento en tiempo real." },
       { type: 'p', text: "Además, el sistema de repaso inteligente selecciona automáticamente las preguntas que más necesitas repasar según tu historial de errores. Intégralo en tu <a href='/blog/plan-estudio-eir'>plan de estudio mensual</a> para sacarle el máximo partido." },
       { type: 'p', text: "¿Lista para empezar a practicar con preguntas reales? Haz tu <a href='/simulacro'>simulacro EIR con el formato oficial exacto</a>, activa tu prueba gratuita de 7 días y descubre cómo la práctica inteligente marca la diferencia en tu preparación EIR." }
     ]

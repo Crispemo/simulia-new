@@ -26,7 +26,7 @@ export default function Precios() {
         <title>Precios Simulia – Explorar 11,99 € / Voy a por la plaza 23,99 € | Preparación EIR</title>
         <meta
           name="description"
-          content="Elige tu plan de preparación EIR: Explorar desde 11,99 €/mes o Voy a por la plaza desde 23,99 €/mes, con simulacros reales, banco de +15.000 preguntas y 7 días de prueba gratis."
+          content="Elige tu plan de preparación EIR: Explorar desde 11,99 €/mes o Voy a por la plaza desde 23,99 €/mes, con simulacros reales, banco de +8.000 preguntas y 7 días de prueba gratis."
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.simulia.es/precios" />
@@ -131,7 +131,7 @@ export default function Precios() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Simulacro EIR oficial — ilimitado</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Quizz, Errores, Protocolario, Contrarreloj, Personalizado y Escalas — ilimitados</span></li>
-                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Banco completo de +15.000 preguntas por asignatura</span></li>
+                <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Banco completo de +8.000 preguntas por asignatura</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Respuestas justificadas pregunta a pregunta</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Posibilidad de impugnación si detectas un error</span></li>
                 <li className="flex items-start gap-3"><span className="text-success text-xl mt-0.5">✓</span><span className="text-secondary">Acceso al Grupo WhatsApp</span></li>
