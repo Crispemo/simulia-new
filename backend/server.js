@@ -631,7 +631,7 @@ app.post('/users/check-subscription', async (req, res) => {
     if (userId) user = await User.findOne({ userId });
 
     // Buscar por email si no se encontró por userId
-    if (!user && email) user = await User.findOne({ email: String(email).toLowerCase() });
+    if (!user && email) user = await User.findOne(emailCaseInsensitiveQuery(email));
 
     // Buscar por stripeId como último recurso
     if (!user && stripeId) user = await User.findOne({ stripeId });
@@ -654,6 +654,31 @@ app.post('/users/check-subscription', async (req, res) => {
     const PLAN_GATING_TRIAL_ENABLED = true; // Cambia a false para revertir rápidamente.
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+
+    // AUTOCURACIÓN: si el usuario no tiene stripeId (o su stripeId no tiene suscripción viva),
+    // buscamos en Stripe por email. Cubre a quien pagó por Payment Link y el webhook no lo vinculó.
+    try {
+      let hasLiveSubViaStripeId = false;
+      if (user.stripeId) {
+        const own = await stripe.subscriptions.list({ customer: user.stripeId, status: 'all', limit: 5 });
+        hasLiveSubViaStripeId = own.data.some(s => ['active', 'trialing'].includes(s.status));
+      }
+      if (!hasLiveSubViaStripeId) {
+        const found =
+          (await findActiveStripeSubscriptionByEmail(email)) ||
+          (user.email && user.email !== email ? await findActiveStripeSubscriptionByEmail(user.email) : null);
+        if (found) {
+          const priceId = found.subscription?.items?.data?.[0]?.price?.id;
+          const tierFound = resolveTierFromPriceId(priceId, STRIPE_PRICE_TIER_MAP);
+          console.log(`🩹 AUTOCURACIÓN: vinculando ${user.userId} a customer ${found.customerId} (sub ${found.subscription.id}, tier ${tierFound})`);
+          user.stripeId = found.customerId;
+          if (tierFound) user.tier = tierFound;
+          await user.save();
+        }
+      }
+    } catch (healErr) {
+      console.error('Error en autocuración por email:', healErr.message);
+    }
 
     // Verificación siempre vía Stripe (stripeId). Sin stripeId no se considera suscripción válida.
     if (!user.stripeId) {
@@ -3143,6 +3168,31 @@ app.post('/validate-and-save-exam-in-progress', async (req, res) => {
   }
 });
 
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function emailCaseInsensitiveQuery(email) {
+  return { email: new RegExp('^' + escapeRegex(String(email).trim()) + '$', 'i') };
+}
+
+// Busca en Stripe una suscripción active/trialing asociada a un email (cualquier customer con ese email).
+// Necesario porque los Payment Links no llevan userId: el único nexo con el usuario es el email.
+async function findActiveStripeSubscriptionByEmail(email) {
+  if (!email) return null;
+  const raw = String(email).trim();
+  const variants = [...new Set([raw, raw.toLowerCase()])];
+  for (const e of variants) {
+    const customers = await stripe.customers.list({ email: e, limit: 10 });
+    for (const c of customers.data) {
+      const subs = await stripe.subscriptions.list({ customer: c.id, status: 'all', limit: 5 });
+      const active = subs.data.find(s => ['active', 'trialing'].includes(s.status));
+      if (active) return { customerId: c.id, subscription: active };
+    }
+  }
+  return null;
+}
+
 // Función helper para convertir cualquier email a gmail
 function normalizeEmailToGmail(email) {
   if (!email) return email;
@@ -3506,10 +3556,17 @@ app.post('/stripe-webhook', async (req, res) => {
           }
         } catch(_) {}
         const fallbackEmail = (session && session.customer_details && session.customer_details.email) || emailFromMeta || userIdFromMeta;
-        const fallbackUserId = userIdFromMeta || session.client_reference_id || (session.customer && String(session.customer)) || undefined;
+        const rawEmail = fallbackEmail && String(fallbackEmail).includes('@') ? String(fallbackEmail).trim().toLowerCase() : undefined;
+        // Payment Links no traen userId: si no viene, buscamos al usuario existente por email
+        let userIdFromEmailMatch;
+        if (!userIdFromMeta && !session.client_reference_id && rawEmail) {
+          const byEmail = await User.findOne(emailCaseInsensitiveQuery(rawEmail));
+          if (byEmail) userIdFromEmailMatch = byEmail.userId;
+        }
+        const fallbackUserId = userIdFromMeta || session.client_reference_id || userIdFromEmailMatch || rawEmail || (session.customer && String(session.customer)) || undefined;
         const userId = fallbackUserId;
         const plan = planFromMeta;
-        const email = normalizeEmailToGmail(fallbackEmail);
+        const email = rawEmail || normalizeEmailToGmail(fallbackEmail);
         const userName = nameFromCustomField || nameFromMeta || userId;
         
         console.log(`💳 STRIPE WEBHOOK: Datos completos recibidos:`, {
@@ -3538,14 +3595,17 @@ app.post('/stripe-webhook', async (req, res) => {
         console.log(`💳 STRIPE WEBHOOK: Resolviendo plan/tier desde suscripción (plan en metadata: ${plan})...`);
 
         try {
-          // Obtener suscripciones del cliente
-          const subscriptions = await stripe.subscriptions.list({
-            customer: session.customer,
-            status: 'active'
-          });
+          // Usar la suscripción de ESTA sesión. Con 7 días de prueba su estado es 'trialing',
+          // así que no filtramos solo por 'active' (antes eso dejaba a todos sin plan).
+          let subscription = null;
+          if (session.subscription) {
+            subscription = await stripe.subscriptions.retrieve(String(session.subscription));
+          } else if (session.customer) {
+            const subscriptions = await stripe.subscriptions.list({ customer: session.customer, status: 'all', limit: 5 });
+            subscription = subscriptions.data.find(s => ['active', 'trialing'].includes(s.status)) || null;
+          }
 
-          if (subscriptions.data.length > 0) {
-            const subscription = subscriptions.data[0];
+          if (subscription && ['active', 'trialing'].includes(subscription.status)) {
             const item = subscription.items.data[0];
             const priceId = item?.price?.id;
             const interval = item?.price?.recurring?.interval;
@@ -3648,10 +3708,10 @@ app.post('/stripe-webhook', async (req, res) => {
           const customerName = invoice.customer_name || undefined;
           
           // VERIFICACIÓN DE DUPLICADOS - Evitar procesar el mismo cliente múltiples veces
-          const existingCustomer = await User.findOne({ 
+          const existingCustomer = await User.findOne({
             $or: [
               { stripeId: customerId },
-              { email: customerEmail }
+              ...(customerEmail ? [emailCaseInsensitiveQuery(customerEmail)] : [])
             ]
           });
           
@@ -3662,11 +3722,13 @@ app.post('/stripe-webhook', async (req, res) => {
           
           // Deducir plan a partir del primer line_item
           let planFromInvoice = undefined;
+          let tierFromInvoice = null;
           try {
             const line = Array.isArray(invoice.lines?.data) ? invoice.lines.data[0] : undefined;
             const interval = line?.price?.recurring?.interval;
             if (interval === 'month') planFromInvoice = 'mensual';
             if (interval === 'year') planFromInvoice = 'anual';
+            tierFromInvoice = resolveTierFromPriceId(line?.price?.id, STRIPE_PRICE_TIER_MAP);
           } catch (_) {}
 
           // Construir un identificador efectivo
@@ -3683,14 +3745,19 @@ app.post('/stripe-webhook', async (req, res) => {
           }
 
           const updatedFromInvoice = await User.findOneAndUpdate(
-            { $or: [ { stripeId: customerId }, { email: customerEmail }, { userId: effectiveUserId } ] },
+            { $or: [ { stripeId: customerId }, ...(customerEmail ? [emailCaseInsensitiveQuery(customerEmail)] : []), { userId: effectiveUserId } ] },
             {
-              userId: effectiveUserId,
-              email: customerEmail || effectiveUserId,
-              userName: customerName || effectiveUserId,
               stripeId: customerId,
               plan: planFromInvoice, // Solo asignar si el plan es válido
-              $setOnInsert: { examHistory: [], failedQuestions: [] }
+              ...(tierFromInvoice && { tier: tierFromInvoice }),
+              // No pisar el uid de Firebase de un usuario ya existente
+              $setOnInsert: {
+                userId: effectiveUserId,
+                email: customerEmail ? String(customerEmail).toLowerCase() : effectiveUserId,
+                userName: customerName || effectiveUserId,
+                examHistory: [],
+                failedQuestions: []
+              }
             },
             { upsert: true, new: true }
           );

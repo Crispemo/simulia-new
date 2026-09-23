@@ -798,7 +798,7 @@ function HomePage() {
 
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href="https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g"
+                href={`https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
                 className="block w-full text-center bg-secondary hover:bg-secondary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días
@@ -867,7 +867,7 @@ function HomePage() {
 
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href="https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i"
+                href={`https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
                 className="block w-full text-center bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días

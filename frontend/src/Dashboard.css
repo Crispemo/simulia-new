@@ -1567,7 +1567,7 @@ input:checked + .slider:before {
   background-color: var(--theme-color-light);
 }
 
-/* Estilos específicos para el modal del tutorial */
+/* Estilos compartidos por los popups de aviso (WhatsApp, diagnóstico inicial) */
 .tutorial-modal {
   max-width: 860px !important;
   width: 95% !important;
@@ -1587,29 +1587,6 @@ input:checked + .slider:before {
   color: var(--theme-color-light);
 }
 
-/* Contenedor responsive para el video de Loom */
-.tutorial-video-container {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  margin: 1rem 0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.tutorial-video-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 8px;
-}
-
-/* Botones del tutorial */
 .tutorial-buttons {
   display: flex;
   justify-content: flex-end;
@@ -1664,14 +1641,14 @@ input:checked + .slider:before {
   box-shadow: 0 4px 8px rgba(155, 193, 200, 0.4);
 }
 
-/* Media queries para responsividad del modal del tutorial */
+/* Media queries para responsividad de estos popups */
 @media (max-width: 1024px) {
   .tutorial-modal {
     max-width: 90% !important;
     width: 95% !important;
     padding: 1.5rem !important;
   }
-  
+
   .tutorial-modal h3 {
     font-size: 1.3rem;
   }
@@ -1681,30 +1658,25 @@ input:checked + .slider:before {
   .error-popup-overlay {
     padding: 15px;
   }
-  
+
   .tutorial-modal {
     max-width: 95% !important;
     width: 98% !important;
     padding: 1.25rem !important;
     max-height: 90vh !important;
   }
-  
+
   .tutorial-modal h3 {
     font-size: 1.2rem;
     margin-bottom: 1rem;
   }
-  
-  .tutorial-video-container {
-    margin: 0.75rem 0;
-    border-radius: 6px;
-  }
-  
+
   .tutorial-buttons {
     flex-direction: column;
     gap: 10px;
     margin-top: 1.25rem;
   }
-  
+
   .tutorial-buttons a,
   .tutorial-buttons button {
     width: 100%;
@@ -1718,29 +1690,24 @@ input:checked + .slider:before {
   .error-popup-overlay {
     padding: 10px;
   }
-  
+
   .tutorial-modal {
     max-width: 98% !important;
     width: 100% !important;
     padding: 1rem !important;
     max-height: 85vh !important;
   }
-  
+
   .tutorial-modal h3 {
     font-size: 1.1rem;
     margin-bottom: 0.75rem;
   }
-  
-  .tutorial-video-container {
-    margin: 0.5rem 0;
-    border-radius: 4px;
-  }
-  
+
   .tutorial-buttons {
     margin-top: 1rem;
     gap: 8px;
   }
-  
+
   .tutorial-buttons a,
   .tutorial-buttons button {
     padding: 10px 16px;
@@ -1753,11 +1720,11 @@ input:checked + .slider:before {
   .tutorial-modal {
     padding: 0.75rem !important;
   }
-  
+
   .tutorial-modal h3 {
     font-size: 1rem;
   }
-  
+
   .tutorial-buttons a,
   .tutorial-buttons button {
     padding: 8px 12px;

@@ -14,7 +14,6 @@ import {
   CreditCard,
   Menu,
   X,
-  MessageSquare,
   FolderOpen,
   Users,
   AlertCircle,
@@ -43,7 +42,6 @@ export default function Sidebar({
   toggleCollapsed,
   isDarkMode,
   toggleDarkMode,
-  onTutorialClick,
   onResourcesClick,
   onSurveyClick,
   isResourcesLocked = false,
@@ -216,18 +214,6 @@ export default function Sidebar({
                 {!isCollapsed && <span className="text-pink-500">¡Cuéntame qué tal!</span>}
               </button>
             )}
-            {onTutorialClick && (
-              <button
-                onClick={onTutorialClick}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-all mb-2',
-                  isCollapsed && 'justify-center'
-                )}
-              >
-                <MessageSquare className="h-5 w-5" />
-                {!isCollapsed && <span>Tutorial</span>}
-              </button>
-            )}
             <button
               onClick={handleResourcesClick}
               disabled={isResourcesLocked}
@@ -358,15 +344,6 @@ export default function Sidebar({
               >
                 <Heart className="h-5 w-5 text-pink-500" />
                 <span className="text-pink-500">¡Cuéntame qué tal!</span>
-              </button>
-            )}
-            {onTutorialClick && (
-              <button
-                onClick={onTutorialClick}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent mb-2"
-              >
-                <MessageSquare className="h-5 w-5" />
-                <span>Tutorial</span>
               </button>
             )}
             <button

@@ -145,7 +145,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [loadingPracticePrefs, setLoadingPracticePrefs] = useState(false);
   const [savingPracticePrefs, setSavingPracticePrefs] = useState(false);
   // Tutorial modal (primera visita)
-  const [showTutorialModal, setShowTutorialModal] = useState(false);
   const [showWhatsappAnnouncement, setShowWhatsappAnnouncement] = useState(false);
   // Popup de diagnóstico inicial (después del tutorial)
   const [showDiagnosticPopup, setShowDiagnosticPopup] = useState(false);
@@ -206,20 +205,32 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
     fetchAllSubjects();
   }, []);
 
-  // Mostrar modal de tutorial la primera vez que el usuario entra al dashboard
+  // Mostrar el popup de diagnóstico la primera vez que el usuario entra al dashboard
+  // (antes se mostraba al cerrar el tutorial en vídeo, ahora ya no existe)
   useEffect(() => {
     try {
       if (!userId) return;
       const key = `tutorialSeen_${userId}`;
       const seen = localStorage.getItem(key);
-      if (!seen) {
-        setShowTutorialModal(true);
+      if (seen) return;
+      localStorage.setItem(key, 'true');
+
+      const completedExams = examData.filter(exam => exam.status === 'completed');
+      const hasCompletedExams = completedExams.length > 0;
+      if (!hasCompletedExams) {
+        const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
+        const diagnosticCompleted = localStorage.getItem(diagnosticKey);
+        if (!diagnosticCompleted) {
+          setTimeout(() => {
+            setShowDiagnosticPopup(true);
+          }, 500);
+        }
       }
     } catch (e) {
       // Si localStorage falla, no bloquear la UI
-      console.warn('No se pudo acceder a localStorage para tutorial:', e);
+      console.warn('No se pudo acceder a localStorage para el diagnóstico inicial:', e);
     }
-  }, [userId]);
+  }, [userId, examData]);
 
   // Aviso temporal (10 días) del nuevo grupo de WhatsApp de contacto directo
   useEffect(() => {
@@ -387,39 +398,6 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   //     setStreakDays(0);
   //   }
   // }, [userId]);
-
-  const closeTutorialModal = () => {
-    try {
-      if (userId) {
-        localStorage.setItem(`tutorialSeen_${userId}`, 'true');
-        
-        // Después de cerrar el tutorial, verificar si debe mostrar el popup de diagnóstico
-        // Solo si NO hay exámenes completados
-        const completedExams = examData.filter(exam => exam.status === 'completed');
-        const hasCompletedExams = completedExams.length > 0;
-        
-        if (!hasCompletedExams) {
-          const diagnosticKey = `diagnosticInitialCompleted_${userId}`;
-          const diagnosticCompleted = localStorage.getItem(diagnosticKey);
-          
-          // Mostrar popup solo si no se ha completado y no hay exámenes
-          if (!diagnosticCompleted) {
-            // Esperar un momento antes de mostrar el popup para mejor UX
-            setTimeout(() => {
-              setShowDiagnosticPopup(true);
-            }, 500);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('No se pudo guardar el estado del tutorial en localStorage:', e);
-    }
-    setShowTutorialModal(false);
-  };
-
-  const openTutorialModal = () => {
-    setShowTutorialModal(true);
-  };
 
   // Cargar preferencias de práctica del usuario
   useEffect(() => {
@@ -2180,39 +2158,8 @@ const handleErroresClick = () => {
     );
   };
 
-  // Modal de Tutorial (video Loom)
-  const renderTutorialModal = () => {
-    if (!showTutorialModal) return null;
-    return (
-      <div className="error-popup-overlay" onClick={closeTutorialModal}>
-        <div className="error-popup tutorial-modal" onClick={(e) => e.stopPropagation()}>
-          <h3>Cómo funciona Simulia (Tutorial rápido)</h3>
-          <div className="tutorial-video-container">
-            <iframe
-              src="https://www.loom.com/embed/8000afd0c9ad452dbf1c2cf92bb236fa"
-              title="Tutorial Simulia"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
-          <div className="tutorial-buttons">
-            <a
-              href="https://www.loom.com/share/8000afd0c9ad452dbf1c2cf92bb236fa"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Ver en Loom
-            </a>
-            <button onClick={closeTutorialModal}>Entendido</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderWhatsappAnnouncement = () => {
-    if (!showWhatsappAnnouncement || showTutorialModal || showDiagnosticPopup) return null;
+    if (!showWhatsappAnnouncement || showDiagnosticPopup) return null;
     return (
       <div className="error-popup-overlay" onClick={closeWhatsappAnnouncement}>
         <div className="error-popup tutorial-modal" onClick={(e) => e.stopPropagation()}>
@@ -2465,7 +2412,6 @@ const handleErroresClick = () => {
           toggleCollapsed={toggleSidebar}
           isDarkMode={isDarkMode}
           toggleDarkMode={handleToggleDarkMode}
-          onTutorialClick={openTutorialModal}
           isResourcesLocked={resourcesLocked}
           isCommunityLocked={communityLocked}
           lockedModeIds={lockedModeIds}
@@ -2791,7 +2737,6 @@ const handleErroresClick = () => {
         {renderErrorPopup()}
         {renderAvatarPopup()}
         {renderRecurrencePopup()}
-        {renderTutorialModal()}
         {renderDiagnosticPopup()}
         {renderWhatsappAnnouncement()}
       </div>

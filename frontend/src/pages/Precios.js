@@ -2,11 +2,24 @@ import React from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const STRIPE_PAYMENT_LINK_EXPLORAR = 'https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g';
 const STRIPE_PAYMENT_LINK_PLAZA = 'https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i';
 
+// Añade el uid y el email del usuario logueado al Payment Link para que el webhook
+// de Stripe pueda vincular el pago a su cuenta (client_reference_id).
+function buildPaymentLink(base, user) {
+  if (!user) return base;
+  const params = new URLSearchParams();
+  if (user.uid) params.set('client_reference_id', user.uid);
+  if (user.email) params.set('prefilled_email', user.email);
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
 export default function Precios() {
+  const { currentUser } = useAuth() || {};
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
@@ -85,7 +98,7 @@ export default function Precios() {
             </div>
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href={STRIPE_PAYMENT_LINK_EXPLORAR}
+                href={buildPaymentLink(STRIPE_PAYMENT_LINK_EXPLORAR, currentUser)}
                 className="block w-full text-center bg-secondary hover:bg-secondary/90 shadow-md hover:shadow-lg transition-all text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días
@@ -128,7 +141,7 @@ export default function Precios() {
             </div>
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href={STRIPE_PAYMENT_LINK_PLAZA}
+                href={buildPaymentLink(STRIPE_PAYMENT_LINK_PLAZA, currentUser)}
                 className="block w-full text-center bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días
