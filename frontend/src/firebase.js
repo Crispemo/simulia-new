@@ -6,11 +6,14 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  getAdditionalUserInfo,
   onAuthStateChanged,
   setPersistence,
   indexedDBLocalPersistence,
   browserLocalPersistence,
 } from "firebase/auth";
+
+import { track } from "./lib/metaPixel";
 
 console.info("FIREBASE_BUILD", "2025-08-29-A");
 
@@ -85,10 +88,22 @@ const waitForUser = (timeoutMs = 20000) =>
     const unsub = onAuthStateChanged(auth, (u) => { if (u) end(u); });
   });
 
+// CompleteRegistration solo la primera vez que alguien entra con Google (cuenta nueva en Firebase).
+// event_id = uid para que Meta deduplique si se dispara dos veces.
+const trackRegistrationIfNew = (credential) => {
+  try {
+    const info = getAdditionalUserInfo(credential);
+    if (info?.isNewUser && credential?.user?.uid) {
+      track('CompleteRegistration', { content_name: 'Cuenta Simulia', status: 'registered' }, `reg_${credential.user.uid}`);
+    }
+  } catch (_) {}
+};
+
 export const getRedirectResultAuth = async () => {
   try {
     const res = await getRedirectResult(auth);
     if (res?.user) {
+      trackRegistrationIfNew(res);
       return { uid: res.user.uid, email: res.user.email, displayName: res.user.displayName };
     }
     
@@ -109,7 +124,8 @@ export const getRedirectResultAuth = async () => {
 export const signInWithGoogle = async () => {
   try {
     const r = await signInWithPopup(auth, provider);
-    
+    trackRegistrationIfNew(r);
+
     localStorage.removeItem("firebase_redirect_start");
     localStorage.removeItem("redirect_info");
     localStorage.setItem('redirect_attempts', '0');

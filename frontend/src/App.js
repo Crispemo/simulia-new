@@ -29,6 +29,29 @@ import CancelPage from './Cancel';
 import CookieConsent from "react-cookie-consent";
 import Scales from './scales';
 import './scales.css';
+import { META_PIXEL_ID, track, captureAttribution, trackPricingView } from './lib/metaPixel';
+
+// Guardar UTMs / fbclid en cuanto se carga la app (antes de que la navegación los borre)
+captureAttribution();
+
+// PageView en cada cambio de ruta (SPA) + ViewContent en la página de planes
+function MetaRouteTracker() {
+  const location = useLocation();
+  const first = React.useRef(true);
+  useEffect(() => {
+    // El primer PageView lo lanza loadAnalytics al inicializar el píxel
+    if (first.current) {
+      first.current = false;
+    } else {
+      track('PageView');
+    }
+    window.__simuliaRouteKey = location.key;
+    if (location.pathname === '/precios') {
+      trackPricingView(location.key);
+    }
+  }, [location.pathname, location.key]);
+  return null;
+}
 
 
 function AppRoutes() {
@@ -108,8 +131,13 @@ function loadAnalytics() {
   t.src=v;s=b.getElementsByTagName(e)[0];
   s.parentNode.insertBefore(t,s)}(window, document,'script',
   'https://connect.facebook.net/en_US/fbevents.js');
-  window.fbq('init', '1582659899396296');
+  window.fbq('init', META_PIXEL_ID);
   window.fbq('track', 'PageView');
+  // Si se acepta cookies estando ya en /precios, registrar también ViewContent
+  // (si se aceptan cookies estando ya en /precios; si el router aún no montó, lo hará MetaRouteTracker)
+  if (window.location.pathname === '/precios') {
+    trackPricingView(window.__simuliaRouteKey);
+  }
 }
 
 function App() {
@@ -125,6 +153,7 @@ function App() {
       <LogoProvider>
         <Router>
           <div className="App">
+            <MetaRouteTracker />
             <AppRoutes />
             <CookieConsent
               location="bottom"

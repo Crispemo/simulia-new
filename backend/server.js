@@ -47,6 +47,7 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const practiceRoutes = require('./routes/practiceRoutes');
 const surveyRoutes = require('./routes/surveyRoutes');
 const axios = require('axios');
+const { sendMetaEvent } = require('./services/metaCapi');
 const Anthropic = require('@anthropic-ai/sdk');
 const app = express();
 
@@ -3309,8 +3310,27 @@ app.post('/create-payment-intent', async (req, res) => {
 
 // Confirmación del checkout al volver desde Stripe (fallback al webhook)
 // Útil especialmente en local/dev donde Stripe no puede pegarle al webhook.
+// Limpia la atribución recibida del navegador (solo campos conocidos, strings cortos)
+const sanitizeAttribution = (raw, req) => {
+  if (!raw || typeof raw !== 'object') raw = {};
+  const keys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'fbp', 'fbc', 'landingPage', 'userAgent', 'eventSourceUrl'];
+  const out = {};
+  keys.forEach((k) => {
+    if (raw[k] != null && raw[k] !== '') out[k] = String(raw[k]).slice(0, 500);
+  });
+  if (raw.capturedAt) {
+    const d = new Date(raw.capturedAt);
+    if (!isNaN(d)) out.capturedAt = d;
+  }
+  const fwd = req.headers['x-forwarded-for'];
+  const ip = (fwd ? String(fwd).split(',')[0] : req.socket?.remoteAddress) || undefined;
+  if (ip) out.ip = ip.trim();
+  return out;
+};
+
 app.post('/stripe/confirm-checkout', async (req, res) => {
   const { sessionId, userId } = req.body || {};
+  const attribution = sanitizeAttribution(req.body?.attribution, req);
 
   if (!sessionId) return res.status(400).json({ error: 'sessionId es obligatorio' });
   if (!userId) return res.status(400).json({ error: 'userId es obligatorio' });
@@ -3408,12 +3428,41 @@ app.post('/stripe/confirm-checkout', async (req, res) => {
         email: normalizedEmail || emailFromStripe || userId,
         stripeId: session.customer || undefined,
         expirationDate: expirationDate || undefined,
+        ...(Object.keys(attribution).length && {
+          attribution: (({ eventSourceUrl, ...rest }) => rest)(attribution)
+        }),
         $setOnInsert: { examHistory: [], failedQuestions: [] }
       },
       { upsert: true, new: true }
     );
 
+    // UTMs también en Stripe (suscripción) para poder cruzar anuncio → pago desde el dashboard de Stripe
+    const utmMeta = {};
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach((k) => {
+      if (attribution[k]) utmMeta[k] = attribution[k].slice(0, 450);
+    });
+    if (Object.keys(utmMeta).length && subscription?.id) {
+      stripe.subscriptions
+        .update(subscription.id, { metadata: { ...utmMeta, userId: String(userId) } })
+        .catch((e) => console.error('⚠️ No se pudieron guardar UTMs en Stripe:', e.message));
+    }
+
+    // StartTrial por API de Conversiones (mismo event_id que el píxel → Meta deduplica)
+    const unitAmount = subscription?.items?.data?.[0]?.price?.unit_amount;
+    const predictedValue = unitAmount ? unitAmount / 100 : 0;
+    if (subStatus === 'trialing') {
+      sendMetaEvent({
+        eventName: 'StartTrial',
+        eventId: sessionId,
+        email: emailFromStripe,
+        externalId: userId,
+        attribution,
+        customData: { value: predictedValue, currency: 'EUR', predicted_ltv: predictedValue }
+      }).catch(() => {});
+    }
+
     return res.json({
+      predictedValue,
       activated: true,
       plan: updatedUser.plan,
       userId: updatedUser.userId,
@@ -3706,7 +3755,41 @@ app.post('/stripe-webhook', async (req, res) => {
         const customerId = invoice.customer;
           const customerEmail = invoice.customer_email || (invoice.customer_details && invoice.customer_details.email) || undefined;
           const customerName = invoice.customer_name || undefined;
-          
+
+          // META CAPI: Purchase en el PRIMER cobro real (fin del trial de 7 días).
+          // Va antes del chequeo de duplicados de abajo, que corta el flujo si el plan ya estaba activo.
+          try {
+            if (invoice.amount_paid > 0) {
+              const buyer = await User.findOne({
+                $or: [
+                  { stripeId: customerId },
+                  ...(customerEmail ? [emailCaseInsensitiveQuery(customerEmail)] : [])
+                ]
+              });
+              if (!buyer?.metaPurchaseSentAt) {
+                const result = await sendMetaEvent({
+                  eventName: 'Purchase',
+                  eventId: invoice.id,
+                  eventTime: invoice.status_transitions?.paid_at || Math.floor(Date.now() / 1000),
+                  email: customerEmail || buyer?.email,
+                  externalId: buyer?.userId,
+                  attribution: buyer?.attribution ? buyer.attribution.toObject?.() || buyer.attribution : {},
+                  customData: {
+                    value: invoice.amount_paid / 100,
+                    currency: String(invoice.currency || 'eur').toUpperCase(),
+                    content_name: buyer?.tier || undefined,
+                    ...(buyer?.attribution?.utm_content && { utm_content: buyer.attribution.utm_content })
+                  }
+                });
+                if (result?.ok && buyer) {
+                  await User.updateOne({ _id: buyer._id }, { metaPurchaseSentAt: new Date() });
+                }
+              }
+            }
+          } catch (capiErr) {
+            console.error('⚠️ META CAPI Purchase:', capiErr.message);
+          }
+
           // VERIFICACIÓN DE DUPLICADOS - Evitar procesar el mismo cliente múltiples veces
           const existingCustomer = await User.findOne({
             $or: [

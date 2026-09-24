@@ -75,6 +75,22 @@ const userSchema = new mongoose.Schema({
     best: { type: Number, default: 0 },
     lastStreakDay: { type: Date }
   },
+  // Atribución de marketing (UTMs / Meta) capturada al completar el checkout
+  attribution: {
+    utm_source: String,
+    utm_medium: String,
+    utm_campaign: String,
+    utm_content: String,
+    utm_term: String,
+    fbclid: String,
+    fbp: String,
+    fbc: String,
+    landingPage: String,
+    capturedAt: Date,
+    userAgent: String,
+    ip: String
+  },
+  metaPurchaseSentAt: { type: Date },
   // Control de recordatorios
   lastReminderSentAt: { type: Date },
   remindersCount: { type: Number, default: 0 }

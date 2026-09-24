@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { getRedirectResultAuth } from './firebase';
 import axios from 'axios';
 import { API_URL } from './config';
+import { track, getAttribution } from './lib/metaPixel';
 
 const SuccessPage = () => {
   const navigate = useNavigate();
@@ -105,10 +106,19 @@ const SuccessPage = () => {
       // y solo entonces activa plan en Mongo
       const confirmResponse = await axios.post(`${API_URL}/stripe/confirm-checkout`, {
         sessionId,
-        userId: firebaseUser.uid
+        userId: firebaseUser.uid,
+        attribution: getAttribution()
       });
 
       console.log('✅ Checkout confirmado y plan activado:', confirmResponse.data);
+
+      // StartTrial: la usuaria ha terminado el checkout y empieza los 7 días.
+      // eventID = sessionId → el backend manda el mismo evento por la API de Conversiones y Meta deduplica.
+      track('StartTrial', {
+        value: confirmResponse.data?.predictedValue || 0,
+        currency: 'EUR',
+        predicted_ltv: confirmResponse.data?.predictedValue || 0
+      }, sessionId);
 
       setStatus('redirecting');
       setTimeout(() => navigate('/dashboard'), 300);
