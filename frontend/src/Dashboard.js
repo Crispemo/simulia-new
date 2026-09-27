@@ -59,7 +59,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
   const [resourcesLocked, setResourcesLocked] = useState(false);
   const [communityLocked, setCommunityLocked] = useState(false);
   const [lockedModeIds, setLockedModeIds] = useState(new Set());
-  const [simulacrosUsed, setSimulacrosUsed] = useState(0);
+  const [simulacrosUsed, setSimulacrosUsed] = useState(null);
   const [simulacrosLimit, setSimulacrosLimit] = useState(4);
   const [hasErrorsAvailable, setHasErrorsAvailable] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(window.innerWidth <= 768);
@@ -103,7 +103,9 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
         const tier = data?.tier ?? null;
         const EXPLORAR_LOCKED_MODE_IDS = new Set(['quizz', 'errores', 'protocolos', 'contrarreloj', 'personalizado']);
         setLockedModeIds(tier === 'explorar' ? EXPLORAR_LOCKED_MODE_IDS : new Set());
-        setSimulacrosUsed(data?.simulacrosUsed ?? 0);
+        // El contador "(X/4)" solo aplica al plan Explorar. El plan Voy a por la plaza
+        // no tiene límite de simulacros, así que no debe mostrarse ningún contador.
+        setSimulacrosUsed(tier === 'explorar' ? (data?.simulacrosUsed ?? 0) : null);
         setSimulacrosLimit(data?.simulacrosLimit ?? 4);
       } catch (err) {
         console.error('Error al cargar política de acceso:', err);
@@ -111,7 +113,7 @@ function Dashboard({ toggleDarkMode: propToggleDarkMode, isDarkMode, currentUser
         setResourcesLocked(false);
         setCommunityLocked(false);
         setLockedModeIds(new Set());
-        setSimulacrosUsed(0);
+        setSimulacrosUsed(null);
         setSimulacrosLimit(4);
       }
     };

@@ -47,7 +47,7 @@ export default function Sidebar({
   isResourcesLocked = false,
   isCommunityLocked = false,
   lockedModeIds = new Set(),
-  simulacrosUsed = 0,
+  simulacrosUsed = null,
   simulacrosLimit = 4,
 }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
