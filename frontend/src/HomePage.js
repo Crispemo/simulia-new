@@ -243,9 +243,9 @@ function HomePage() {
         "screenshot": "https://www.simulia.es/Dashboard-EIR-Simulia.png",
         "offers": {
           "@type": "Offer",
-          "price": "11.99",
+          "price": "14.99",
           "priceCurrency": "EUR",
-          "description": "Desde 11,99 €/mes (plan Explorar) o 23,99 €/mes (plan Voy a por la plaza), con 7 días de prueba gratis"
+          "description": "Desde 14,99 €/mes (plan Explorar) o 27,99 €/mes (plan Voy a por la plaza), con 7 días de prueba gratis"
         }
       }
     `}
@@ -277,7 +277,7 @@ function HomePage() {
                   "name": "¿Qué diferencia hay entre Simulia y una academia EIR?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 11,99 €/mes."
+                    "text": "Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 14,99 €/mes."
                   }
                 },
                 {
@@ -759,7 +759,7 @@ function HomePage() {
               <h3 className="text-2xl font-bold mb-2 text-secondary">Explorar</h3>
               <p className="text-sm text-muted-foreground mb-4">Prueba Simulia sin presión</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-secondary">11,99 €</span>
+                <span className="text-4xl font-bold text-secondary">14,99 €</span>
                 <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
@@ -798,13 +798,13 @@ function HomePage() {
 
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href={`https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
+                href={`https://buy.stripe.com/8x2dR9g3ada0e8hfCS6Zy0k${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
                 className="block w-full text-center bg-secondary hover:bg-secondary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Después, 11,99 €/mes. Cancela cuando quieras.
+                Después, 14,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
@@ -820,7 +820,7 @@ function HomePage() {
               <h3 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h3>
               <p className="text-sm text-muted-foreground mb-4">Todo lo que necesitas hasta el examen, sin límites</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">23,99 €</span>
+                <span className="text-5xl font-bold text-primary">27,99 €</span>
                 <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
@@ -867,13 +867,13 @@ function HomePage() {
 
             <div className="max-w-sm mx-auto space-y-2">
               <a
-                href={`https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
+                href={`https://buy.stripe.com/cNi14n2ck1rifclduK6Zy0j${currentUser ? `?client_reference_id=${encodeURIComponent(currentUser.uid)}&prefilled_email=${encodeURIComponent(currentUser.email || '')}` : ''}`}
                 className="block w-full text-center bg-primary hover:bg-primary/90 hover:scale-[1.02] shadow-soft hover:shadow-soft-lg transition-all duration-300 text-white py-3 rounded-full font-bold"
               >
                 Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Después, 23,99 €/mes. Cancela cuando quieras.
+                Después, 27,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
@@ -916,7 +916,7 @@ function HomePage() {
                   ¿Qué diferencia hay con una academia o estudiar por mi cuenta?
                 </summary>
                 <p className="text-muted-foreground leading-relaxed text-base mt-4 pb-4">
-                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 11,99 €/mes.
+                  Una academia te da clases y temario (desde 1.500 €). Estudiar sola es gratis pero sin estructura. Simulia es el punto intermedio: práctica guiada con simulacros reales, análisis de errores con IA y estadísticas de progreso, desde 14,99 €/mes.
                 </p>
               </details>
             </div>

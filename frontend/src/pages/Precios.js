@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const STRIPE_PAYMENT_LINK_EXPLORAR = 'https://buy.stripe.com/28E8wP8AIda05BLcqG6Zy0g';
-const STRIPE_PAYMENT_LINK_PLAZA = 'https://buy.stripe.com/bJefZheZ6c5Wfclaiy6Zy0i';
+const STRIPE_PAYMENT_LINK_EXPLORAR = 'https://buy.stripe.com/8x2dR9g3ada0e8hfCS6Zy0k';
+const STRIPE_PAYMENT_LINK_PLAZA = 'https://buy.stripe.com/cNi14n2ck1rifclduK6Zy0j';
 
 // Añade el uid y el email del usuario logueado al Payment Link para que el webhook
 // de Stripe pueda vincular el pago a su cuenta (client_reference_id).
@@ -23,15 +23,15 @@ export default function Precios() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
       <Helmet>
-        <title>Precios Simulia – Explorar 11,99 € / Voy a por la plaza 23,99 € | Preparación EIR</title>
+        <title>Precios Simulia – Explorar 14,99 € / Voy a por la plaza 27,99 € | Preparación EIR</title>
         <meta
           name="description"
-          content="Elige tu plan de preparación EIR: Explorar desde 11,99 €/mes o Voy a por la plaza desde 23,99 €/mes, con simulacros reales, banco de +8.000 preguntas y 7 días de prueba gratis."
+          content="Elige tu plan de preparación EIR: Explorar desde 14,99 €/mes o Voy a por la plaza desde 27,99 €/mes, con simulacros reales, banco de +8.000 preguntas y 7 días de prueba gratis."
         />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://www.simulia.es/precios" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Precios Simulia – Explorar 11,99 € / Voy a por la plaza 23,99 €" />
+        <meta property="og:title" content="Precios Simulia – Explorar 14,99 € / Voy a por la plaza 27,99 €" />
         <meta property="og:description" content="Prueba Simulia gratis 7 días. Elige Explorar o Voy a por la plaza según cuánto quieras entrenar para el EIR." />
         <meta property="og:url" content="https://www.simulia.es/precios" />
         <meta property="og:image" content="https://www.simulia.es/Dashboard-EIR-Simulia.png" />
@@ -45,14 +45,14 @@ export default function Precios() {
               {
                 "@type": "Offer",
                 "name": "Explorar",
-                "price": "11.99",
+                "price": "14.99",
                 "priceCurrency": "EUR",
                 "url": "https://www.simulia.es/precios"
               },
               {
                 "@type": "Offer",
                 "name": "Voy a por la plaza",
-                "price": "23.99",
+                "price": "27.99",
                 "priceCurrency": "EUR",
                 "url": "https://www.simulia.es/precios"
               }
@@ -79,7 +79,7 @@ export default function Precios() {
               <h2 className="text-2xl font-bold mb-2 text-secondary">Explorar</h2>
               <p className="text-sm text-muted-foreground mb-4">Prueba Simulia sin presión</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-secondary">11,99 €</span>
+                <span className="text-4xl font-bold text-secondary">14,99 €</span>
                 <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
@@ -104,7 +104,7 @@ export default function Precios() {
                 Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Después, 11,99 €/mes. Cancela cuando quieras.
+                Después, 14,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function Precios() {
               <h2 className="text-2xl font-bold mb-2 text-secondary">Voy a por la plaza</h2>
               <p className="text-sm text-muted-foreground mb-4">Todo lo que necesitas hasta el examen, sin límites</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-primary">23,99 €</span>
+                <span className="text-5xl font-bold text-primary">27,99 €</span>
                 <span className="text-muted-foreground text-lg">/mes</span>
               </div>
               <div className="text-sm text-muted-foreground mt-2">
@@ -147,7 +147,7 @@ export default function Precios() {
                 Empieza gratis 7 días
               </a>
               <p className="text-center text-xs text-muted-foreground">
-                Después, 23,99 €/mes. Cancela cuando quieras.
+                Después, 27,99 €/mes. Cancela cuando quieras.
               </p>
             </div>
           </div>
