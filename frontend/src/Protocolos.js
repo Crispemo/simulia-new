@@ -715,6 +715,7 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
     const currentQ = questions[questionId || currentQuestion];
     const disputeData = {
       question: currentQ?.question || "Pregunta no disponible",
+      questionId: currentQ?._id || currentQ?.questionId || null,
       reason: disputeReason,
       userAnswer: selectedAnswers[questionId || currentQuestion] || "Sin respuesta",
       userId: testUserId

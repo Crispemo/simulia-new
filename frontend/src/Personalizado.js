@@ -313,6 +313,7 @@ const Personalizado = ({ toggleDarkMode, isDarkMode, userId }) => {
     
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
+      questionId: questions[questionId]?._id || questions[questionId]?.questionId || null,
       reason: reason,
       userAnswer: selectedAnswers[questionId] || "Sin respuesta",
       userId: userId || 'test_user_1'

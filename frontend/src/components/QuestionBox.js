@@ -193,9 +193,10 @@ const QuestionBox = ({
     if (!imagePath) return null;
 
     // Asegurar que la ruta es correcta y añadir timestamp para evitar caché
-    const fullPath = imagePath.startsWith('http') || imagePath.startsWith('/')
-      ? `${imagePath}?t=${imageCacheBuster}`
-      : `/examen_fotos/${imagePath}?t=${imageCacheBuster}`;
+    // Las imágenes de preguntas viven siempre en /examen_fotos/ (frontend).
+    // Normalizamos rutas antiguas del backend (/preguntas/..., https://...koyeb.app/preguntas/...).
+    const fileName = String(imagePath).split('?')[0].split('/').pop();
+    const fullPath = `/examen_fotos/${fileName}?t=${imageCacheBuster}`;
 
     return (
       <>

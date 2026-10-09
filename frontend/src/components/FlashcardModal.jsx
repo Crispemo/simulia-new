@@ -176,7 +176,7 @@ const FlashcardModal = ({ isOpen, onClose, userId, isDarkMode }) => {
                 {question.image && (
                   <div className="flashcard-image-container">
                     <img 
-                      src={question.image} 
+                      src={`/examen_fotos/${String(question.image).split('?')[0].split('/').pop()}`} 
                       alt="Imagen de la pregunta" 
                       className="flashcard-question-image"
                       onError={(e) => {

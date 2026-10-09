@@ -140,6 +140,7 @@ const ExamView = ({
     // Lógica interna por defecto
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
+      questionId: questions[questionId]?._id || questions[questionId]?.questionId || null,
       reason: disputeReason,
       userAnswer: userAnswers[questionId] || null,
     };

@@ -831,6 +831,7 @@ const ExamInProgress = ({ toggleDarkMode, isDarkMode, userId }) => {
       // Enviar la impugnación al backend
       const disputeData = {
         question: currentQuestionData?.question || "Pregunta no disponible",
+        questionId: currentQuestionData?._id || currentQuestionData?.questionId || null,
         reason: reason,
         userId: effectiveUserId,
         userEmail: null

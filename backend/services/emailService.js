@@ -147,7 +147,7 @@ const sendSubscriptionEmail = async (email, plan, expirationDate) => {
 };
 
 // Función para enviar impugnaciones
-const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId) => {
+const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId, questionId = null, collectionHint = null) => {
 
   
   if (!question) {
@@ -163,9 +163,11 @@ const sendDisputeEmail = async (question, reason, userAnswer, userEmail, userId)
     Usuario: ${userId || 'No disponible'}
     Email: ${userEmail || 'No disponible'}
     
+    ID de la pregunta: ${questionId || 'No disponible'}${collectionHint ? ` (${collectionHint})` : ''}
+    
     Pregunta: ${question}
     
-    Respuesta seleccionada: ${userAnswer.selectedAnswer || 'No seleccionada'}
+    Respuesta seleccionada: ${(userAnswer && typeof userAnswer === 'object' ? userAnswer.selectedAnswer : userAnswer) || 'No seleccionada'}
     
     Razón de impugnación: ${reason || 'No especificada'}
     

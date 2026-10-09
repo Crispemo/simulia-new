@@ -441,6 +441,7 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
     
     const disputeData = {
       question: preguntas[questionId]?.question || "Pregunta no disponible",
+      questionId: preguntas[questionId]?._id || preguntas[questionId]?.questionId || null,
       reason: reason,
       userAnswer: selectedAnswers[questionId] || "Sin respuesta",
       userId: userId || 'test_user_1'

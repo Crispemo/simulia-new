@@ -781,6 +781,7 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
   const handleDisputeSubmit = async (questionId) => {
     const disputeData = {
       question: questions[questionId]?.question || "Pregunta no disponible",
+      questionId: questions[questionId]?._id || questions[questionId]?.questionId || null,
       reason: disputeReason,
     };
 

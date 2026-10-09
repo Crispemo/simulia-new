@@ -61,6 +61,17 @@ const FRONTEND_URL = process.env.NODE_ENV === 'production'
   ? 'https://www.simulia.es' 
   : (process.env.FRONTEND_URL || 'http://localhost:3000');
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5001';
+
+// Las imágenes de las preguntas se sirven desde el frontend (Vercel) en /examen_fotos/.
+// El backend NO tiene carpeta de imágenes, así que siempre devolvemos esa ruta relativa.
+const questionImageUrl = (image) => {
+  if (!image) return null;
+  const fileName = String(image).trim().split('/').pop().split('?')[0];
+  return fileName ? `/examen_fotos/${fileName}` : null;
+};
+
+// Filtro para excluir preguntas desactivadas (isDelete: true) sin borrarlas de la BD
+const ACTIVE_QUESTION = { isDelete: { $ne: true } };
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Función para enviar webhook a n8n con verificación de duplicados
@@ -1048,7 +1059,7 @@ app.post('/random-questions', async (req, res) => {
         
         const preguntasProtocolos = await mongoose.connection.db
           .collection('examen_protocolos')
-          .aggregate([{ $sample: { size: Math.min(requestedCount, totalCount) } }])
+          .aggregate([{ $match: ACTIVE_QUESTION }, { $sample: { size: Math.min(requestedCount, totalCount) } }])
           .toArray();
         
         console.log(`Encontradas ${preguntasProtocolos.length} preguntas de protocolo`);
@@ -1117,7 +1128,7 @@ app.post('/random-questions', async (req, res) => {
 
         const preguntasEscalas = await mongoose.connection.db
           .collection('preguntas_escalas')
-          .aggregate([{ $sample: { size: Math.min(requestedCount, totalCount) } }])
+          .aggregate([{ $match: ACTIVE_QUESTION }, { $sample: { size: Math.min(requestedCount, totalCount) } }])
           .toArray();
 
         if (preguntasEscalas.length === 0) {
@@ -1174,7 +1185,7 @@ app.post('/random-questions', async (req, res) => {
     // Obtener todas las preguntas con imágenes
     const imageQuestions = await mongoose.connection.db
       .collection('examen_completos')
-      .find({ ...baseQuery, image: { $exists: true, $ne: null } })
+      .find({ ...baseQuery, ...ACTIVE_QUESTION, image: { $exists: true, $ne: null } })
       .toArray();
 
     console.log(`Total de preguntas con imágenes disponibles: ${imageQuestions.length}`);
@@ -1182,7 +1193,7 @@ app.post('/random-questions', async (req, res) => {
     // Obtener preguntas sin imágenes
     const textQuestions = await mongoose.connection.db
       .collection('examen_completos')
-      .find({ ...baseQuery, $or: [{ image: { $exists: false } }, { image: null }] })
+      .find({ ...baseQuery, ...ACTIVE_QUESTION, $or: [{ image: { $exists: false } }, { image: null }] })
       .toArray();
 
     console.log(`Total de preguntas sin imágenes disponibles: ${textQuestions.length}`);
@@ -1362,7 +1373,7 @@ app.get('/protocol-questions', async (req, res) => {
     console.log("Ejemplo de documento en examen_protocolos:", JSON.stringify(sampleProtocol, null, 2));
     
     const preguntasProtocolos = await mongoose.connection.db.collection('examen_protocolos')
-      .aggregate([{ $sample: { size: 30 } }])
+      .aggregate([{ $match: ACTIVE_QUESTION }, { $sample: { size: 30 } }])
       .toArray();
     
     console.log(`Encontradas ${preguntasProtocolos.length} preguntas de protocolo`);
@@ -1538,7 +1549,7 @@ app.get('/exam-review/:examId', async (req, res) => {
       
       // Añadir ruta completa a la imagen si existe
       if (questionData.image) {
-        questionData.image = `${req.protocol}://${req.get('host')}/preguntas/${questionData.image}`;
+        questionData.image = questionImageUrl(questionData.image);
       }
       
       // Verificar explícitamente si long_answer existe
@@ -1666,7 +1677,7 @@ app.get('/failed-questions/:userId', async (req, res) => {
         
         // Add image URL if needed
         if (questionWithMeta.image) {
-          questionWithMeta.image = `${BACKEND_URL}/preguntas/${questionWithMeta.image}`;
+          questionWithMeta.image = questionImageUrl(questionWithMeta.image);
         }
         
         // Add failure metadata
@@ -1753,7 +1764,7 @@ app.get('/practice-unanswered/:userId', async (req, res) => {
       
       // Construir ruta completa de la imagen si existe
       if (questionData.image) {
-        questionData.image = `${BACKEND_URL}/preguntas/${questionData.image}`;
+        questionData.image = questionImageUrl(questionData.image);
       }
       
       // Asegurar que todos los campos necesarios estén presentes
@@ -2060,7 +2071,7 @@ app.get('/unanswered-questions/:userId', async (req, res) => {
         option_5: questionData.option_5 || '',
         answer: questionData.answer || '',
         subject: questionData.subject || unanswered.subject || 'General',
-        image: questionData.image ? `${req.protocol}://${req.get('host')}/preguntas/${questionData.image}` : null,
+        image: questionImageUrl(questionData.image),
         long_answer: questionData.long_answer || '',
         unanswered: true,
         markedAsDoubt: unanswered.markedAsDoubt || false,
@@ -3995,7 +4006,7 @@ app.post('/random-questions-contrarreloj', async (req, res) => {
     
     // Obtener solo las preguntas necesarias con los campos requeridos
     const questions = await ExamenCompleto.aggregate([
-      { $match: query },
+      { $match: { ...query, ...ACTIVE_QUESTION } },
       { $sample: { size: count } },
       { $project: { 
         question: 1, 
@@ -4093,7 +4104,7 @@ app.post('/create-custom-exam', async (req, res) => {
     
     // Obtener preguntas
     const questions = await ExamenCompleto.aggregate([
-      { $match: query },
+      { $match: { ...query, ...ACTIVE_QUESTION } },
       { $sample: { size: Number(numPreguntas) } }
     ]);
     
@@ -4101,7 +4112,7 @@ app.post('/create-custom-exam', async (req, res) => {
     const processedQuestions = questions.map(q => ({
       ...q,
       options: [q.option_1, q.option_2, q.option_3, q.option_4, q.option_5].filter(Boolean),
-      image: q.image ? `/preguntas/${q.image}` : null
+      image: questionImageUrl(q.image)
     }));
     
     res.json({
@@ -4132,7 +4143,7 @@ app.post('/random-question-completos', async (req, res) => {
     
     // Obtener preguntas aleatorias
     const questions = await ExamenCompleto.aggregate([
-      { $match: query },
+      { $match: { ...query, ...ACTIVE_QUESTION } },
       { $sample: { size: parseInt(count) } },
       { $project: { 
         question: 1, 
@@ -4187,7 +4198,7 @@ app.post('/random-fotos', async (req, res) => {
     // Obtener preguntas aleatorias de examen_fotos
     // En la BD el campo es 'image', no 'imagen'
     const questions = await ExamenFotos.aggregate([
-      { $match: query },
+      { $match: { ...query, ...ACTIVE_QUESTION } },
       { $sample: { size: parseInt(count) } },
       { $project: { 
         question: 1, 
@@ -4286,6 +4297,7 @@ app.post('/random-protocolos', async (req, res) => {
     const questions = await mongoose.connection.db
       .collection('examen_protocolos')
       .aggregate([
+        { $match: ACTIVE_QUESTION },
         { $sample: { size: parseInt(count) } },
         { $project: {
           _id: 1,
@@ -5308,7 +5320,7 @@ app.get('/flashcards/daily/:userId', async (req, res) => {
         const questionObj = q.toObject ? q.toObject() : q;
         // Añadir URL de imagen si existe
         if (questionObj.image) {
-          questionObj.image = `${BACKEND_URL}/preguntas/${questionObj.image}`;
+          questionObj.image = questionImageUrl(questionObj.image);
         }
         allQuestions.push({
           ...questionObj,
@@ -5339,7 +5351,7 @@ app.get('/flashcards/daily/:userId', async (req, res) => {
         
         // Añadir URL de imagen si existe
         if (question.image) {
-          question.image = `${BACKEND_URL}/preguntas/${question.image}`;
+          question.image = questionImageUrl(question.image);
         }
         
         // Evitar duplicados (si ya está en errores)
