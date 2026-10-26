@@ -5,7 +5,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { Helmet } from "react-helmet";
 import { useLogo } from './context/LogoContext';
-import { auth, signInWithGoogle, signOutUser } from './firebase';
+import { auth, signInWithGoogle, signOutUser, isInAppBrowser } from './firebase';
 import { useAuth } from './context/AuthContext';
 import { API_URL } from './config';
 import { toast } from 'react-toastify';
@@ -22,6 +22,7 @@ function HomePage() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [showInAppWarning, setShowInAppWarning] = useState(false);
   const { logoSrc } = useLogo();
   const { currentUser, login, checkSubscription } = useAuth();
   
@@ -85,6 +86,10 @@ function HomePage() {
   };
 
   const handleLoginClick = async () => {
+    if (isInAppBrowser()) {
+      setShowInAppWarning(true);
+      return;
+    }
     try {
       setIsSigningIn(true);
       
@@ -132,7 +137,11 @@ function HomePage() {
       }
     } catch (error) {
       console.error('Error en el proceso de login:', error);
-      toast.error('Error al iniciar sesión con Google. Inténtalo de nuevo.');
+      if (error?.code === 'simulia/in-app-browser') {
+        setShowInAppWarning(true);
+      } else {
+        toast.error('Error al iniciar sesión con Google. Inténtalo de nuevo.');
+      }
     } finally {
       setIsSigningIn(false);
     }
@@ -330,13 +339,23 @@ function HomePage() {
               {renderActionButtons()}
             </div>
 
-            <button 
-              className="md:hidden text-secondary text-2xl focus:outline-none" 
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              aria-label="Menú móvil"
-            >
-              {showMobileMenu ? '✕' : '☰'}
-            </button>
+            <div className="md:hidden flex items-center gap-3">
+              <button
+                onClick={handleLoginClick}
+                disabled={isSigningIn}
+                className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md disabled:opacity-50"
+                aria-label={currentUser ? 'Entrar en Simulia' : 'Entrar con Google'}
+              >
+                {isSigningIn ? 'Entrando...' : (currentUser ? 'Entrar →' : 'Entrar con Google')}
+              </button>
+              <button 
+                className="text-secondary text-2xl focus:outline-none" 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                aria-label="Menú móvil"
+              >
+                {showMobileMenu ? '✕' : '☰'}
+              </button>
+            </div>
           </div>
           
           {/* Menú móvil desplegable */}
@@ -381,7 +400,7 @@ function HomePage() {
                       disabled={isSigningIn}
                       aria-label="Comenzar simulacro"
                     >
-                      {isSigningIn ? 'Iniciando sesión...' : 'Haz tu simulacro EIR'}
+                      {isSigningIn ? 'Iniciando sesión...' : 'Entrar con Google'}
                       {!isSigningIn && <span>→</span>}
                     </button>
                   )}
@@ -391,6 +410,27 @@ function HomePage() {
           )}
         </div>
     </nav>
+      {showInAppWarning && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" onClick={() => setShowInAppWarning(false)}>
+          <div className="max-w-sm w-full bg-card rounded-2xl p-6 shadow-xl text-center" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-primary mb-2">Abre Simulia en tu navegador</h3>
+            <p className="text-sm text-secondary/80 mb-4">
+              Estás dentro del navegador de otra app (Instagram, WhatsApp...) y Google no permite iniciar sesión desde ahí.
+              Toca los tres puntos (⋯) arriba a la derecha y elige <strong>«Abrir en el navegador»</strong> (Safari o Chrome).
+              Entra con la misma cuenta de Google que usaste en el ordenador.
+            </p>
+            <button
+              className="w-full bg-primary text-white rounded-full py-2 font-semibold mb-2"
+              onClick={() => {
+                try { navigator.clipboard.writeText('https://www.simulia.es'); toast.success('Enlace copiado. Pégalo en Safari o Chrome.'); } catch {}
+              }}
+            >
+              Copiar enlace
+            </button>
+            <button className="w-full text-sm text-secondary/70 py-1" onClick={() => setShowInAppWarning(false)}>Cerrar</button>
+          </div>
+        </div>
+      )}
       {showPopup && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md mx-4 p-6 bg-card border border-primary shadow-xl rounded-lg">
           <p className="text-center font-medium text-foreground">

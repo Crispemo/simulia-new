@@ -119,9 +119,20 @@ export const getRedirectResultAuth = async () => {
   }
 };
 
-// Ya no necesitamos detección mobile específica - usamos popup para todos
+// Navegadores internos de apps (Instagram, Facebook, WhatsApp, TikTok, LinkedIn...).
+// Google bloquea el login OAuth dentro de ellos (error 403 disallowed_useragent),
+// así que hay que pedir a la usuaria que abra la web en Safari o Chrome.
+export const isInAppBrowser = () => {
+  const ua = navigator.userAgent || navigator.vendor || '';
+  return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|TikTok|musical_ly|Bytedance|LinkedInApp|Snapchat|Twitter|GSA\/|; wv\)/i.test(ua);
+};
 
 export const signInWithGoogle = async () => {
+  if (isInAppBrowser()) {
+    const err = new Error('in-app-browser');
+    err.code = 'simulia/in-app-browser';
+    throw err;
+  }
   try {
     const r = await signInWithPopup(auth, provider);
     trackRegistrationIfNew(r);

@@ -16,6 +16,9 @@ const PaymentButton = ({ plan, amount, onPaymentStart }) => {
         // El usuario será redirigido o autenticado, no necesitamos hacer nada más aquí
       } catch (error) {
         console.error('❌ Error iniciando autenticación:', error);
+        if (error?.code === 'simulia/in-app-browser') {
+          alert('Google no permite iniciar sesión dentro de Instagram/WhatsApp. Toca ⋯ arriba a la derecha y elige «Abrir en el navegador» (Safari o Chrome).');
+        }
         setIsProcessing(false);
       }
       return;
