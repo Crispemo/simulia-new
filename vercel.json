@@ -5,6 +5,14 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/empieza",
+      "destination": "/empieza/index.html"
+    },
+    {
+      "source": "/empieza/",
+      "destination": "/empieza/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -40,6 +48,15 @@
         {
           "key": "X-Forwarded-Host",
           "value": "www.simulia.es"
+        }
+      ]
+    },
+    {
+      "source": "/empieza/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=600, stale-while-revalidate=86400"
         }
       ]
     }

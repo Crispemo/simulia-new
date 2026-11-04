@@ -1,8 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <meta name="facebook-domain-verification" content="yg9ybg4t3hsnhd7d1kknmo3zyyh00o" />
     <meta charset="utf-8" />
+    <meta name="facebook-domain-verification" content="yg9ybg4t3hsnhd7d1kknmo3zyyh00o" />
+    <!-- Meta Pixel: código base en el <head>, antes del bundle de React.
+         Respeta el consentimiento: si ya hay CookieConsent=true el PageView sale al instante;
+         si no, App.js llama a window.simuliaLoadPixel() cuando la usuaria acepta. -->
+    <script>
+      (function () {
+        window.simuliaLoadPixel = function () {
+          if (window.__simuliaPixelInit) return;
+          window.__simuliaPixelInit = true;
+          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+          document,'script','https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', '1080688154610872');
+          fbq('track', 'PageView');
+        };
+        if (/(?:^|; )CookieConsent=true(?:;|$)/.test(document.cookie)) window.simuliaLoadPixel();
+      })();
+    </script>
+    <link rel="preconnect" href="https://connect.facebook.net">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,7 +82,7 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root"><div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#3e5156"><img src="/empieza/logo.png" width="56" height="56" alt="" style="border-radius:12px"><div style="font-weight:700;font-size:20px">Simulia</div><div style="font-size:14px;color:#7da0a7">Cargando…</div></div></div>
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

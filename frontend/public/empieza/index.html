@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulia – Prueba gratis 7 días | Simulacros EIR</title>
+<meta name="description" content="Prepara el EIR con simulacros reales, +8.000 preguntas y análisis de tus errores. Prueba Simulia gratis 7 días.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#3e5156">
+<meta name="facebook-domain-verification" content="yg9ybg4t3hsnhd7d1kknmo3zyyh00o">
+<link rel="icon" href="/favicon.ico">
+<link rel="preconnect" href="https://connect.facebook.net">
+
+<!-- Meta Pixel: código base en el <head>. Respeta el consentimiento de cookies:
+     si la visitante ya aceptó (cookie CookieConsent=true, la misma que usa la app),
+     el PageView sale al instante; si no, sale en cuanto pulse "Aceptar". -->
+<script>
+(function () {
+  var PIXEL_ID = '1080688154610872';
+  function hasConsent() { return /(?:^|; )CookieConsent=true(?:;|$)/.test(document.cookie); }
+  window.simuliaLoadPixel = function () {
+    if (window.__simuliaPixelInit) return;
+    window.__simuliaPixelInit = true;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', PIXEL_ID);
+    fbq('track', 'PageView');
+  };
+  if (hasConsent()) window.simuliaLoadPixel();
+
+  // Guardar UTMs / fbclid (mismo formato que la app: lib/metaPixel.js → captureAttribution)
+  try {
+    var p = new URLSearchParams(location.search), keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'];
+    var fbclid = p.get('fbclid'), has = keys.some(function (k) { return p.get(k); });
+    if (has || fbclid) {
+      var d = { capturedAt: new Date().toISOString(), landingPage: location.pathname };
+      keys.forEach(function (k) { if (p.get(k)) d[k] = p.get(k); });
+      if (fbclid) { d.fbclid = fbclid; d.fbcFromClick = 'fb.1.' + Date.now() + '.' + fbclid; }
+      localStorage.setItem('simulia_attribution', JSON.stringify(d));
+    }
+  } catch (e) {}
+})();
+</script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--p:#7da0a7;--d:#3e5156;--ink:#1f2a2d;--mut:#5d6b6f;--bg:#f6f9f9}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;margin:0 auto;padding:20px 20px 120px}
+header{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--d)}
+header img{width:32px;height:32px;border-radius:8px}
+h1{font-size:30px;line-height:1.15;margin:28px 0 12px;letter-spacing:-.02em}
+h1 span{color:var(--p)}
+.lead{font-size:17px;color:var(--mut);margin-bottom:22px}
+.cta{display:block;width:100%;text-align:center;background:var(--p);color:#fff;text-decoration:none;font-weight:700;font-size:18px;padding:16px 20px;border-radius:999px;box-shadow:0 6px 18px rgba(125,160,167,.45)}
+.cta:active{transform:scale(.98)}
+.sub{text-align:center;font-size:13px;color:var(--mut);margin-top:8px}
+.inapp{display:none;margin-top:14px;background:#fff7e6;border:1px solid #f3d9a4;border-radius:12px;padding:12px 14px;font-size:14px}
+ul.ben{list-style:none;margin:30px 0;display:grid;gap:12px}
+ul.ben li{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;gap:12px}
+ul.ben b{display:block}
+ul.ben small{color:var(--mut);font-size:14px}
+.ic{flex:0 0 34px;height:34px;border-radius:10px;background:#e5eef0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.shot{width:100%;height:auto;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);display:block;aspect-ratio:760/463;background:#e5eef0}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:28px 0}
+.plan{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.plan.hi{outline:2px solid var(--p)}
+.plan b{display:block;font-size:15px}
+.plan .pr{font-size:22px;font-weight:800;margin:4px 0}
+.plan small{color:var(--mut);font-size:12px}
+.me{display:flex;gap:14px;align-items:center;background:#fff;border-radius:14px;padding:14px;margin:28px 0}
+.me img{width:64px;height:64px;border-radius:50%;object-fit:cover}
+.me p{font-size:14px;color:var(--mut)}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:12px 20px calc(12px + env(safe-area-inset-bottom));background:rgba(246,249,249,.96);border-top:1px solid #e3eaeb}
+.bar .cta{max-width:520px;margin:0 auto}
+#ck{position:fixed;left:12px;right:12px;bottom:84px;background:var(--d);color:#fff;border-radius:14px;padding:14px;font-size:13px;display:none;z-index:10}
+#ck a{color:#cfe0e3}
+#ck .b{display:flex;gap:8px;margin-top:10px}
+#ck button{flex:1;border:0;border-radius:999px;padding:9px;font-weight:700;font-size:14px}
+#ck .ok{background:var(--p);color:#fff}
+#ck .no{background:transparent;color:#fff;border:1px solid #fff}
+footer{text-align:center;font-size:12px;color:var(--mut);margin-top:30px}
+footer a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="/empieza/logo.png" alt="" width="32" height="32">Simulia</header>
+
+  <h1>Entrena el EIR como si fuera <span>el día del examen</span></h1>
+  <p class="lead">Simulacros con preguntas oficiales, +8.000 preguntas EIR y de protocolos, y un análisis de tus fallos para saber qué repasar.</p>
+
+  <a class="cta js-cta" href="/">Empieza gratis 7 días</a>
+  <p class="sub">Sin compromiso · cancela cuando quieras</p>
+  <p class="inapp" id="inapp">Para crear tu cuenta con Google, abre esta página en tu navegador: toca <b>···</b> arriba a la derecha y elige <b>“Abrir en el navegador”</b>.</p>
+
+  <ul class="ben">
+    <li><span class="ic">⏱️</span><div><b>Simulacros en condiciones reales</b><small>Sin pausas, con tiempo e imágenes, con el mismo formato del EIR.</small></div></li>
+    <li><span class="ic">📚</span><div><b>Exámenes EIR oficiales y protocolos</b><small>Preguntas de convocatorias anteriores y de protocolos del Ministerio de Sanidad.</small></div></li>
+    <li><span class="ic">🎯</span><div><b>Aprende de tus errores</b><small>Repasa lo que fallas y sigue tu propio progreso.</small></div></li>
+    <li><span class="ic">📱</span><div><b>Desde el móvil, sin instalar nada</b><small>Funciona en el navegador y se añade a tu pantalla de inicio.</small></div></li>
+  </ul>
+
+  <img class="shot" src="/empieza/dashboard.webp" alt="Panel de Simulia" width="760" height="463" loading="lazy" decoding="async">
+
+  <div class="plans">
+    <div class="plan"><b>Explorar</b><div class="pr">14,99 €</div><small>al mes · con límites</small></div>
+    <div class="plan hi"><b>Voy a por la plaza</b><div class="pr">27,99 €</div><small>al mes · sin límites</small></div>
+  </div>
+
+  <div class="me">
+    <img src="/empieza/cristina.webp" alt="Cristina" width="64" height="64" loading="lazy">
+    <p>Soy Cristina, enfermera, y he creado Simulia para que prepares el EIR practicando como en el examen real.</p>
+  </div>
+
+  <footer><a href="/aviso-legal">Aviso legal</a> · <a href="/politica-privacidad">Privacidad</a> · <a href="/cookies">Cookies</a></footer>
+</div>
+
+<div class="bar"><a class="cta js-cta" href="/">Empieza gratis 7 días</a></div>
+
+<div id="ck">Usamos cookies propias y de terceros para analítica y publicidad. <a href="/cookies">Más información</a>
+  <div class="b"><button class="no" id="ck-no">Rechazar</button><button class="ok" id="ck-ok">Aceptar</button></div>
+</div>
+
+<script>
+(function () {
+  // Pasar UTMs y fbclid a la app al pulsar el botón
+  var qs = location.search;
+  var links = document.querySelectorAll('.js-cta');
+  for (var i = 0; i < links.length; i++) {
+    links[i].href = '/' + qs;
+    links[i].addEventListener('click', function () {
+      if (window.fbq) fbq('trackCustom', 'ClickRegistroLanding');
+    });
+  }
+
+  // Navegador interno de Instagram / Facebook: Google no permite iniciar sesión ahí
+  if (/Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent)) {
+    document.getElementById('inapp').style.display = 'block';
+  }
+
+  // Banner de cookies (misma cookie que la app, para no volver a preguntar)
+  function setCk(v) {
+    var exp = new Date(Date.now() + 365 * 864e5).toUTCString();
+    document.cookie = 'CookieConsent=' + v + '; expires=' + exp + '; path=/; SameSite=Lax';
+    document.getElementById('ck').style.display = 'none';
+  }
+  if (!/(?:^|; )CookieConsent=/.test(document.cookie)) {
+    document.getElementById('ck').style.display = 'block';
+  }
+  document.getElementById('ck-ok').onclick = function () { setCk('true'); window.simuliaLoadPixel(); };
+  document.getElementById('ck-no').onclick = function () { setCk('false'); };
+})();
+</script>
+</body>
+</html>
