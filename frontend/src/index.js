@@ -18,7 +18,11 @@ const rootElement = document.getElementById('root');
 
 // Si react-snap ya prerenderizó HTML en este nodo, hidratamos en vez de
 // volver a montar desde cero (evita parpadeo y aprovecha el HTML servido).
-if (rootElement.hasChildNodes()) {
+// El #root trae una pantalla de carga estática (#simulia-boot); eso no es HTML prerenderizado,
+// así que en ese caso se monta normal (createRoot la sustituye).
+const isBootPlaceholder = !!document.getElementById('simulia-boot');
+
+if (rootElement.hasChildNodes() && !isBootPlaceholder) {
   ReactDOM.hydrateRoot(rootElement, app);
 } else {
   const root = ReactDOM.createRoot(rootElement);

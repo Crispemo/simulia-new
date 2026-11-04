@@ -1,35 +1,77 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import HomePage from './HomePage';
-import Dashboard from './Dashboard';
-import CheckoutForm from './CheckoutForm';
-import Exam from './Exam';
-import AOS from 'aos';
+// Estilos de todas las páginas, cargados desde el principio y en el mismo orden que antes
+// del code splitting, para que el aspecto de la web no cambie. Solo se trocea el JavaScript.
 import 'aos/dist/aos.css';
+import './components/DemoModal.css';
+import './components/QuestionBox.module.css';
+import './Dashboard.css';
+import './Aeleccion.css';
+import './components/SuccessNotification.css';
+import './views/exam/exam.module.css';
+import './components/Pagination.module.css';
+import './Contrarreloj.css';
+import './components/Community.css';
+import './components/TimelineProgress.css';
+import './components/TicketModal.css';
+import './components/FlashcardModal.css';
+import './checkout.css';
 import './index.css';
-import Quizz from './Quizz';
-import Contrarreloj from './Contrarreloj';
-import ReviewExam from './ReviewExam';
-import Errores from './errores';
-import Protocolos from './Protocolos';
-import AEleccion from './Aeleccion';
+import './Quizz.css';
+import './views/exam/review.module.css';
+import './errores.css';
+import './Exam.css';
+import './Protocolos.css';
+import './components/Blog.css';
+import './components/BlogPost.css';
+import './scales.css';
+import AOS from 'aos';
 import { LogoProvider } from './context/LogoContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import AvisoLegal from './pages/AvisoLegal';
-import Precios from './pages/Precios';
-import Simulacro from './pages/Simulacro';
-import PoliticaPrivacidad from './pages/PoliticaPrivacidad';
-import TerminosCondiciones from './pages/TerminosCondiciones';
-import PoliticaCookies from './pages/PoliticaCookies';
-import Blog from './components/Blog';
-import BlogPost from './components/BlogPost';
-import ExamInProgress from './ExamInProgress';
-import SuccessPage from './Success';
-import CancelPage from './Cancel';
 import CookieConsent from "react-cookie-consent";
-import Scales from './scales';
-import './scales.css';
 import { META_PIXEL_ID, track, captureAttribution, trackPricingView } from './lib/metaPixel';
+
+// Si tras un despliegue nuevo el navegador pide un trozo de código antiguo que ya no existe,
+// recarga la página una vez para coger la versión nueva (evita pantallas rotas).
+function lazyWithRetry(factory) {
+  return React.lazy(() =>
+    factory().catch((err) => {
+      const key = 'simulia_chunk_reload';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw err;
+    }).then((mod) => {
+      sessionStorage.removeItem('simulia_chunk_reload');
+      return mod;
+    })
+  );
+}
+
+// Cada página se descarga solo cuando se visita (la portada va en el archivo principal).
+const Dashboard = lazyWithRetry(() => import('./Dashboard'));
+const Exam = lazyWithRetry(() => import('./Exam'));
+const Quizz = lazyWithRetry(() => import('./Quizz'));
+const Contrarreloj = lazyWithRetry(() => import('./Contrarreloj'));
+const ReviewExam = lazyWithRetry(() => import('./ReviewExam'));
+const Errores = lazyWithRetry(() => import('./errores'));
+const Protocolos = lazyWithRetry(() => import('./Protocolos'));
+const AEleccion = lazyWithRetry(() => import('./Aeleccion'));
+const AvisoLegal = lazyWithRetry(() => import('./pages/AvisoLegal'));
+const Precios = lazyWithRetry(() => import('./pages/Precios'));
+const Simulacro = lazyWithRetry(() => import('./pages/Simulacro'));
+const PoliticaPrivacidad = lazyWithRetry(() => import('./pages/PoliticaPrivacidad'));
+const TerminosCondiciones = lazyWithRetry(() => import('./pages/TerminosCondiciones'));
+const PoliticaCookies = lazyWithRetry(() => import('./pages/PoliticaCookies'));
+const Blog = lazyWithRetry(() => import('./components/Blog'));
+const BlogPost = lazyWithRetry(() => import('./components/BlogPost'));
+const ExamInProgress = lazyWithRetry(() => import('./ExamInProgress'));
+const SuccessPage = lazyWithRetry(() => import('./Success'));
+const CancelPage = lazyWithRetry(() => import('./Cancel'));
+const Scales = lazyWithRetry(() => import('./scales'));
 
 // Guardar UTMs / fbclid en cuanto se carga la app (antes de que la navegación los borre)
 captureAttribution();
@@ -79,6 +121,11 @@ function AppRoutes() {
   }, [location]);
 
   return (
+<Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7da0a7', fontFamily: 'Inter, sans-serif' }}>
+        Cargando…
+      </div>
+    }>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/success" element={<SuccessPage />} />
@@ -105,6 +152,7 @@ function AppRoutes() {
       <Route path="/scales" element={<Scales userId={currentUser?.id} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }
 
