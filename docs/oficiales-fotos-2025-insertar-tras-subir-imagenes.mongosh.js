@@ -48,4 +48,29 @@ ocultarTextoSinImagen("Según establece la Norma ISO 6710:2018, el tu", 'foto 20
 nueva('examen_fotos', {"question": "Un varón de 26 años que estaba nadando en el mar Cantábrico, presenta lesiones lineales pruriginosas y dolorosas en brazos y tórax. No presenta disnea, ni signos de reacción alérgica ni otra sintomatología sistémica. Refiere que ha fotografiado el animal marino que le ha causado las lesiones, que corresponde a la Imagen 10. Atendiendo a las recomendaciones de la Subdirección General de Sanidad Ambiental y Salud Laboral sobre las picaduras de medusas, ¿cuál es la actuación inmediata que debe realizarse?:", "image": "IMG10_2025.png", "option_1": "Limpiar las zonas afectadas sin frotar, utilizando agua dulce. Retirar los restos que puedan quedar adheridos a la piel utilizando pinzas o en su defecto, una tarjeta de plástico. Aplicar una solución tópica de bicarbonato de sodio. Si el dolor es muy intenso o hay un empeoramiento del estado general, acudir de inmediato a un servicio de urgencia.", "option_2": "Limpiar las zonas afectadas frotando enérgicamente para retirar todos los restos. Lavar la zona utilizando agua de mar o una solución salina. Si el dolor es muy intenso o hay un empeoramiento del estado general, acudir de inmediato a un servicio de urgencia.", "option_3": "Limpiar las zonas afectadas sin frotar, y retirar los restos que puedan quedar adheridos a la piel utilizando pinzas o en su defecto, una tarjeta de plástico. Aplicar en las zonas afectadas una dilución de vinagre y agua. Si el dolor es muy intenso o hay un empeoramiento del estado general, acudir de inmediato a un servicio de urgencia.", "option_4": "Limpiar las zonas afectadas sin frotar, utilizando agua de mar o una solución salina. Retirar los restos que puedan quedar adheridos a la piel utilizando pinzas o en su defecto, una tarjeta de plástico. Se puede aplicar una solución tópica de bicarbonato de sodio. Si el dolor es muy intenso o hay un empeoramiento del estado general, acudir de inmediato a un servicio de urgencia.", "answer": 4, "subject": "SALUD PÚBLICA- INFECCIOSOS-VACUNAS", "long_answer": "El animal de la imagen es una carabela portuguesa (Physalia physalis), con su flotador azul-violáceo y largos tentáculos, cada vez más frecuente en el Cantábrico. Según las recomendaciones de Sanidad Ambiental, la zona se lava sin frotar (frotar hace que los nematocistos que quedan descarguen más veneno) y con agua de mar o suero salino, nunca con agua dulce, porque el cambio osmótico también los activa. Los restos se retiran con pinzas o con el borde de una tarjeta de plástico y, en el caso de la carabela, se puede aplicar bicarbonato sódico. El vinagre está desaconsejado en la carabela portuguesa porque puede favorecer la descarga de los nematocistos. Si el dolor es muy intenso o empeora el estado general, hay que acudir a urgencias.", "exam_name": 2025, "isDelete": false}, 'foto 2025 (imagen oficial 10)');
 ocultarTextoSinImagen("Un varón de 26 años que estaba nadando en el ", 'foto 2025 (imagen oficial 10)');
 
-print(`✅ Terminado: ${ok} preguntas de imagen insertadas, ${ocultadas} duplicadas sin imagen ocultadas.`);
+// Asignaturas de las fotos 2024: sin asignatura no salen cuando la usuaria filtra por asignaturas.
+// Solo se rellenan si están vacías (no pisa las que ya tengan).
+const asignaturas2024 = {
+  "IMG2_2024.png": "MÉDICO-QUIRÚRGICA",
+  "IMG3_2024.png": "CARDIOLOGÍA",
+  "IMG4_2024.png": "DERMATOLOGÍA-HERIDAS CRÓNICAS",
+  "IMG5_2024.png": "SEGURIDAD",
+  "IMG6_2024.png": "SEGURIDAD",
+  "IMG7_2024.png": "PEDIATRÍA",
+  "IMG8_2024.png": "GINECOLOGIA-OBSTETRICIA",
+  "IMG9_2024.png": "DIGESTIVO",
+  "IMG10_2024.png": "MÉDICO-QUIRÚRGICA"
+};
+let asignadas = 0;
+for (const [img, subject] of Object.entries(asignaturas2024)) {
+  const r = db2.getCollection('examen_fotos').updateMany(
+    { image: img, $or: [{ subject: { $exists: false } }, { subject: null }, { subject: '' }] },
+    { $set: { subject } }
+  );
+  asignadas += r.modifiedCount;
+  if (r.modifiedCount) print(`🏷️  ${img}: asignatura puesta → ${subject}`);
+}
+const sinAsignatura = db2.getCollection('examen_fotos').find({ isDelete: { $ne: true }, $or: [{ subject: { $exists: false } }, { subject: null }, { subject: '' }] }, { image: 1 }).toArray();
+print(sinAsignatura.length ? `⚠️  Siguen sin asignatura: ${sinAsignatura.map(d => d.image).join(', ')}` : '✅ Todas las preguntas de imagen tienen asignatura.');
+
+print(`✅ Terminado: ${ok} preguntas de imagen insertadas, ${ocultadas} duplicadas sin imagen ocultadas, ${asignadas} asignaturas 2024 rellenadas.`);
