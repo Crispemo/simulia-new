@@ -4183,7 +4183,8 @@ app.post('/random-question-completos', async (req, res) => {
 // Ruta para obtener preguntas aleatorias con fotos
 app.post('/random-fotos', async (req, res) => {
   try {
-    const { count = 10, asignaturas } = req.body;
+    const { count = 10, asignaturas, userId } = req.body;
+    const requested = parseInt(count) || 10;
     
     // Construir query base - En la BD real el campo es 'image' (no 'imagen')
     let query = {};
@@ -4194,27 +4195,59 @@ app.post('/random-fotos', async (req, res) => {
     }
     
     console.log(`🔍 BACKEND - Buscando preguntas con query:`, JSON.stringify(query));
-    
-    // Obtener preguntas aleatorias de examen_fotos
-    // En la BD el campo es 'image', no 'imagen'
+
+    const fotosProjection = {
+      question: 1,
+      option_1: 1,
+      option_2: 1,
+      option_3: 1,
+      option_4: 1,
+      option_5: 1,
+      answer: 1,
+      image: 1,  // Campo REAL en la BD es 'image'
+      exam_name: 1,
+      subject: 1,
+      long_answer: 1,
+      _id: 1
+    };
+
+    // Preguntas de imagen que esta usuaria ya ha tenido en algún examen anterior.
+    // El banco oficial con imagen es pequeño (solo existe desde 2019), así que
+    // primero se sirven las que no ha visto y solo se repiten cuando ya las ha hecho todas.
+    let seenIds = [];
+    if (userId) {
+      try {
+        const rawSeen = await ExamenResultado.distinct('userAnswers.questionId', {
+          userId: String(userId),
+          'userAnswers.questionData.image': { $nin: [null, ''] }
+        });
+        seenIds = rawSeen
+          .filter(id => id && mongoose.Types.ObjectId.isValid(String(id)))
+          .map(id => new mongoose.Types.ObjectId(String(id)));
+      } catch (seenError) {
+        console.warn('No se pudo calcular el historial de fotos de la usuaria (se sigue sin él):', seenError.message);
+        seenIds = [];
+      }
+    }
+
+    // 1) Preguntas de imagen que todavía no ha visto
     const questions = await ExamenFotos.aggregate([
-      { $match: { ...query, ...ACTIVE_QUESTION } },
-      { $sample: { size: parseInt(count) } },
-      { $project: { 
-        question: 1, 
-        option_1: 1, 
-        option_2: 1, 
-        option_3: 1, 
-        option_4: 1, 
-        option_5: 1, 
-        answer: 1,
-        image: 1,  // Campo REAL en la BD es 'image'
-        exam_name: 1,
-        subject: 1,
-        long_answer: 1,
-        _id: 1
-      }}
+      { $match: { ...query, ...ACTIVE_QUESTION, ...(seenIds.length ? { _id: { $nin: seenIds } } : {}) } },
+      { $sample: { size: requested } },
+      { $project: fotosProjection }
     ]);
+
+    // 2) Si no hay suficientes nuevas, completar con algunas ya vistas
+    if (seenIds.length && questions.length < requested) {
+      const repetidas = await ExamenFotos.aggregate([
+        { $match: { ...query, ...ACTIVE_QUESTION, _id: { $in: seenIds } } },
+        { $sample: { size: requested - questions.length } },
+        { $project: fotosProjection }
+      ]);
+      questions.push(...repetidas);
+    }
+
+    console.log(`🖼️ BACKEND - Fotos: ${seenIds.length} ya vistas por la usuaria, se envían ${questions.length} (pedidas ${requested})`);
     
     console.log(`🔍 BACKEND - Preguntas obtenidas de la BD: ${questions.length}`);
     

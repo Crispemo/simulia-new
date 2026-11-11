@@ -252,7 +252,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                 'Content-Type': 'application/json',
               },
               credentials: 'include',
-              body: JSON.stringify({ count: 10 })
+              body: JSON.stringify({ count: 10, userId: effectiveUserId })
             });
 
           if (fotosResponse.ok) {
