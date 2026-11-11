@@ -6,7 +6,9 @@
 // Además: si estas mismas preguntas estaban en examen_completos (año 2025) como texto sin imagen,
 // las marca isDelete:true (guardando copia en CSV.backup_fotos_2025) para que no salgan sin su imagen.
 // Se puede ejecutar dos veces sin problema.
+// Asignaturas: también rellena las de las fotos 2024 que estén vacías.
 
+(() => {
 const db2 = db.getSiblingDB('CSV');
 const backup = db2.getCollection('backup_fotos_2025');
 let ok = 0, ocultadas = 0;
@@ -74,3 +76,4 @@ const sinAsignatura = db2.getCollection('examen_fotos').find({ isDelete: { $ne: 
 print(sinAsignatura.length ? `⚠️  Siguen sin asignatura: ${sinAsignatura.map(d => d.image).join(', ')}` : '✅ Todas las preguntas de imagen tienen asignatura.');
 
 print(`✅ Terminado: ${ok} preguntas de imagen insertadas, ${ocultadas} duplicadas sin imagen ocultadas, ${asignadas} asignaturas 2024 rellenadas.`);
+})();
