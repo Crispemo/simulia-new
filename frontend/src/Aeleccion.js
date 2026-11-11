@@ -209,7 +209,8 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             },
             body: JSON.stringify({
               count: numPreguntasImagen,
-              asignaturas: asignaturasSeleccionadas
+              asignaturas: asignaturasSeleccionadas,
+              userId: effectiveUserId
             })
           });
 
