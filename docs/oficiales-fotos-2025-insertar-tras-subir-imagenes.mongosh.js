@@ -75,5 +75,7 @@ for (const [img, subject] of Object.entries(asignaturas2024)) {
 const sinAsignatura = db2.getCollection('examen_fotos').find({ isDelete: { $ne: true }, $or: [{ subject: { $exists: false } }, { subject: null }, { subject: '' }] }, { image: 1 }).toArray();
 print(sinAsignatura.length ? `⚠️  Siguen sin asignatura: ${sinAsignatura.map(d => d.image).join(', ')}` : '✅ Todas las preguntas de imagen tienen asignatura.');
 
+const sinJustificacion = db2.getCollection('examen_fotos').find({ isDelete: { $ne: true }, $or: [{ long_answer: { $exists: false } }, { long_answer: null }, { long_answer: '' }] }, { image: 1 }).toArray();
+print(sinJustificacion.length ? `⚠️  Siguen sin justificación: ${sinJustificacion.map(d => d.image).join(', ')}` : '✅ Todas las preguntas de imagen tienen justificación.');
 print(`✅ Terminado: ${ok} preguntas de imagen insertadas, ${ocultadas} duplicadas sin imagen ocultadas, ${asignadas} asignaturas 2024 rellenadas.`);
 })();
