@@ -1564,8 +1564,30 @@ app.get('/exam-review/:examId', async (req, res) => {
       };
     });
     
+    // Varios modos (Quizz, Contrarreloj, Protocolos, Escalas, Errores, Personalizado...)
+    // no guardan long_answer en questionData. Si falta, lo recuperamos del banco de preguntas.
+    const missingIds = questions
+      .filter(q => !q.long_answer && q._id && mongoose.Types.ObjectId.isValid(q._id))
+      .map(q => q._id);
+    if (missingIds.length > 0) {
+      try {
+        const found = await findQuestionsByIds(missingIds);
+        const byId = {};
+        found.forEach(f => {
+          const la = f.long_answer || f.Justificacion || '';
+          if (la) byId[f._id.toString()] = la;
+        });
+        questions.forEach(q => {
+          if (!q.long_answer && q._id && byId[q._id.toString()]) q.long_answer = byId[q._id.toString()];
+        });
+        console.log(`Justificaciones recuperadas del banco: ${Object.keys(byId).length} de ${missingIds.length}`);
+      } catch (e) {
+        console.error('No se pudieron recuperar justificaciones:', e.message);
+      }
+    }
+
     console.log(`Preguntas procesadas para revisión: ${questions.length}`);
-    
+
     // Enviar resultados
     res.json({ 
       exam: exam, 
