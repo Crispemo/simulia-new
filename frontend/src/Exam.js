@@ -218,7 +218,8 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
               // Para años anteriores: 190 preguntas completas (sin imágenes) + 10 con imágenes = 200 total
               // Para protocolos: 200 preguntas completas sin imágenes
               count: effectiveSimulacroType === 'anteriores' ? 190 : 200,
-              examType: currentExamType
+              examType: currentExamType,
+              userId: effectiveUserId
             })
           });
 
@@ -252,7 +253,7 @@ const Exam = ({ toggleDarkMode, isDarkMode, userId }) => {
                 'Content-Type': 'application/json',
               },
               credentials: 'include',
-              body: JSON.stringify({ count: 10 })
+              body: JSON.stringify({ count: 10, userId: effectiveUserId })
             });
 
           if (fotosResponse.ok) {

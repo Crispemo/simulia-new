@@ -72,6 +72,70 @@ const questionImageUrl = (image) => {
 
 // Filtro para excluir preguntas desactivadas (isDelete: true) sin borrarlas de la BD
 const ACTIVE_QUESTION = { isDelete: { $ne: true } };
+
+// IDs de preguntas que el usuario ya ha visto en exámenes anteriores (guardados en ExamenResultado)
+async function getSeenQuestionIds(userId) {
+  if (!userId || userId === 'test_user_1') return [];
+  try {
+    const ids = await mongoose.model('ExamenResultado').distinct('userAnswers.questionId', { userId });
+    return ids.filter(id => id && mongoose.Types.ObjectId.isValid(id)).map(id => new mongoose.Types.ObjectId(String(id)));
+  } catch (err) {
+    console.error('Error obteniendo preguntas vistas:', err.message);
+    return [];
+  }
+}
+
+// Muestreo sin repeticiones: primero preguntas que el usuario NO ha visto; si no hay suficientes,
+// completa con las ya vistas. Además elimina duplicados (mismo _id o mismo enunciado), porque
+// $sample puede devolver el mismo documento más de una vez cuando el tamaño pedido es < 5% de la colección.
+async function sampleFreshQuestions(collection, match, count, userId, project) {
+  count = Math.max(0, parseInt(count) || 0);
+  if (!count) return [];
+  const seenIds = await getSeenQuestionIds(userId);
+  const normalize = (t) => String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const result = [];
+  const usedIds = new Set();
+  const usedTexts = new Set();
+
+  const addBatch = (docs) => {
+    for (const d of docs) {
+      if (result.length >= count) break;
+      const id = String(d._id);
+      const txt = normalize(d.question);
+      if (usedIds.has(id) || (txt && usedTexts.has(txt))) continue;
+      usedIds.add(id);
+      if (txt) usedTexts.add(txt);
+      result.push(d);
+    }
+  };
+
+  const run = async (extraMatch) => {
+    const missing = count - result.length;
+    if (missing <= 0) return;
+    const excluded = [...usedIds].map(id => new mongoose.Types.ObjectId(id));
+    const idFilter = { ...(extraMatch._id || {}) };
+    if (excluded.length) idFilter.$nin = [...(idFilter.$nin || []), ...excluded];
+    const fullMatch = { ...match, ...ACTIVE_QUESTION, ...extraMatch };
+    if (Object.keys(idFilter).length) fullMatch._id = idFilter;
+    else delete fullMatch._id;
+    // Pedimos algo de margen para compensar duplicados que descartamos
+    const pipeline = [{ $match: fullMatch }, { $sample: { size: Math.ceil(missing * 1.3) + 5 } }];
+    if (project) pipeline.push({ $project: project });
+    addBatch(await collection.aggregate(pipeline).toArray());
+  };
+
+  // 1) Preguntas no vistas (dos pasadas por si los duplicados dejaron huecos)
+  if (seenIds.length) {
+    await run({ _id: { $nin: seenIds } });
+    await run({ _id: { $nin: seenIds } });
+  }
+  // 2) Rellenar con cualquier pregunta (incluidas vistas) si faltan
+  await run({});
+  await run({});
+
+  return result.slice(0, count);
+}
+
 const isProduction = process.env.NODE_ENV === 'production';
 
 // Función para enviar webhook a n8n con verificación de duplicados
@@ -1057,10 +1121,9 @@ app.post('/random-questions', async (req, res) => {
           });
         }
         
-        const preguntasProtocolos = await mongoose.connection.db
-          .collection('examen_protocolos')
-          .aggregate([{ $match: ACTIVE_QUESTION }, { $sample: { size: Math.min(requestedCount, totalCount) } }])
-          .toArray();
+        const preguntasProtocolos = await sampleFreshQuestions(
+          mongoose.connection.db.collection('examen_protocolos'), {}, Math.min(requestedCount, totalCount), req.body.userId
+        );
         
         console.log(`Encontradas ${preguntasProtocolos.length} preguntas de protocolo`);
         
@@ -4021,30 +4084,16 @@ app.post('/create-test-user', async (req, res) => {
 
 app.post('/random-questions-contrarreloj', async (req, res) => {
   try {
-    const { count, excludeImages } = req.body;
+    const { count, excludeImages, userId } = req.body;
     
     // Construir query para MongoDB
     const query = excludeImages ? { image: { $exists: false } } : {};
     
     // Obtener solo las preguntas necesarias con los campos requeridos
-    const questions = await ExamenCompleto.aggregate([
-      { $match: { ...query, ...ACTIVE_QUESTION } },
-      { $sample: { size: count } },
-      { $project: { 
-        question: 1, 
-        option_1: 1, 
-        option_2: 1, 
-        option_3: 1, 
-        option_4: 1, 
-        correct_answer: 1,  // Asegurarse de que este campo existe
-        answer: 1,          // Compatibilidad con versiones anteriores
-        image: 1,           // Incluir imágenes si existen
-        exam_name: 1,
-        subject: 1,
-        long_answer: 1,     // Incluir long_answer
-        _id: 1
-      }}
-    ]).exec();
+    const questions = await sampleFreshQuestions(ExamenCompleto.collection, query, count, userId, {
+      question: 1, option_1: 1, option_2: 1, option_3: 1, option_4: 1,
+      correct_answer: 1, answer: 1, image: 1, exam_name: 1, subject: 1, long_answer: 1, _id: 1
+    });
     
     // Procesar el resultado para compatibilidad
     const processedQuestions = questions.map(q => {
@@ -4151,7 +4200,7 @@ app.post('/create-custom-exam', async (req, res) => {
 app.post('/random-question-completos', async (req, res) => {
   try {
     console.log("Petición recibida en /random-question-completos:", req.body);
-    const { count = 200, examType, asignaturas } = req.body;
+    const { count = 200, examType, asignaturas, userId } = req.body;
     
     // Construir query base
     let query = {};
@@ -4164,25 +4213,11 @@ app.post('/random-question-completos', async (req, res) => {
     console.log("Query a ejecutar:", query);
     
     // Obtener preguntas aleatorias
-    const questions = await ExamenCompleto.aggregate([
-      { $match: { ...query, ...ACTIVE_QUESTION } },
-      { $sample: { size: parseInt(count) } },
-      { $project: { 
-        question: 1, 
-        option_1: 1, 
-        option_2: 1, 
-        option_3: 1, 
-        option_4: 1, 
-        option_5: 1, 
-        correct_answer: 1,  // Asegurarse de que este campo existe
-        answer: 1,          // Compatibilidad con versiones anteriores
-        image: 1,           // Incluir imágenes si existen
-        exam_name: 1,
-        subject: 1,
-        long_answer: 1,     // Incluir la explicación larga
-        _id: 1
-      }}
-    ]).exec();
+    // Sin repeticiones: prioriza preguntas que el usuario no ha visto
+    const questions = await sampleFreshQuestions(ExamenCompleto.collection, query, count, userId, {
+      question: 1, option_1: 1, option_2: 1, option_3: 1, option_4: 1, option_5: 1,
+      correct_answer: 1, answer: 1, image: 1, exam_name: 1, subject: 1, long_answer: 1, _id: 1
+    });
     
     // Procesar el resultado para compatibilidad
     const processedQuestions = questions.map(q => {
@@ -4205,7 +4240,7 @@ app.post('/random-question-completos', async (req, res) => {
 // Ruta para obtener preguntas aleatorias con fotos
 app.post('/random-fotos', async (req, res) => {
   try {
-    const { count = 10, asignaturas } = req.body;
+    const { count = 10, asignaturas, userId } = req.body;
     
     // Construir query base - En la BD real el campo es 'image' (no 'imagen')
     let query = {};
@@ -4219,24 +4254,11 @@ app.post('/random-fotos', async (req, res) => {
     
     // Obtener preguntas aleatorias de examen_fotos
     // En la BD el campo es 'image', no 'imagen'
-    const questions = await ExamenFotos.aggregate([
-      { $match: { ...query, ...ACTIVE_QUESTION } },
-      { $sample: { size: parseInt(count) } },
-      { $project: { 
-        question: 1, 
-        option_1: 1, 
-        option_2: 1, 
-        option_3: 1, 
-        option_4: 1, 
-        option_5: 1, 
-        answer: 1,
-        image: 1,  // Campo REAL en la BD es 'image'
-        exam_name: 1,
-        subject: 1,
-        long_answer: 1,
-        _id: 1
-      }}
-    ]);
+    // Sin repeticiones: prioriza imágenes que el usuario no ha visto todavía
+    const questions = await sampleFreshQuestions(ExamenFotos.collection, query, count, userId, {
+      question: 1, option_1: 1, option_2: 1, option_3: 1, option_4: 1, option_5: 1,
+      answer: 1, image: 1, exam_name: 1, subject: 1, long_answer: 1, _id: 1
+    });
     
     console.log(`🔍 BACKEND - Preguntas obtenidas de la BD: ${questions.length}`);
     

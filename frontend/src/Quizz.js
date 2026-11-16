@@ -100,7 +100,8 @@ const Quizz = ({ toggleDarkMode, isDarkMode, userId }) => {
           },
           body: JSON.stringify({
             count: 50,
-            examType: 'quizz'
+            examType: 'quizz',
+            userId
           })
         });
 

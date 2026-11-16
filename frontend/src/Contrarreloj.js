@@ -74,7 +74,8 @@ const Contrarreloj = ({ userId }) => {
         },
         body: JSON.stringify({
           count: 20,
-          examType: 'contrarreloj'
+          examType: 'contrarreloj',
+          userId
         })
       });
 
