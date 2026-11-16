@@ -111,7 +111,8 @@ const Protocolos = ({ toggleDarkMode, isDarkMode, userId }) => {
           },
           body: JSON.stringify({
             numPreguntas: numPreguntasFromState,
-            examType: examTypeFromState
+            examType: examTypeFromState,
+            userId
           })
         });
         

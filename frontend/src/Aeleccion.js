@@ -184,7 +184,8 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             body: JSON.stringify({
               count: preguntasNormales,
               examType: 'anteriores',
-              asignaturas: asignaturasSeleccionadas
+              asignaturas: asignaturasSeleccionadas,
+              userId
             })
           });
 
@@ -209,7 +210,8 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
             },
             body: JSON.stringify({
               count: numPreguntasImagen,
-              asignaturas: asignaturasSeleccionadas
+              asignaturas: asignaturasSeleccionadas,
+              userId
             })
           });
 
@@ -232,7 +234,8 @@ const AEleccion = ({ onClose, userId, toggleDarkMode, isDarkMode }) => {
           },
           body: JSON.stringify({
             numPreguntas: numPreguntas,
-            examType: 'protocolos'
+            examType: 'protocolos',
+            userId
           })
         });
 
